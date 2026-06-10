@@ -228,6 +228,27 @@
   }
 }
 
+/* ============================================================
+   GLOBAL MOBILE SAFETY
+   Wide display fonts (Anurati / Dune Rise) have long uppercase
+   glyphs that can force horizontal overflow on small screens.
+   Guard against it and let long words wrap.
+   ============================================================ */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+#bloom_app_container {
+  overflow-x: hidden;
+}
+.theme-black,
+.theme-slate,
+.theme-summit {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 /* Readable utility for small labels — always Exo regardless of theme */
 .font-exo {
   font-family: 'Exo', sans-serif !important;
@@ -282,29 +303,20 @@
 }
 
 /* ============================================================
-   MOUNTAIN / SUMMIT THEME
-   Exo for everything via CSS variable override.
-   Anurati only for body / light-weight text.
+   MOUNTAIN / SUMMIT THEME — same preset as sphere & slate
+   Dune Rise on h1–h6 headers, Anurati on everything else.
    ============================================================ */
 .theme-summit {
-  --font-sans: 'Exo', sans-serif;
-  --font-serif: 'Exo', sans-serif;
-  font-family: 'Exo', sans-serif;
+  --font-sans: 'Anurati', sans-serif;
+  --font-serif: 'Anurati', sans-serif;
+  --font-mono: 'Anurati', sans-serif;
+  font-family: 'Anurati', sans-serif;
 }
 .theme-summit h1,
 .theme-summit h2,
 .theme-summit h3,
 .theme-summit h4,
 .theme-summit h5,
-.theme-summit h6,
-.theme-summit header *,
-.theme-summit nav * {
-  font-family: 'Exo', sans-serif;
-}
-/* body / regular text → Anurati */
-.theme-summit {
-  --font-mono: 'Anurati', sans-serif;
-}
-.theme-summit [class*="font-light"] {
-  font-family: 'Anurati', sans-serif;
+.theme-summit h6 {
+  font-family: 'Dune Rise', serif;
 }
