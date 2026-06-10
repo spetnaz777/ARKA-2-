@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Sparkles,
@@ -36,13 +36,22 @@ import {
   Mountain
 } from "lucide-react";
 import { Logo } from "./components/Logo";
-import { AILab } from "./components/AILab";
-import { ArtisticGallery } from "./components/ArtisticGallery";
 import { StructureSimulator } from "./components/StructureSimulator";
-import { PingScanner } from "./components/PingScanner";
 import { TravelDimensionWarp } from "./components/TravelDimensionWarp";
-import { WebDesignStudio } from "./components/WebDesignStudio";
 import { Specimen, AutomationPreset, GlowVariant } from "./types";
+
+// Heavy, tab/modal-gated panels are code-split so the initial mobile
+// load and tab switches stay fast (only fetched when first opened).
+const AILab = lazy(() => import("./components/AILab").then((m) => ({ default: m.AILab })));
+const PingScanner = lazy(() => import("./components/PingScanner").then((m) => ({ default: m.PingScanner })));
+const WebDesignStudio = lazy(() => import("./components/WebDesignStudio").then((m) => ({ default: m.WebDesignStudio })));
+
+// Lightweight fallback shown while a split panel chunk loads.
+const PanelFallback = () => (
+  <div className="w-full flex items-center justify-center py-24">
+    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+  </div>
+);
 
 export default function App() {
   // Navigation & Page State
@@ -149,32 +158,53 @@ export default function App() {
     }, 100);
   };
 
-  // Track cursor spotlight, scroll position and physical coordinates for rich organic reflections
+  // Track cursor spotlight + scroll parallax.
+  // On touch / small screens we skip continuous tracking entirely so the
+  // page scrolls natively at 60fps (no per-frame React re-renders). On
+  // desktop the handlers are rAF-throttled to at most one update per frame.
   useEffect(() => {
+    const lowPower =
+      window.matchMedia("(hover: none), (pointer: coarse)").matches ||
+      window.matchMedia("(max-width: 768px)").matches;
+
+    if (lowPower) {
+      // Center the spotlight once and do nothing else — buttery scrolling.
+      document.documentElement.style.setProperty("--x-mouse", "50%");
+      document.documentElement.style.setProperty("--y-mouse", "50%");
+      return;
+    }
+
+    let mouseRaf = 0;
+    let scrollRaf = 0;
+    let mx = 50;
+    let my = 50;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      document.documentElement.style.setProperty("--x-mouse", `${x}%`);
-      document.documentElement.style.setProperty("--y-mouse", `${y}%`);
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches[0]) {
-        const x = (e.touches[0].clientX / window.innerWidth) * 100;
-        const y = (e.touches[0].clientY / window.innerHeight) * 100;
-        document.documentElement.style.setProperty("--x-mouse", `${x}%`);
-        document.documentElement.style.setProperty("--y-mouse", `${y}%`);
-      }
+      mx = (e.clientX / window.innerWidth) * 100;
+      my = (e.clientY / window.innerHeight) * 100;
+      if (mouseRaf) return;
+      mouseRaf = requestAnimationFrame(() => {
+        mouseRaf = 0;
+        document.documentElement.style.setProperty("--x-mouse", `${mx}%`);
+        document.documentElement.style.setProperty("--y-mouse", `${my}%`);
+      });
     };
     const handleScroll = () => {
-      setScrollY(window.scrollY);
-      document.documentElement.style.setProperty("--scroll-y", `${window.scrollY}px`);
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
+        const y = window.scrollY;
+        setScrollY(y);
+        document.documentElement.style.setProperty("--scroll-y", `${y}px`);
+      });
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
+      if (mouseRaf) cancelAnimationFrame(mouseRaf);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
@@ -1687,7 +1717,9 @@ export default function App() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4 }}
             >
-              <PingScanner theme={theme} addLog={addRegistryLog} />
+              <Suspense fallback={<PanelFallback />}>
+                <PingScanner theme={theme} addLog={addRegistryLog} />
+              </Suspense>
             </motion.div>
           )}
 
@@ -1699,7 +1731,9 @@ export default function App() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4 }}
             >
-              <WebDesignStudio theme={theme} addLog={addRegistryLog} />
+              <Suspense fallback={<PanelFallback />}>
+                <WebDesignStudio theme={theme} addLog={addRegistryLog} />
+              </Suspense>
             </motion.div>
           )}
 
@@ -1733,11 +1767,13 @@ export default function App() {
       </footer>
 
       {/* 1. Traditional Floating AI Lab popup (Keep as secondary accessibility access) */}
-      <AILab
-        isOpen={isLabOpen}
-        onClose={() => setIsLabOpen(false)}
-        onAddSpecimen={handleAddSpecimen}
-      />
+      <Suspense fallback={null}>
+        <AILab
+          isOpen={isLabOpen}
+          onClose={() => setIsLabOpen(false)}
+          onAddSpecimen={handleAddSpecimen}
+        />
+      </Suspense>
 
       {/* 2. Systems Blueprints Drawers Overlay */}
       <AnimatePresence>

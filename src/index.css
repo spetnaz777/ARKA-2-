@@ -229,6 +229,32 @@
 }
 
 /* ============================================================
+   MOBILE PERFORMANCE
+   Heavy stacked backdrop-blur over a playing video is the #1
+   cause of jank on phones. Cap every glass blur to a cheap value
+   and drop the cursor-follow gradient repaint (no cursor on touch).
+   ============================================================ */
+@media (max-width: 768px) {
+  .liquid-glass,
+  .liquid-glass-strong,
+  .apple-btn-tactile,
+  .theme-summit .liquid-glass,
+  .theme-summit .liquid-glass-strong,
+  .theme-summit .apple-btn-tactile {
+    backdrop-filter: blur(6px) saturate(135%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(135%) !important;
+  }
+  /* Static spotlight on touch devices — no per-move repaint */
+  .apple-spotlight-bg {
+    background: radial-gradient(600px circle at 50% 30%, rgba(255,255,255,0.04), transparent 45%) !important;
+  }
+  /* Cheapen the fullscreen video filter (saturate/contrast are costly per-frame) */
+  #bloom_video_bg {
+    filter: brightness(0.55) contrast(1.05) !important;
+  }
+}
+
+/* ============================================================
    GLOBAL MOBILE SAFETY
    Wide display fonts (Anurati / Dune Rise) have long uppercase
    glyphs that can force horizontal overflow on small screens.
