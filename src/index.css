@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500;1,8..60,600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", sans-serif;
+  --font-serif: "Source Serif 4", serif;
+  --radius: 1rem;
+}
+
+@layer components {
+  .liquid-glass {
+    background: rgba(10, 12, 18, 0.35);
+    background-blend-mode: normal;
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 12px 40px -10px rgba(0, 0, 0, 0.65),
+      inset 0 1px 1px rgba(255, 255, 255, 0.22),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
+  }
+
+  @media (max-width: 768px) {
+    .liquid-glass {
+      backdrop-filter: blur(8px) saturate(145%);
+      -webkit-backdrop-filter: blur(8px) saturate(145%);
+    }
+  }
+
+  /* High fidelity Apple light glare reflective edge highlight */
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.12) 25%,
+      transparent 50%,
+      transparent 75%,
+      rgba(255, 255, 255, 0.12) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 12;
+  }
+
+  .liquid-glass-strong {
+    background: rgba(8, 10, 16, 0.65);
+    background-blend-mode: normal;
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 20px 60px -15px rgba(0, 0, 0, 0.8),
+      inset 0 1.5px 1.5px rgba(255, 255, 255, 0.3),
+      inset 0 -1.5px 3px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (max-width: 768px) {
+    .liquid-glass-strong {
+      backdrop-filter: blur(12px) saturate(155%);
+      -webkit-backdrop-filter: blur(12px) saturate(155%);
+    }
+  }
+
+  .liquid-glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 25%,
+      transparent 50%,
+      transparent 75%,
+      rgba(255, 255, 255, 0.15) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 12;
+  }
+
+  /* Luxurious organic vignetting to push the video background deeper */
+  .apple-cinematic-vignette {
+    background: radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.85) 100%);
+    pointer-events: none;
+  }
+
+  /* Physical high dynamic tactical interaction specs */
+  .interactive {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s;
+    cursor: pointer;
+  }
+
+  .interactive:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .interactive:active {
+    transform: translateY(1px) scale(0.97);
+    box-shadow: 0 5px 12px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  /* iOS style fluid button */
+  .apple-btn-tactile {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    box-shadow: 
+      0 4px 15px -4px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .apple-btn-tactile:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 25px -6px rgba(0, 0, 0, 0.5),
+      inset 0 1px 1.5px rgba(255, 255, 255, 0.35);
+  }
+
+  .apple-btn-tactile:active {
+    transform: scale(0.96);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    box-shadow: 
+      0 2px 8px -3px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0.5px rgba(255, 255, 255, 0.1);
+  }
+
+  /* iOS Active specular lighting highlights */
+  .apple-spotlight-bg {
+    background: radial-gradient(
+      800px circle at var(--x-mouse, 50%) var(--y-mouse, 50%),
+      rgba(255, 255, 255, 0.06),
+      transparent 40%
+    );
+  }
+
+  /* Summit (Mountain) Theme - Elevated organic glass blurriness & glossy reflections */
+  .theme-summit .liquid-glass {
+    background: rgba(4, 5, 10, 0.28);
+    backdrop-filter: blur(45px) saturate(210%);
+    -webkit-backdrop-filter: blur(45px) saturate(210%);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 20px 50px -12px rgba(0, 0, 0, 0.8),
+      inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  }
+
+  .theme-summit .liquid-glass-strong {
+    background: rgba(3, 4, 8, 0.5);
+    backdrop-filter: blur(60px) saturate(220%);
+    -webkit-backdrop-filter: blur(60px) saturate(220%);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 
+      0 28px 70px -15px rgba(0, 0, 0, 0.9),
+      inset 0 1.5px 2.5px rgba(255, 255, 255, 0.45);
+  }
+
+  .theme-summit .apple-btn-tactile {
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  @media (max-width: 768px) {
+    .theme-summit .liquid-glass {
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+    }
+    .theme-summit .liquid-glass-strong {
+      backdrop-filter: blur(32px) saturate(170%);
+      -webkit-backdrop-filter: blur(32px) saturate(170%);
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "ARKA",
+  "description": "High-end AI automation, conversational chatbots, and immersive web design ecosystem for modern enterprises.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
