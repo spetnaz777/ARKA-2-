@@ -184,7 +184,7 @@ export const ArtisticGallery: React.FC<ArtisticGalleryProps> = ({ onSelectPreset
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
                 <div className="absolute bottom-4 left-4">
                   <span className="text-[8px] uppercase tracking-widest text-white/50 block font-bold mb-1">SYSTEM INTEGRATION BLOCK</span>
-                  <h3 className="font-serif italic text-lg leading-none">{selectedSpecimen.name}</h3>
+                  <h3 className="font-sans text-lg leading-none">{selectedSpecimen.name}</h3>
                 </div>
               </div>
 

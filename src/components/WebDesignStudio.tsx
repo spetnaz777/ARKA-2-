@@ -579,7 +579,7 @@ export const WebDesignStudio: React.FC<WebDesignStudioProps> = ({ theme, addLog 
                   activeAesthetic === "swiss"
                     ? "text-black"
                     : activeAesthetic === "luxe"
-                      ? "text-amber-100 font-serif"
+                      ? "text-amber-100 font-sans"
                       : "text-white"
                 }`}>
                   {submittedBrief ? (
@@ -587,9 +587,9 @@ export const WebDesignStudio: React.FC<WebDesignStudioProps> = ({ theme, addLog 
                   ) : activeCompany === "ai" ? (
                     <>Deploying Cognitive <span className="text-cyan-400">Logic Streams</span> at Global Scale</>
                   ) : activeCompany === "biotech" ? (
-                    <>Custom <span className="text-amber-500 font-serif">Molecular Models</span> and Atomic Folding</>
+                    <>Custom <span className="text-amber-500 font-sans">Molecular Models</span> and Atomic Folding</>
                   ) : activeCompany === "venture" ? (
-                    <>Underwriting tomorrow's next <span className="text-indigo-400 italic">paradigm breakthroughs</span></>
+                    <>Underwriting tomorrow's next <span className="text-indigo-400">paradigm breakthroughs</span></>
                   ) : (
                     <>Bespoke <span className="text-white underline underline-offset-4 decoration-neutral-800">Spatial Systems</span> & brand typography</>
                   )}

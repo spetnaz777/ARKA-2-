@@ -420,7 +420,7 @@ export default function App() {
   return (
     <div id="bloom_app_container" className={`font-sans w-full relative transition-colors duration-500 text-white selection:bg-white selection:text-black ${
       !isPortalEntered ? "h-[100vh] h-[100dvh] overflow-hidden touch-none" : "min-h-screen"
-    } ${theme === "slate" ? "bg-[#0b0f19]" : theme === "summit" ? "bg-[#010103] theme-summit" : "bg-black theme-black"}`} style={{ perspective: "1200px" }}>
+    } ${theme === "slate" ? "bg-[#0b0f19] theme-slate" : theme === "summit" ? "bg-[#010103] theme-summit" : "bg-black theme-black"}`} style={{ perspective: "1200px" }}>
       
       {/* 3D Cinematic Welcome Gate / Splash Screen Portal */}
       <AnimatePresence>
@@ -744,7 +744,7 @@ export default function App() {
 
                 <h1 className="font-sans font-medium text-4xl sm:text-5xl lg:text-[4.2rem] tracking-[-0.04em] leading-[1.02] text-white">
                   Automate systems. <br />
-                  <span className="font-serif italic text-white/80 font-normal">Build with ARKA.</span>
+                  <span className="font-sans text-white/80 font-normal">Build with ARKA.</span>
                 </h1>
 
                 <p className="text-sm md:text-base font-sans font-light text-white/50 leading-relaxed max-w-xl">
@@ -821,7 +821,7 @@ export default function App() {
             >
               <div>
                 <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Bespoke Enterprise Capabilities</span>
-                <h2 className="font-serif italic text-3xl md:text-5xl text-white/95 leading-none">Interactive ARKA Solutions Matrix</h2>
+                <h2 className="font-sans text-3xl md:text-5xl text-white/95 leading-none">Interactive ARKA Solutions Matrix</h2>
                 <p className="text-xs sm:text-sm text-white/50 mt-2 max-w-2xl leading-relaxed">
                   Experience live interactive simulations of each core service pillar of the ARKA organization. Connect nodes, validate logic and view latency performance.
                 </p>
@@ -1055,7 +1055,7 @@ export default function App() {
             >
               <div>
                 <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">ARKA WORKSTATION</span>
-                <h2 className="font-serif italic text-3xl md:text-5xl text-white/95">Lab Automation Workbench</h2>
+                <h2 className="font-sans text-3xl md:text-5xl text-white/95">Lab Automation Workbench</h2>
                 <p className="text-xs sm:text-sm text-white/50 mt-1.5 max-w-2xl">
                   Configure custom chatbot directives, workflow webhook endpoints, and hosting backbone requirements. Compile and test live simulation schemas on standard edge networks.
                 </p>
@@ -1259,7 +1259,7 @@ export default function App() {
               <div className="lg:col-span-7 flex flex-col gap-6">
                 <div>
                   <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Compiled Blueprints Repository</span>
-                  <h2 className="font-serif italic text-3xl md:text-5xl text-white/95">Registered ARKA Blueprints</h2>
+                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Registered ARKA Blueprints</h2>
                   <p className="text-xs text-white/50 mt-1">
                     Manage active enterprise integrations, inspect parameter configurations, and fire mock payloads to live state terminals below.
                   </p>
@@ -1388,7 +1388,7 @@ export default function App() {
               <div className="lg:col-span-4 flex flex-col gap-6 justify-between">
                 <div>
                   <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Interactive Edge Network</span>
-                  <h2 className="font-serif italic text-3xl md:text-5xl text-white/95">Telemetry Dome</h2>
+                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Telemetry Dome</h2>
                   <p className="text-xs text-white/50 mt-1 leading-relaxed">
                     Adjust orbital coordinate layers, holographic pitch, and sub-routing nests. Trigger ping signals dynamically by clicking global data gateways on the globe.
                   </p>
@@ -1413,7 +1413,7 @@ export default function App() {
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10 select-none">
                   <div className="text-left">
                     <span className="text-[9px] tracking-widest uppercase text-cyan-400 font-bold block font-mono">Live Edge Viewport</span>
-                    <h3 className="font-serif italic text-2xl text-white/90">Orthographic Core</h3>
+                    <h3 className="font-sans text-2xl text-white/90">Orthographic Core</h3>
                   </div>
                   <div className="text-right text-[10px] font-mono text-white/40">
                     <div>LATENCY GRADE: SLA-A</div>
@@ -1471,7 +1471,7 @@ export default function App() {
               <div className="lg:col-span-7 flex flex-col gap-6 justify-between">
                 <div>
                   <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Automated Strategic Onboarding</span>
-                  <h2 className="font-serif italic text-3xl md:text-5xl text-white/95">Agreement Builder</h2>
+                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Agreement Builder</h2>
                   <p className="text-xs text-white/50 mt-1 leading-relaxed">
                     Configure desired query volume capacity, choose the corresponding support tier, and select the tools you want to connect. Real-time cost formulation.
                   </p>
@@ -1569,7 +1569,7 @@ export default function App() {
                     >
                       <div className="text-left flex flex-col gap-1">
                         <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold font-mono">CONSOLIDATED PROPOSAL</span>
-                        <h3 className="font-serif italic text-2xl text-white/90">Strategic SLA Summary</h3>
+                        <h3 className="font-sans text-2xl text-white/90">Strategic SLA Summary</h3>
                       </div>
 
                       {/* Quote metrics list */}
@@ -1630,7 +1630,7 @@ export default function App() {
                           <ShieldCheck className="w-6 h-6 text-emerald-400" />
                         </div>
                         <h4 className="text-xs tracking-widest uppercase font-mono font-extrabold text-emerald-400 mt-2">SLA CORE PROTOCOL INITIATED</h4>
-                        <h3 className="font-serif italic text-2xl text-white/95">Proposal Locked Successfully</h3>
+                        <h3 className="font-sans text-2xl text-white/95">Proposal Locked Successfully</h3>
                         <p className="text-xs text-white/60 max-w-xs mt-2 leading-relaxed">
                           We have recorded your specifications in our secure database ledger. A direct communication line is being established between ARKA’s lead technical architect and your company’s technical contact inbox.
                         </p>
@@ -1891,7 +1891,7 @@ export default function App() {
                     </div>
                     <div>
                       <h4 className="text-xs uppercase font-mono tracking-widest text-emerald-400 font-bold">ONBOARDING TRANSMITTAL INITIALISED</h4>
-                      <h3 className="font-serif italic text-xl mt-1 text-white">Direct Verification SLA</h3>
+                      <h3 className="font-sans text-xl mt-1 text-white">Direct Verification SLA</h3>
                       <p className="text-xs text-white/50 mt-1.5 max-w-[290px] mx-auto leading-relaxed">
                         Secure endpoint generated! Our corporate technical team is routing your specific token and custom setup files to your designated email inbox. Expected delivery is within 2 hours.
                       </p>

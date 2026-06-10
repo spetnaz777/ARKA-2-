@@ -309,7 +309,7 @@ export const PingScanner: React.FC<PingScannerProps> = ({ theme, addLog }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-6">
         <div className="text-left">
           <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">ARKA Secure Route Diagnostics</span>
-          <h2 className="font-serif italic text-3xl md:text-5xl text-white/95 leading-none">Diagnostic Scan & Bandwidth</h2>
+          <h2 className="font-sans text-3xl md:text-5xl text-white/95 leading-none">Diagnostic Scan & Bandwidth</h2>
           <p className="text-xs text-white/50 mt-2 max-w-xl leading-relaxed font-light">
             Measure round-trip server routes across custom edge nodes instantly, analyze packet hops, and execute a live fiber transport speed test simulation.
           </p>
@@ -336,7 +336,7 @@ export const PingScanner: React.FC<PingScannerProps> = ({ theme, addLog }) => {
             <div className="absolute inset-0 apple-spotlight-bg opacity-30 z-0 pointer-events-none" />
             <div className="flex flex-col gap-2.5 text-left relative z-10">
               <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold block font-mono">ROUTE AUDITING NODE</span>
-              <h3 className="font-serif italic text-2xl text-white/90">Multi-Region Ping Scope</h3>
+              <h3 className="font-sans text-2xl text-white/90">Multi-Region Ping Scope</h3>
             </div>
 
             {/* Input URL field box */}
@@ -450,7 +450,7 @@ export const PingScanner: React.FC<PingScannerProps> = ({ theme, addLog }) => {
               </div>
               <div className={`h-[180px] rounded-2xl p-4 font-mono text-[10.5px] overflow-y-auto leading-relaxed text-left border flex flex-col gap-1 ${currentThemeClasses.terminalBg}`}>
                 {terminalLogs.length === 0 ? (
-                  <span className="text-white/30 italic">Awaiting route probe sequence triggers. Enter target URL above to start...</span>
+                  <span className="text-white/30">Awaiting route probe sequence triggers. Enter target URL above to start...</span>
                 ) : (
                   terminalLogs.map((log, index) => (
                     <div key={index} className="whitespace-pre-wrap">{log}</div>
@@ -498,7 +498,7 @@ export const PingScanner: React.FC<PingScannerProps> = ({ theme, addLog }) => {
             <div className="w-full flex justify-between items-start text-left relative z-10">
               <div>
                 <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold font-mono">SLA ROUTING SPEED</span>
-                <h3 className="font-serif italic text-2xl text-white/90">Bandwidth Test</h3>
+                <h3 className="font-sans text-2xl text-white/90">Bandwidth Test</h3>
               </div>
               
               <div className="text-right text-[10px] font-mono text-white/40">
