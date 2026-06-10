@@ -228,6 +228,11 @@
   }
 }
 
+/* Readable utility for small labels — always Exo regardless of theme */
+.font-exo {
+  font-family: 'Exo', sans-serif !important;
+}
+
 /* ============================================================
    GLOBAL: no italic inside any theme
    ============================================================ */

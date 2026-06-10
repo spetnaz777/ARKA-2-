@@ -275,7 +275,7 @@ export const StructureSimulator: React.FC = () => {
                 setIsSpinning(!isSpinning);
                 addLog(isSpinning ? "Automation mapping frozen" : "Continuous stream routing started");
               }}
-              className="text-[9px] uppercase font-semibold text-white/80 hover:text-white flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full interactive"
+              className="text-[9px] uppercase font-semibold font-exo text-white/80 hover:text-white flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full interactive"
             >
               <RefreshCw className={`w-2.5 h-2.5 ${isSpinning ? "animate-spin" : ""}`} />
               {isSpinning ? "Freeze Router" : "Route Live"}
@@ -288,7 +288,7 @@ export const StructureSimulator: React.FC = () => {
           <div className="flex rounded-lg bg-white/5 p-1">
             <button
               onClick={() => setActiveTab("architecture")}
-              className={`flex-1 py-1 text-[9px] uppercase font-bold rounded-md tracking-wider transition-all cursor-pointer ${
+              className={`flex-1 py-1 text-[9px] uppercase font-bold font-exo rounded-md tracking-wider transition-all cursor-pointer ${
                 activeTab === "architecture" ? "bg-white text-black" : "text-white/40 hover:text-white"
               }`}
             >
@@ -296,7 +296,7 @@ export const StructureSimulator: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab("telemetry")}
-              className={`flex-1 py-1 text-[9px] uppercase font-bold rounded-md tracking-wider transition-all cursor-pointer ${
+              className={`flex-1 py-1 text-[9px] uppercase font-bold font-exo rounded-md tracking-wider transition-all cursor-pointer ${
                 activeTab === "telemetry" ? "bg-white text-black" : "text-white/40 hover:text-white"
               }`}
             >
@@ -316,7 +316,7 @@ export const StructureSimulator: React.FC = () => {
               >
                 {/* 1. Simulated Traffic Capacity */}
                 <div>
-                  <div className="flex justify-between text-[9px] font-mono text-white/50 mb-1">
+                  <div className="flex justify-between text-[9px] font-exo text-white/50 mb-1">
                     <span>ACTIVE BOT CHANNELS</span>
                     <span>{nodes * 80} active agents</span>
                   </div>
@@ -335,7 +335,7 @@ export const StructureSimulator: React.FC = () => {
 
                 {/* 2. Globe Zoom Scale */}
                 <div>
-                  <div className="flex justify-between text-[9px] font-mono text-white/50 mb-1">
+                  <div className="flex justify-between text-[9px] font-exo text-white/50 mb-1">
                     <span>GLOBE VISUAL ZOOM</span>
                     <span>{reachRadius + 20}px radius</span>
                   </div>
@@ -354,7 +354,7 @@ export const StructureSimulator: React.FC = () => {
 
                 {/* 3. Hologram Tilt Axis */}
                 <div>
-                  <div className="flex justify-between text-[9px] font-mono text-white/50 mb-1">
+                  <div className="flex justify-between text-[9px] font-exo text-white/50 mb-1">
                     <span>HOLOGRAPHIC TILT PERSPECTIVE</span>
                     <span>{rotation}° pitch</span>
                   </div>
@@ -373,7 +373,7 @@ export const StructureSimulator: React.FC = () => {
 
                 {/* 4. API Mesh layers */}
                 <div>
-                  <div className="flex justify-between text-[9px] font-mono text-white/50 mb-1">
+                  <div className="flex justify-between text-[9px] font-exo text-white/50 mb-1">
                     <span>DEEP RETRIEVAL NESTS</span>
                     <span>{depthLayers} levels deep</span>
                   </div>
