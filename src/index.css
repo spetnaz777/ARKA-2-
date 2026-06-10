@@ -229,7 +229,7 @@
 }
 
 /* ============================================================
-   GLOBAL: kill italic across all custom themes
+   GLOBAL: no italic inside any theme
    ============================================================ */
 .theme-black *,
 .theme-slate *,
@@ -238,22 +238,15 @@
 }
 
 /* ============================================================
-   SPHERE / BLACK THEME FONTS
-   Base  → Anurati (set on container, inherited by all children)
-   h1–h6 + large display text → Dune Rise
-   All font utility classes → Anurati
-   Navbar / header elements → Anurati
+   SPHERE / BLACK THEME
+   Override Tailwind v4 CSS variables so every font-* utility
+   resolves to Anurati automatically. Then apply Dune Rise
+   only to h1–h6 — nothing wider.
    ============================================================ */
 .theme-black {
-  font-family: 'Anurati', sans-serif;
-}
-.theme-black .font-sans,
-.theme-black .font-serif,
-.theme-black .font-mono {
-  font-family: 'Anurati', sans-serif;
-}
-.theme-black header *,
-.theme-black nav * {
+  --font-sans: 'Anurati', sans-serif;
+  --font-serif: 'Anurati', sans-serif;
+  --font-mono: 'Anurati', sans-serif;
   font-family: 'Anurati', sans-serif;
 }
 .theme-black h1,
@@ -266,19 +259,12 @@
 }
 
 /* ============================================================
-   CHARCOAL SLATE THEME FONTS
-   Same treatment as sphere: Dune Rise headers, Anurati text
+   CHARCOAL SLATE THEME — same rules as sphere
    ============================================================ */
 .theme-slate {
-  font-family: 'Anurati', sans-serif;
-}
-.theme-slate .font-sans,
-.theme-slate .font-serif,
-.theme-slate .font-mono {
-  font-family: 'Anurati', sans-serif;
-}
-.theme-slate header *,
-.theme-slate nav * {
+  --font-sans: 'Anurati', sans-serif;
+  --font-serif: 'Anurati', sans-serif;
+  --font-mono: 'Anurati', sans-serif;
   font-family: 'Anurati', sans-serif;
 }
 .theme-slate h1,
@@ -291,15 +277,13 @@
 }
 
 /* ============================================================
-   MOUNTAIN / SUMMIT THEME FONTS
-   Base  → Exo (dominant: headers, nav, buttons, all UI)
-   font-light + font-mono elements → Anurati (body / regular text)
+   MOUNTAIN / SUMMIT THEME
+   Exo for everything via CSS variable override.
+   Anurati only for body / light-weight text.
    ============================================================ */
 .theme-summit {
-  font-family: 'Exo', sans-serif;
-}
-.theme-summit .font-sans,
-.theme-summit .font-serif {
+  --font-sans: 'Exo', sans-serif;
+  --font-serif: 'Exo', sans-serif;
   font-family: 'Exo', sans-serif;
 }
 .theme-summit h1,
@@ -312,8 +296,10 @@
 .theme-summit nav * {
   font-family: 'Exo', sans-serif;
 }
-/* Regular body text → Anurati */
-.theme-summit .font-mono,
+/* body / regular text → Anurati */
+.theme-summit {
+  --font-mono: 'Anurati', sans-serif;
+}
 .theme-summit [class*="font-light"] {
   font-family: 'Anurati', sans-serif;
 }
