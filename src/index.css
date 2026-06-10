@@ -1,6 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500;1,8..60,600&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Dune Rise';
+  src: url('/fonts/Dune_Rise.otf') format('opentype'),
+       url('/fonts/Dune_Rise.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Anurati';
+  src: url('/fonts/Anurati-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Exo';
+  src: url('/fonts/Exo-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Exo';
+  src: url('/fonts/Exo-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 @theme {
   --font-sans: "Poppins", sans-serif;
   --font-serif: "Source Serif 4", serif;
@@ -193,4 +226,52 @@
       -webkit-backdrop-filter: blur(32px) saturate(170%);
     }
   }
+}
+
+/* ============================================================
+   SPHERE / BLACK THEME FONTS
+   Dune Rise  → h1–h6 headers only
+   Anurati    → all other text (font-sans, font-serif, font-mono)
+   These rules are unlayered so they beat Tailwind utilities.
+   ============================================================ */
+.theme-black .font-sans,
+.theme-black .font-serif,
+.theme-black .font-mono {
+  font-family: 'Anurati', sans-serif;
+}
+
+.theme-black h1,
+.theme-black h2,
+.theme-black h3,
+.theme-black h4,
+.theme-black h5,
+.theme-black h6 {
+  font-family: 'Dune Rise', serif;
+}
+
+/* ============================================================
+   MOUNTAIN / SUMMIT THEME FONTS
+   Exo        → headers, navbar/header, font-sans, font-serif
+   Anurati    → regular body text (font-light, font-mono)
+   ============================================================ */
+.theme-summit .font-sans,
+.theme-summit .font-serif {
+  font-family: 'Exo', sans-serif;
+}
+
+.theme-summit h1,
+.theme-summit h2,
+.theme-summit h3,
+.theme-summit h4,
+.theme-summit h5,
+.theme-summit h6,
+.theme-summit header *,
+.theme-summit nav * {
+  font-family: 'Exo', sans-serif;
+}
+
+/* Regular / body text → Anurati (after Exo rules so same-specificity wins via source order) */
+.theme-summit .font-mono,
+.theme-summit [class*="font-light"] {
+  font-family: 'Anurati', sans-serif;
 }

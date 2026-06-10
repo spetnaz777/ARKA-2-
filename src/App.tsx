@@ -420,7 +420,7 @@ export default function App() {
   return (
     <div id="bloom_app_container" className={`font-sans w-full relative transition-colors duration-500 text-white selection:bg-white selection:text-black ${
       !isPortalEntered ? "h-[100vh] h-[100dvh] overflow-hidden touch-none" : "min-h-screen"
-    } ${theme === "slate" ? "bg-[#0b0f19]" : theme === "summit" ? "bg-[#010103] theme-summit" : "bg-black"}`} style={{ perspective: "1200px" }}>
+    } ${theme === "slate" ? "bg-[#0b0f19]" : theme === "summit" ? "bg-[#010103] theme-summit" : "bg-black theme-black"}`} style={{ perspective: "1200px" }}>
       
       {/* 3D Cinematic Welcome Gate / Splash Screen Portal */}
       <AnimatePresence>
