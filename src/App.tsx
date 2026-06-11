@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Sparkles,
@@ -36,22 +36,12 @@ import {
   Mountain
 } from "lucide-react";
 import { Logo } from "./components/Logo";
+import { AILab } from "./components/AILab";
 import { StructureSimulator } from "./components/StructureSimulator";
+import { PingScanner } from "./components/PingScanner";
 import { TravelDimensionWarp } from "./components/TravelDimensionWarp";
+import { WebDesignStudio } from "./components/WebDesignStudio";
 import { Specimen, AutomationPreset, GlowVariant } from "./types";
-
-// Heavy, tab/modal-gated panels are code-split so the initial mobile
-// load and tab switches stay fast (only fetched when first opened).
-const AILab = lazy(() => import("./components/AILab").then((m) => ({ default: m.AILab })));
-const PingScanner = lazy(() => import("./components/PingScanner").then((m) => ({ default: m.PingScanner })));
-const WebDesignStudio = lazy(() => import("./components/WebDesignStudio").then((m) => ({ default: m.WebDesignStudio })));
-
-// Lightweight fallback shown while a split panel chunk loads.
-const PanelFallback = () => (
-  <div className="w-full flex items-center justify-center py-24">
-    <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
-  </div>
-);
 
 export default function App() {
   // Navigation & Page State
@@ -574,26 +564,39 @@ export default function App() {
             />
           </div>
         ) : (
-          <video
-            id="bloom_video_bg"
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{ objectFit: "cover" }}
-            className={`absolute inset-0 w-full h-full object-cover pointer-events-none filter transition-all duration-1000 ${
-              isWarping ? "scale-105 blur-[6px]" : "scale-102"
-            } ${
-              theme === "slate"
-                ? "saturate-[1.3] brightness-[0.5] hue-rotate-[18deg] md:blur-none md:saturate-[0.8] md:brightness-[0.6] contrast-125"
-                : "saturate-[1.2] brightness-[0.55] md:blur-none md:saturate-50 md:brightness-70 contrast-115"
-            }`}
-          >
-            <source
-              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
-              type="video/mp4"
+          <>
+            {/* Mobile: reliable static gradient backdrop. Autoplay video is
+                paused by iOS Safari in Low Power Mode and is GPU-heavy, so
+                phones get a clean themed gradient instead. */}
+            <div
+              className={`md:hidden absolute inset-0 w-full h-full ${
+                theme === "slate"
+                  ? "bg-[radial-gradient(125%_90%_at_50%_0%,#1b2742_0%,#0b0f19_45%,#05070d_100%)]"
+                  : "bg-[radial-gradient(125%_90%_at_50%_0%,#171327_0%,#0a0812_45%,#040308_100%)]"
+              }`}
             />
-          </video>
+            {/* Desktop: cinematic video */}
+            <video
+              id="bloom_video_bg"
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{ objectFit: "cover" }}
+              className={`hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none filter transition-all duration-1000 ${
+                isWarping ? "scale-105 blur-[6px]" : "scale-102"
+              } ${
+                theme === "slate"
+                  ? "saturate-[0.8] brightness-[0.6] contrast-125"
+                  : "saturate-50 brightness-70 contrast-115"
+              }`}
+            >
+              <source
+                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
+                type="video/mp4"
+              />
+            </video>
+          </>
         )}
         {/* Apple iOS high dynamic physical shading mask overlay - lighter in summit mode to expose detail */}
         <div className={`absolute inset-0 transition-all duration-700 ${theme === "slate" ? "bg-slate-950/35" : theme === "summit" ? "bg-black/15" : "bg-black/25"}`} />
@@ -764,7 +767,7 @@ export default function App() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center py-10 md:py-16"
             >
               {/* Left Column: Visionary copy and CTA buttons */}
@@ -846,7 +849,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
               className="flex flex-col gap-8 text-left"
             >
               <div>
@@ -1080,7 +1083,7 @@ export default function App() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
               className="flex flex-col gap-6 text-left"
             >
               <div>
@@ -1281,7 +1284,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
             >
               
@@ -1493,7 +1496,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left items-stretch"
             >
               
@@ -1715,11 +1718,9 @@ export default function App() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
             >
-              <Suspense fallback={<PanelFallback />}>
-                <PingScanner theme={theme} addLog={addRegistryLog} />
-              </Suspense>
+              <PingScanner theme={theme} addLog={addRegistryLog} />
             </motion.div>
           )}
 
@@ -1729,11 +1730,9 @@ export default function App() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.22 }}
             >
-              <Suspense fallback={<PanelFallback />}>
-                <WebDesignStudio theme={theme} addLog={addRegistryLog} />
-              </Suspense>
+              <WebDesignStudio theme={theme} addLog={addRegistryLog} />
             </motion.div>
           )}
 
@@ -1767,13 +1766,11 @@ export default function App() {
       </footer>
 
       {/* 1. Traditional Floating AI Lab popup (Keep as secondary accessibility access) */}
-      <Suspense fallback={null}>
-        <AILab
-          isOpen={isLabOpen}
-          onClose={() => setIsLabOpen(false)}
-          onAddSpecimen={handleAddSpecimen}
-        />
-      </Suspense>
+      <AILab
+        isOpen={isLabOpen}
+        onClose={() => setIsLabOpen(false)}
+        onAddSpecimen={handleAddSpecimen}
+      />
 
       {/* 2. Systems Blueprints Drawers Overlay */}
       <AnimatePresence>

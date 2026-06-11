@@ -229,6 +229,18 @@
 }
 
 /* ============================================================
+   DISPLAY-FONT LINE-HEIGHT FLOOR
+   Dune Rise & Anurati have tall glyphs. Tailwind's leading-none
+   (line-height:1) makes wrapped headings overlap on narrow mobile
+   screens. Enforce a safe floor on every themed heading.
+   ============================================================ */
+.theme-black h1, .theme-black h2, .theme-black h3, .theme-black h4, .theme-black h5, .theme-black h6,
+.theme-slate h1, .theme-slate h2, .theme-slate h3, .theme-slate h4, .theme-slate h5, .theme-slate h6,
+.theme-summit h1, .theme-summit h2, .theme-summit h3, .theme-summit h4, .theme-summit h5, .theme-summit h6 {
+  line-height: 1.2;
+}
+
+/* ============================================================
    MOBILE PERFORMANCE
    Heavy stacked backdrop-blur over a playing video is the #1
    cause of jank on phones. Cap every glass blur to a cheap value
