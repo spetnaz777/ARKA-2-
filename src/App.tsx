@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView, useMotionValue, useVelocity } from "motion/react";
 import {
   Sparkles,
   Download,
@@ -38,10 +38,182 @@ import {
 import { Logo } from "./components/Logo";
 import { AILab } from "./components/AILab";
 import { StructureSimulator } from "./components/StructureSimulator";
+import { SpinningGlobe } from "./components/SpinningGlobe";
 import { PingScanner } from "./components/PingScanner";
 import { TravelDimensionWarp } from "./components/TravelDimensionWarp";
-import { WebDesignStudio } from "./components/WebDesignStudio";
+import { ROICalculator } from "./components/ROICalculator";
+import { ScrollScrubHero } from "./components/ScrollScrubHero";
 import { Specimen, AutomationPreset, GlowVariant } from "./types";
+
+// ─── Custom cursor with spring lag + hover expansion ───────────────────────
+function CustomCursor() {
+  const mouseX = useMotionValue(-200);
+  const mouseY = useMotionValue(-200);
+  const [hovered, setHovered] = useState(false);
+  const dotX = useSpring(mouseX, { damping: 16, stiffness: 800, mass: 0.15 });
+  const dotY = useSpring(mouseY, { damping: 16, stiffness: 800, mass: 0.15 });
+  const ringX = useSpring(mouseX, { damping: 30, stiffness: 200, mass: 0.9 });
+  const ringY = useSpring(mouseY, { damping: 30, stiffness: 200, mass: 0.9 });
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => { mouseX.set(e.clientX); mouseY.set(e.clientY); };
+    const onOver = (e: MouseEvent) => {
+      setHovered(!!(e.target as Element).closest('button, a, [role="button"], input, select, label'));
+    };
+    window.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseover', onOver);
+    return () => { window.removeEventListener('mousemove', onMove); document.removeEventListener('mouseover', onOver); };
+  }, [mouseX, mouseY]);
+  return (
+    <>
+      <motion.div className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference" style={{ x: dotX, y: dotY, translateX: "-50%", translateY: "-50%" }}>
+        <motion.div className="bg-white rounded-full" animate={{ width: hovered ? 46 : 10, height: hovered ? 46 : 10 }} transition={{ type: "spring", damping: 16, stiffness: 280 }} />
+      </motion.div>
+      <motion.div className="fixed top-0 left-0 pointer-events-none z-[9998]" style={{ x: ringX, y: ringY, translateX: "-50%", translateY: "-50%" }}>
+        <motion.div className="rounded-full border border-white/25" animate={{ width: hovered ? 72 : 38, height: hovered ? 72 : 38, borderColor: hovered ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)" }} transition={{ type: "spring", damping: 16, stiffness: 160 }} />
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Word-by-word text reveal with clip-path ───────────────────────────────
+function SplitText({ text, className, delay = 0, animate = false }: {
+  text: string; className?: string; delay?: number; animate?: boolean;
+}) {
+  const words = text.split(' ');
+  const container = { hidden: {}, visible: { transition: { staggerChildren: 0.07, delayChildren: delay } } };
+  const word = { hidden: { y: "108%", opacity: 0 }, visible: { y: "0%", opacity: 1, transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] } } };
+  return (
+    <motion.span className={className} variants={container} initial="hidden" {...(animate ? { animate: "visible" } : { whileInView: "visible", viewport: { once: true, margin: "-50px" } })} aria-label={text}>
+      {words.map((w, i) => (
+        <span key={i} className="inline-block overflow-hidden" style={{ paddingBottom: "0.08em" }}>
+          <motion.span className="inline-block will-change-transform" variants={word}>{w}&nbsp;</motion.span>
+        </span>
+      ))}
+    </motion.span>
+  );
+}
+
+// ─── Magnetic pull button ───────────────────────────────────────────────────
+function MagneticButton({ children, className, onClick, style }: {
+  children: React.ReactNode; className?: string; onClick?: () => void; style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { damping: 14, stiffness: 140, mass: 0.4 });
+  const sy = useSpring(my, { damping: 14, stiffness: 140, mass: 0.4 });
+  const move = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const r = ref.current!.getBoundingClientRect();
+    mx.set((e.clientX - r.left - r.width / 2) * 0.32);
+    my.set((e.clientY - r.top - r.height / 2) * 0.32);
+  };
+  const leave = () => { mx.set(0); my.set(0); };
+  return (
+    <motion.button ref={ref} className={className} style={{ ...style, x: sx, y: sy }} onMouseMove={move} onMouseLeave={leave} onClick={onClick} whileTap={{ scale: 0.94 }}>
+      {/* inner span ensures text nodes sit above btn-glow-pulse pseudo-elements */}
+      <span style={{ position: "relative", zIndex: 3, display: "contents" }}>{children}</span>
+    </motion.button>
+  );
+}
+
+// ─── Parallax banner — sticky-window "fall into" effect ───────────────────
+function ParallaxBanner({ src, label, ratio = "21/9", mobileRatio = "16/9", brightness = 0.65 }: {
+  src: string; label: string; ratio?: string; mobileRatio?: string; brightness?: number;
+}) {
+  // Read once at render — no listener needed; orientation changes re-mount anyway
+  const isMob = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
+  const { scrollY: globalY } = useScroll();
+  const velocity = useVelocity(globalY);
+  // Image stays nearly fixed — extreme reverse parallax gives "descending into" feel
+  const y = useTransform(scrollYProgress, [0, 1], ["4%", "-4%"]);
+  // Slow scale-in as viewer approaches: scene "opens up"
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.18, 1.1, 1.18]);
+  // Velocity-based skew — clamped to 0 on mobile to prevent iOS momentum-scroll jank
+  const rawSkew = useTransform(velocity, [-4500, 0, 4500], [isMob ? 0 : -2.5, 0, isMob ? 0 : 2.5]);
+  const skewY = useSpring(rawSkew, { damping: 60, stiffness: 350 });
+  // Brightness lifts as image enters full view
+  const imgBrightness = useTransform(scrollYProgress, [0, 0.5, 1], [brightness * 0.7, brightness, brightness * 0.7]);
+  const imgFilter = useTransform(imgBrightness, (b) => `brightness(${b}) contrast(1.12) saturate(0.78)`);
+  return (
+    <motion.div
+      ref={containerRef}
+      initial={{ opacity: 0, clipPath: "inset(12% 0 12% 0 round 32px)" }}
+      whileInView={{ opacity: 1, clipPath: "inset(0% 0 0% 0 round 32px)" }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full overflow-hidden rounded-[2rem]"
+      style={{ aspectRatio: isMob ? mobileRatio : ratio, skewY: isMob ? 0 : skewY }}
+    >
+      <motion.div className="absolute inset-0 will-change-transform" style={{ y, scale }}>
+        <motion.img
+          src={src}
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover object-center"
+          style={{ filter: imgFilter }}
+        />
+      </motion.div>
+      {/* Deep vignette — heavier bottom shadow for cave/depth sensation */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/28 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/18 pointer-events-none" />
+      {/* Corner edge darkening — cinematic letterbox feel */}
+      <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 0 120px rgba(0,0,0,0.55)" }} />
+      <div className="absolute bottom-7 left-9 flex items-center gap-3">
+        <motion.div initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="h-px w-6 bg-white/25 origin-left" />
+        <motion.span initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.9, duration: 0.5 }} className="font-michroma text-[7.5px] tracking-[0.35em] uppercase text-white/30">{label}</motion.span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Ambient cursor-follow glow ────────────────────────────────────────────
+function AmbientGlow() {
+  const mouseX = useMotionValue(-400);
+  const mouseY = useMotionValue(-400);
+  const x = useSpring(mouseX, { damping: 45, stiffness: 120, mass: 1.2 });
+  const y = useSpring(mouseY, { damping: 45, stiffness: 120, mass: 1.2 });
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { mouseX.set(e.clientX); mouseY.set(e.clientY); };
+    window.addEventListener('mousemove', fn);
+    return () => window.removeEventListener('mousemove', fn);
+  }, [mouseX, mouseY]);
+  return (
+    <motion.div
+      className="fixed top-0 left-0 pointer-events-none z-[1] hidden lg:block"
+      style={{ x, y, translateX: "-50%", translateY: "-50%" }}
+    >
+      <div style={{ width: 600, height: 600, background: "radial-gradient(circle, rgba(255,255,255,0.028) 0%, transparent 70%)", borderRadius: "50%" }} />
+    </motion.div>
+  );
+}
+
+// ─── Ghost section number (editorial luxury) ───────────────────────────────
+function GhostNum({ n }: { n: string }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["8%", "-8%"]);
+  return (
+    <motion.div ref={ref} className="absolute right-0 top-0 pointer-events-none select-none overflow-hidden hidden lg:block" style={{ y }}>
+      <span className="font-michroma leading-none" style={{ fontSize: "clamp(6rem,18vw,16rem)", color: "transparent", WebkitTextStroke: "1px rgba(255,255,255,0.045)", letterSpacing: "-0.02em" }}>{n}</span>
+    </motion.div>
+  );
+}
+
+// ─── Animated count-up number ──────────────────────────────────────────────
+function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const [val, setVal] = React.useState(0);
+  useEffect(() => {
+    if (!isInView) return;
+    const steps = 60; const duration = 1400; let frame = 0;
+    const timer = setInterval(() => { frame++; setVal(Math.min(to, Math.round((to / steps) * frame))); if (frame >= steps) clearInterval(timer); }, duration / steps);
+    return () => clearInterval(timer);
+  }, [isInView, to]);
+  return <span ref={ref}>{val}{suffix}</span>;
+}
 
 export default function App() {
   // Navigation & Page State
@@ -72,22 +244,27 @@ export default function App() {
     "[READY] Awaiting custom pipeline telemetry signals..."
   ]);
 
-  // Agreement Quote Builder / SLA Form State
-  const [estimateVolume, setEstimateVolume] = useState<number>(250); // in thousands
-  const [slaTier, setSlaTier] = useState<"standard" | "gold" | "defence">("gold");
-  const [connectors, setConnectors] = useState({
-    stripe: true,
-    crm: true,
-    shopify: false,
-    gmail: true,
-    database: false
-  });
-  const [isQuoteLocked, setIsQuoteLocked] = useState(false);
+  // Contact / Booking Form State
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactService, setContactService] = useState<string[]>([]);
+  const [contactMessage, setContactMessage] = useState("");
+  const [isContactSubmitted, setIsContactSubmitted] = useState(false);
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    window.matchMedia("(max-width: 768px), (pointer: coarse)").matches
+  );
   const [theme, setTheme] = useState<"black" | "slate" | "summit">(() => {
     const saved = localStorage.getItem("arka_theme");
     return (saved === "slate" || saved === "black" || saved === "summit") ? saved as any : "black";
   });
+
+  // Scroll progress + velocity-based page skew
+  const { scrollYProgress, scrollY: scrollYMV } = useScroll();
+  const progressScaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const scrollVelocity = useVelocity(scrollYMV);
+  const rawPageSkew = useTransform(scrollVelocity, [-6000, 0, 6000], [-0.7, 0, 0.7]);
+  const pageSkewY = useSpring(rawPageSkew, { damping: 65, stiffness: 420 });
 
   // Welcome Gate / Portal State
   const [isPortalEntered, setIsPortalEntered] = useState<boolean>(() => {
@@ -148,6 +325,14 @@ export default function App() {
     }, 100);
   };
 
+  // Keep isMobile in sync with orientation/resize
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    const update = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   // Track cursor spotlight + scroll parallax.
   // On touch / small screens we skip continuous tracking entirely so the
   // page scrolls natively at 60fps (no per-frame React re-renders). On
@@ -158,10 +343,30 @@ export default function App() {
       window.matchMedia("(max-width: 768px)").matches;
 
     if (lowPower) {
-      // Center the spotlight once and do nothing else — buttery scrolling.
+      // Center the spotlight once — no per-move repaint on touch.
       document.documentElement.style.setProperty("--x-mouse", "50%");
       document.documentElement.style.setProperty("--y-mouse", "50%");
-      return;
+      // Still need header state to update when user crosses 24px — but only
+      // fire a React re-render when the threshold is actually crossed so we
+      // don't trigger 60 re-renders per second on every scroll frame.
+      let wasScrolled = false;
+      let raf = 0;
+      const mobileScroll = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const nowScrolled = window.scrollY > 24;
+          if (nowScrolled !== wasScrolled) {
+            wasScrolled = nowScrolled;
+            setScrollY(window.scrollY);
+          }
+        });
+      };
+      window.addEventListener("scroll", mobileScroll, { passive: true });
+      return () => {
+        if (raf) cancelAnimationFrame(raf);
+        window.removeEventListener("scroll", mobileScroll);
+      };
     }
 
     let mouseRaf = 0;
@@ -364,7 +569,7 @@ export default function App() {
     setTimeout(() => {
       let botResponse = "Our technical engineers can connect your APIs instantly.";
       if (userMsg.toLowerCase().includes("pricing") || userMsg.toLowerCase().includes("cost")) {
-        botResponse = "Custom ARKA automation microservices start at $950/mo. Access our Strategic Quote Builder in the main navbar for a precise ROI calculation!";
+        botResponse = "Book a free 30-minute strategy call and we'll scope the exact solution for your business — no commitment required.";
       } else if (userMsg.toLowerCase().includes("scale") || userMsg.toLowerCase().includes("speed")) {
         botResponse = "We achieve sub-100ms response rates globally by caching chatbot models directly at our geographical CDN edge gateways.";
       } else if (userMsg.toLowerCase().includes("reliability") || userMsg.toLowerCase().includes("safe")) {
@@ -422,19 +627,8 @@ export default function App() {
     }, 400);
   };
 
-  // Calculate pricing estimates based on SLA inputs
-  const calculatedPrice = () => {
-    let base = 500;
-    // Volume multiplier
-    base += (estimateVolume / 10) * 12;
-    // SLA Tiers
-    if (slaTier === "gold") base += 450;
-    if (slaTier === "defence") base += 1200;
-    // Connectors Count
-    const selectedCount = Object.values(connectors).filter(Boolean).length;
-    base += selectedCount * 80;
-
-    return Math.round(base);
+  const toggleContactService = (svc: string) => {
+    setContactService((prev) => prev.includes(svc) ? prev.filter((s) => s !== svc) : [...prev, svc]);
   };
 
   return (
@@ -503,7 +697,7 @@ export default function App() {
                     </p>
                     <button
                       onClick={handlePortalInitialize}
-                      className="w-full mt-1 py-2.5 px-6 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer active:scale-98"
+                      className="w-full mt-1 py-4 px-6 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer active:scale-98"
                     >
                       INITIALISE SECURE ENTRY
                     </button>
@@ -511,11 +705,11 @@ export default function App() {
                 ) : (
                   <div className="w-full py-4 flex flex-col justify-center">
                     {/* Custom sleek progress bar, pure white with high-contrast ambient halo, zero secondary text */}
-                    <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-[1.5px] bg-white/10 rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-                        style={{ width: `${portalProgress}%` }}
-                        transition={{ ease: "easeInOut" }}
+                        className="h-full w-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] origin-left"
+                        animate={{ scaleX: portalProgress / 100 }}
+                        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.35 }}
                       />
                     </div>
                   </div>
@@ -528,7 +722,7 @@ export default function App() {
                   localStorage.setItem("arka_portal_entered", "true");
                   addRegistryLog("[SYS] Skipped splash entry page: direct terminal access granted.");
                 }}
-                className="mt-5 text-[8.5px] sm:text-[10px] font-mono tracking-wider uppercase text-white/30 hover:text-white/60 transition-colors cursor-pointer"
+                className="mt-2 py-3 px-4 text-[10px] font-michroma tracking-wider uppercase text-white/30 hover:text-white/60 transition-colors cursor-pointer"
               >
                 skip secure handshake &rarr;
               </button>
@@ -539,6 +733,39 @@ export default function App() {
 
       {isPortalEntered && (
         <>
+          {/* Horizontal scroll progress line — color matches theme accent */}
+          <motion.div
+            className="fixed top-0 left-0 right-0 z-[60] origin-left pointer-events-none"
+            style={{
+              scaleX: progressScaleX,
+              height: "1.5px",
+              background: theme === "slate"
+                ? "linear-gradient(to right, rgba(80,160,255,0.9), rgba(120,200,255,0.6))"
+                : theme === "summit"
+                ? "linear-gradient(to right, rgba(210,165,80,0.9), rgba(240,200,120,0.6))"
+                : "rgba(255,255,255,0.85)",
+              boxShadow: theme === "slate"
+                ? "0 0 8px rgba(80,160,255,0.5)"
+                : theme === "summit"
+                ? "0 0 8px rgba(210,165,80,0.5)"
+                : "0 0 6px rgba(255,255,255,0.35)",
+            }}
+          />
+          {/* Vertical scroll progress line — left edge */}
+          <motion.div
+            className="fixed left-0 top-0 bottom-0 z-[59] origin-top pointer-events-none hidden lg:block"
+            style={{
+              scaleY: progressScaleX,
+              width: "1px",
+              background: theme === "slate"
+                ? "linear-gradient(to bottom, rgba(80,160,255,0.5), rgba(80,160,255,0.06))"
+                : theme === "summit"
+                ? "linear-gradient(to bottom, rgba(210,165,80,0.5), rgba(210,165,80,0.06))"
+                : "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.08))",
+            }}
+          />
+          {/* Ambient cursor-follow glow */}
+          <AmbientGlow />
           {/* Cool hyperspace travel portal dimension transition effect */}
           <TravelDimensionWarp isActive={isWarping} stage={warpStage} type={warpType} />
 
@@ -552,30 +779,41 @@ export default function App() {
               onError={handleBgImageError}
               className="absolute inset-0 w-full h-full object-cover object-[center_35%] sm:object-center origin-center select-none"
               style={{
-                transform: isWarping 
-                  ? "scale(1.08)" 
-                  : `scale(1.06) translateY(${scrollY * -0.06}px)`,
+                transform: isWarping
+                  ? "scale(1.12)"
+                  : `scale(${1.08 + scrollY * 0.00012}) translateY(${scrollY * -0.04}px)`,
                 opacity: isWarping ? 0.75 : 1.0,
-                filter: isWarping 
-                  ? "grayscale(100%) contrast(245%) brightness(95%) blur(5px)" 
+                filter: isWarping
+                  ? "grayscale(100%) contrast(245%) brightness(95%) blur(5px)"
                   : "grayscale(100%) contrast(245%) brightness(82%) blur(0px)",
-                transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1)"
+                transition: isWarping ? "all 0.9s cubic-bezier(0.16, 1, 0.3, 1)" : "filter 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1)"
+              }}
+            />
+          </div>
+        ) : theme === "black" ? (
+          <div className="absolute inset-0 w-full h-full bg-black">
+            <img
+              src="/deep-black-hero.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover select-none"
+              style={{
+                objectPosition: "center center",
+                transform: isMobile
+                  ? "scale(1.0) translateZ(0)"
+                  : isWarping
+                    ? "scale(1.10) translateZ(0)"
+                    : `scale(${1.03 + scrollY * 0.00009}) translateY(${scrollY * -0.025}px) translateZ(0)`,
+                opacity: isWarping ? 0.65 : 1,
+                filter: isWarping ? "brightness(75%) blur(5px)" : "brightness(108%) saturate(105%) blur(0px)",
+                transition: "transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s cubic-bezier(0.16,1,0.3,1), filter 0.9s cubic-bezier(0.16,1,0.3,1)",
+                willChange: "transform, opacity",
               }}
             />
           </div>
         ) : (
           <>
-            {/* Mobile: reliable static gradient backdrop. Autoplay video is
-                paused by iOS Safari in Low Power Mode and is GPU-heavy, so
-                phones get a clean themed gradient instead. */}
-            <div
-              className={`md:hidden absolute inset-0 w-full h-full ${
-                theme === "slate"
-                  ? "bg-[radial-gradient(125%_90%_at_50%_0%,#1b2742_0%,#0b0f19_45%,#05070d_100%)]"
-                  : "bg-[radial-gradient(125%_90%_at_50%_0%,#171327_0%,#0a0812_45%,#040308_100%)]"
-              }`}
-            />
-            {/* Desktop: cinematic video */}
+            {/* Video background — all screen sizes */}
             <video
               id="bloom_video_bg"
               autoPlay
@@ -583,13 +821,9 @@ export default function App() {
               muted
               playsInline
               style={{ objectFit: "cover" }}
-              className={`hidden md:block absolute inset-0 w-full h-full object-cover pointer-events-none filter transition-all duration-1000 ${
+              className={`absolute inset-0 w-full h-full object-cover pointer-events-none filter transition-all duration-1000 ${
                 isWarping ? "scale-105 blur-[6px]" : "scale-102"
-              } ${
-                theme === "slate"
-                  ? "saturate-[0.8] brightness-[0.6] contrast-125"
-                  : "saturate-50 brightness-70 contrast-115"
-              }`}
+              } saturate-[0.8] brightness-[0.6] contrast-125`}
             >
               <source
                 src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"
@@ -598,55 +832,33 @@ export default function App() {
             </video>
           </>
         )}
-        {/* Apple iOS high dynamic physical shading mask overlay - lighter in summit mode to expose detail */}
-        <div className={`absolute inset-0 transition-all duration-700 ${theme === "slate" ? "bg-slate-950/35" : theme === "summit" ? "bg-black/15" : "bg-black/25"}`} />
-        <div className="absolute inset-0 apple-cinematic-vignette opacity-[0.75] transition-all duration-700" />
+        {/* Overlay — deep black theme keeps overlay near-zero; vignette handles edge darkening */}
+        <div className={`absolute inset-0 transition-all duration-700 ${theme === "slate" ? "bg-slate-950/35" : theme === "summit" ? "bg-black/15" : "bg-black/[0.08]"}`} />
+        <div className={`absolute inset-0 apple-cinematic-vignette transition-all duration-700 ${theme === "black" ? "opacity-[0.22]" : "opacity-[0.75]"}`} />
       </div>
 
-      {/* Floating Ambient Glow particles */}
-      <div className={`fixed top-[15%] left-1/4 w-[400px] h-[400px] rounded-full transition-all duration-1000 blur-[140px] pointer-events-none z-0 ${theme === "slate" ? "bg-blue-600/18" : theme === "summit" ? "bg-zinc-800/10" : "bg-indigo-500/12"}`} />
-      <div className={`fixed bottom-[15%] right-1/4 w-[400px] h-[400px] rounded-full transition-all duration-1000 blur-[140px] pointer-events-none z-0 ${theme === "slate" ? "bg-indigo-600/18" : theme === "summit" ? "bg-white/[0.02]" : "bg-cyan-500/12"}`} />
+
+      {/* Floating Ambient Glow particles — only on slate/summit themes */}
+      {theme !== "black" && (
+        <>
+          <div className={`fixed top-[15%] left-1/4 w-[400px] h-[400px] rounded-full transition-all duration-1000 blur-[140px] pointer-events-none z-0 ${theme === "slate" ? "bg-blue-600/18" : "bg-zinc-800/10"}`} />
+          <div className={`fixed bottom-[15%] right-1/4 w-[400px] h-[400px] rounded-full transition-all duration-1000 blur-[140px] pointer-events-none z-0 ${theme === "slate" ? "bg-indigo-600/18" : "bg-white/[0.02]"}`} />
+        </>
+      )}
 
       {/* ================= STICKY COHESIVE HEADER NAVIGATION ================= */}
-      <header className="sticky top-0 z-40 w-full px-4 py-3 md:px-12 md:py-4 border-b border-transparent bg-transparent transition-all duration-500 overflow-hidden">
-        {/* Dynamic spot lighting glare layer following mouse cursor or finger touch */}
+      <header data-scrolled={scrollY > 24 ? "true" : "false"} className="sticky top-0 z-40 w-full px-4 py-3 md:px-12 md:py-4 border-b border-transparent bg-transparent transition-all duration-500 overflow-hidden">
+        {/* Cursor-follow spotlight — static on touch, animated on desktop */}
         <div className="absolute inset-0 apple-spotlight-bg opacity-35 z-0 pointer-events-none" />
-        
-        {/* Dynamic scroll-velocity shimmer reflection sweep */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent w-[300%] h-full pointer-events-none transition-transform duration-300 ease-out z-0"
-          style={{
-            transform: `translateX(calc(-50% + ${(scrollY % 500) * 1.2}px))`
-          }}
-        />
 
-        {/* Dynamic scrolling specular spark particles simulating physical Apple-style crystal reflection */}
-        <div className="absolute inset-x-0 bottom-0 top-0 overflow-hidden pointer-events-none z-0">
-          {[...Array(8)].map((_, i) => {
-            const xOffset = (i * 12.5) + 6;
-            const scrollFactor = (scrollY * (0.2 + i * 0.1)) % 70;
-            return (
-              <div 
-                key={i}
-                className="absolute w-[1.2px] h-[1.2px] rounded-full bg-white/70 transition-all duration-150 ease-out"
-                style={{
-                  left: `${xOffset}%`,
-                  top: `${15 + (scrollFactor % 40)}px`,
-                  opacity: Math.max(0, Math.sin((scrollY + i * 40) * 0.04)) * 0.4,
-                  transform: `scale(${1 + Math.sin(scrollY * 0.06) * 0.6})`,
-                  boxShadow: "0 0 4px rgba(255, 255, 255, 0.4)",
-                  filter: "blur(0.2px)"
-                }}
-              />
-            );
-          })}
-        </div>
+        {/* CSS-only shimmer sweep — zero JS, zero re-renders */}
+        <div className="header-shimmer-sweep z-0" />
 
         <div className="max-w-7xl mx-auto flex items-center justify-between relative z-10">
           
           {/* Logo & Platform Status Tag */}
           <div className="flex items-center gap-3 md:gap-4.5 group cursor-pointer" onClick={() => { setCurrentTab("overview"); addRegistryLog("[NAV] Navigated to home via Logo click"); }}>
-            <Logo className="w-10 h-10 md:w-14 md:h-14 text-white filter drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] transition-all duration-500 group-hover:scale-105" />
+            <Logo className="w-10 h-10 md:w-14 md:h-14 text-white filter drop-shadow-[0_0_12px_rgba(255,255,255,0.35)] transition-all duration-300 group-hover:scale-[1.06] group-hover:drop-shadow-[0_0_18px_rgba(255,255,255,0.5)]" />
             <div className="flex flex-col text-left">
               <span className="font-sans font-black text-lg md:text-2xl tracking-[0.18em] text-white uppercase leading-none transition-colors group-hover:text-neutral-100">ARKA</span>
               <span className="text-[9px] md:text-[10px] text-white/40 lowercase tracking-[0.1em] font-mono mt-0.5 md:mt-1">systems.global</span>
@@ -654,20 +866,14 @@ export default function App() {
           </div>
 
           {/* Desktop Tab Navigation Links */}
-          <nav className={`hidden lg:flex items-center gap-1.5 border p-1 rounded-full relative transition-all duration-500 ${
-            theme === "slate"
-              ? "bg-slate-950/40 border-blue-500/10"
-              : "bg-white/[0.03] border-white/[0.05]"
-          }`}>
+          <nav className="hidden lg:flex items-center gap-8">
             {[
-              { id: "overview", label: "Overview" },
-              { id: "solutions", label: "Solutions" },
-              { id: "design", label: "Web Design" },
-              { id: "lab", label: "Lab" },
-              { id: "registry", label: "Registry" },
-              { id: "globe", label: "Telemetry" },
+              { id: "overview", label: "Home" },
+              { id: "solutions", label: "Services" },
               { id: "pingscan", label: "Scanner" },
-              { id: "quote", label: "Quote" }
+              { id: "lab", label: "Work" },
+              { id: "registry", label: "Registry" },
+              { id: "quote", label: "Contact" }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -675,68 +881,41 @@ export default function App() {
                   setCurrentTab(tab.id as any);
                   addRegistryLog(`[NAV] Navigated to page: ${tab.label}`);
                 }}
-                className="relative px-5 py-2 rounded-full text-xs transition-all duration-300 tracking-wide font-semibold focus:outline-none"
               >
-                <span className={`relative z-10 transition-colors duration-300 ${
-                  currentTab === tab.id
-                    ? (theme === "slate" ? "text-blue-950 font-extrabold" : "text-black")
-                    : "text-white/60 hover:text-white"
+                <span className={`nav-link font-michroma text-[9px] tracking-[0.18em] uppercase transition-colors duration-250 ${
+                  currentTab === tab.id ? "text-white nav-link-active" : "text-white/35 hover:text-white/65"
                 }`}>
                   {tab.label}
                 </span>
-                {currentTab === tab.id && (
-                  <motion.div
-                    layoutId="active_tab_hologram"
-                    className={`absolute inset-0 rounded-full z-0 transition-colors duration-500 ${
-                      theme === "slate" ? "bg-cyan-200" : "bg-white"
-                    }`}
-                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                  />
-                )}
               </button>
             ))}
           </nav>
 
           {/* Header Actions */}
-          <div className="flex items-center gap-2">
-            {/* Aesthetic Theme Switcher Pin */}
+          <div className="flex items-center gap-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleTheme}
-              className={`p-2.5 rounded-full border transition-all duration-500 flex items-center justify-center cursor-pointer ${
-                theme === "slate"
-                  ? "bg-slate-900 border-blue-500/30 text-blue-400 hover:bg-slate-850"
-                  : theme === "summit"
-                    ? "bg-[#18181b] border-zinc-700 text-zinc-100 hover:bg-zinc-850"
-                    : "bg-white/5 border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white"
-              }`}
-              title={
-                theme === "slate"
-                  ? "Switch to Cinematic Summit Theme"
-                  : theme === "summit"
-                    ? "Switch to Deep Black Theme"
-                    : "Switch to Charcoal Slate Theme"
-              }
+              className="w-11 h-11 flex items-center justify-center text-white/30 hover:text-white/70 transition-colors cursor-pointer"
+              title={theme === "slate" ? "Cinematic Summit" : theme === "summit" ? "Deep Black" : "Charcoal Slate"}
             >
               {theme === "slate" ? (
-                <Sun className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-300 animate-[spin_8s_linear_infinite]" />
+                <Sun className="w-4 h-4" />
               ) : theme === "summit" ? (
-                <Mountain className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-200" />
+                <Mountain className="w-4 h-4" />
               ) : (
-                <Moon className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-200" />
+                <Moon className="w-4 h-4" />
               )}
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.97 }}
+            <button
               id="btn_nav_menu"
               onClick={() => setIsMenuOpen(true)}
-              className="px-5 py-2.5 md:px-6 md:py-3 rounded-full text-xs font-semibold uppercase tracking-widest text-white border border-white/10 hover:bg-white/5 bg-transparent transition-all cursor-pointer interactive"
+              className="px-4 py-3 text-[10px] font-michroma tracking-[0.18em] uppercase text-white/35 hover:text-white/70 transition-colors cursor-pointer"
             >
-              Console Menu
-            </motion.button>
+              Menu
+            </button>
           </div>
         </div>
       </header>
@@ -744,7 +923,7 @@ export default function App() {
       {/* ================= PRIMARY CONTENT AREA WITH MOTION SWITCHER ================= */}
       <main 
         id="main_viewport" 
-        className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 md:px-8 py-3.5 sm:py-6 md:py-8 min-h-[calc(100dvh-72px)] sm:min-h-[calc(100vh-100px)] flex flex-col justify-between transition-all duration-700 w-full"
+        className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 md:px-8 py-3.5 sm:py-6 md:py-8 flex flex-col transition-all duration-700 w-full"
         style={{
           transformStyle: "preserve-3d",
           transform: isWarping 
@@ -758,522 +937,864 @@ export default function App() {
         }}
       >
         
+        {/* Velocity skew wrapper — GPU composited, only transform/opacity */}
+        <motion.div style={{ skewY: isMobile ? 0 : pageSkewY }} className="will-change-transform" data-scroll-skew="true">
         <AnimatePresence mode="wait">
-          
+
           {/* PAGE 1: OVERVIEW / HOMEPAGE */}
           {currentTab === "overview" && (
             <motion.div
               key="overview-page"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.22 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center py-10 md:py-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col pb-24"
             >
-              {/* Left Column: Visionary copy and CTA buttons */}
-              <div className="lg:col-span-6 flex flex-col text-left gap-8 pr-0 lg:pr-8">
-                
-                {/* Visionary title */}
 
-                <h1 className="font-sans font-medium text-4xl sm:text-5xl lg:text-[4.2rem] tracking-[-0.04em] leading-[1.02] text-white">
-                  Automate systems. <br />
-                  <span className="font-sans text-white/80 font-normal">Build with ARKA.</span>
-                </h1>
+              {/* ── SECTION 1: HERO ─────────────────────────────────── */}
+              <div className="relative flex flex-col justify-between min-h-[calc(100dvh-80px)] py-10 sm:py-16 pb-16 overflow-hidden">
+                <GhostNum n="01" />
 
-                <p className="text-sm md:text-base font-sans font-light text-white/50 leading-relaxed max-w-xl">
-                  We architect tailored conversational chatbots, orchestrate deep API workflow automations, and craft high-end immersive web designs to help companies scale with absolute precision.
-                </p>
-
-                {/* Quiet layout spacer */}
-                <div className="pt-2" />
-
-                {/* Call To Actions */}
-                <div className="flex flex-wrap items-center gap-4 mt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.03, y: -1 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      setCurrentTab("lab");
-                      addRegistryLog("[NAV] Navigated to lab workbench");
-                    }}
-                    className="px-8 py-4.5 rounded-full text-xs font-bold tracking-widest bg-white text-black hover:bg-neutral-100 transition-all uppercase flex items-center gap-3 shadow-xl cursor-pointer interactive"
-                  >
-                    Open Workstation
-                    <ArrowRight className="w-4 h-4 text-black" />
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02, bg: "rgba(255,255,255,0.06)" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setCurrentTab("solutions");
-                      addRegistryLog("[NAV] Navigated to solutions matrix");
-                    }}
-                    className="px-6 py-4 rounded-full text-xs font-semibold text-white/80 border border-white/10 hover:bg-white/5 transition-all cursor-pointer"
-                  >
-                    Explore Matrix &rarr;
-                  </motion.button>
-                </div>
-              </div>
-
-              {/* Right Column: Globe showcased with beautiful, free-floating transparency (Scroll Parallax Dynamic Depth) */}
-              <div 
-                className="lg:col-span-6 flex flex-col items-center justify-center relative transition-transform duration-300 ease-out"
-                style={{ transform: `translateY(${Math.min(30, Math.max(-30, scrollY * -0.05))}px)`, willChange: "transform" }}
-              >
-                <div className="w-full max-w-lg aspect-square rounded-[3rem] relative flex items-center justify-center p-4">
-                  
-                  {/* Subtle decorative glow ring behind globe only */}
-                  <div className="absolute inset-0 rounded-full border border-white/[0.02] bg-white/[0.01] pointer-events-none" />
-
-                  <div className="w-full h-full flex items-center justify-center scale-95 md:scale-100">
-                    <StructureSimulator />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px w-6 bg-white/20" />
+                    <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · SYSTEMS GLOBAL</span>
                   </div>
+                  <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8, duration: 0.5 }} className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03]">
+                    <span className="font-michroma text-[7px] tracking-[0.3em] uppercase text-white/30">Available for new projects</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                  </motion.div>
+                </motion.div>
 
-                  <button
-                    onClick={() => setCurrentTab("globe")}
-                    className="absolute bottom-6 bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-xl px-4 py-2 rounded-full text-[10px] font-mono tracking-widest uppercase text-white/50 flex items-center gap-2 transition-all interactive"
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col gap-0 -mt-4 sm:mt-0">
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden">
+                      <motion.span
+                        initial={{ y: "110%", opacity: 0 }}
+                        animate={{ y: "0%", opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-white block"
+                      >Digital</motion.span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <motion.span
+                        initial={{ y: "110%", opacity: 0 }}
+                        animate={{ y: "0%", opacity: 1 }}
+                        transition={{ delay: 0.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                        className="block"
+                        style={{ color: "rgba(255,255,255,0.18)" }}
+                      >Infrastructure.</motion.span>
+                    </div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      We build the digital systems that modern companies scale on — websites, AI automation, and infrastructure that doesn't break.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col gap-8">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                    <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to booking"); }} className="btn-glow-pulse w-full sm:w-auto px-8 py-4 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                      Book a Free Call <ArrowRight className="w-3 h-3" />
+                    </MagneticButton>
+                    <MagneticButton onClick={() => { setCurrentTab("solutions"); addRegistryLog("[NAV] Navigated to solutions"); }} className="py-3 font-michroma text-[9px] tracking-[0.2em] uppercase text-white/30 hover:text-white/65 transition-colors duration-200 flex items-center gap-2">
+                      Explore Services <ArrowRight className="w-3 h-3" />
+                    </MagneticButton>
+                  </div>
+                  <motion.div
+                    className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-5"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65, duration: 0.6 }}
                   >
-                    <Globe className="w-4 h-4 text-cyan-400 animate-[spin_10s_linear_infinite]" /> Live Telemetry Detail &rarr;
-                  </button>
+                    {[{ val: "12+", label: "Clients Delivered" }, { val: "4", label: "Countries" }, { val: "30 days", label: "Avg Time to ROI" }, { val: "99.9%", label: "Uptime SLA" }].map((item, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.7 + i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex items-baseline gap-1.5">
+                        <span className="font-michroma text-[11px] text-white/70 stat-val">{item.val}</span>
+                        <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </motion.div>
+
+                {/* Scroll down indicator */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2, duration: 0.8 }} className="absolute bottom-20 left-0 flex items-center gap-3 hidden sm:flex">
+                  <div className="scroll-indicator w-px h-10 bg-white/20" />
+                  <span className="font-michroma text-[7px] tracking-[0.3em] uppercase text-white/20">Scroll</span>
+                </motion.div>
+
+                {/* Capability marquee ticker */}
+                <div className="absolute bottom-0 left-0 right-0 border-t border-white/[0.04] py-4 marquee-outer">
+                  <div className="marquee-inner">
+                    {[...Array(2)].flatMap((_, rep) =>
+                      ["AI Automation", "Web Design", "AI Lead Generation", "Chatbots", "Marketing Automation", "AI Apps", "Edge Infrastructure", "Systems Integration", "ISO-27001", "99.9% Uptime"].map((item, i) => (
+                        <React.Fragment key={`${rep}-${i}`}>
+                          <span className="font-michroma text-[8px] tracking-[0.22em] uppercase text-white/18 whitespace-nowrap">{item}</span>
+                          <span className="text-white/10 mx-6">·</span>
+                        </React.Fragment>
+                      ))
+                    )}
+                  </div>
                 </div>
+
               </div>
+
+              {/* ── SECTION 2: FEATURED SERVICES ────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06]"
+              >
+                <div className="relative flex flex-col gap-3 mb-12">
+                  <GhostNum n="02" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">What We Build</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Core Capabilities" />
+                  </h2>
+                </div>
+
+                <div className="mb-12">
+                  <ParallaxBanner src="/rocket-hangar.png" label="ARKA · Systems Infrastructure" ratio="16/7" brightness={0.82} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.04]">
+                  {[
+                    { num: "01", name: "AI Automation", desc: "End-to-end systems that handle lead follow-up, CRM syncing, scheduling, and repetitive workflows — around the clock.", tag: "Most Popular" },
+                    { num: "02", name: "AI Lead Generation", desc: "AI systems that find, qualify, and nurture high-intent prospects on autopilot. More pipeline, less manual outreach.", tag: "High ROI" },
+                    { num: "03", name: "Web Design & Dev", desc: "Fast, conversion-focused websites built mobile-first. AI-enhanced design that loads instantly and actually converts.", tag: "Fast Delivery" },
+                  ].map((s, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ delay: i * 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ backgroundColor: "rgba(255,255,255,0.03)", y: -4, transition: { duration: 0.25 } }}
+                      onClick={() => { setCurrentTab("solutions"); }}
+                      className="flex flex-col gap-4 p-6 sm:p-8 glass-card cursor-pointer group glow-border"
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="font-michroma text-[9px] tracking-widest text-white/20">{s.num}</span>
+                        <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20 border border-white/10 px-2 py-1 rounded-full">{s.tag}</span>
+                      </div>
+                      <h3 className="font-sans font-light text-xl tracking-[0.04em] uppercase text-white/80 group-hover:text-white transition-colors duration-200">{s.name}</h3>
+                      <p className="text-[12px] text-white/30 font-light leading-relaxed tracking-wide flex-1 group-hover:text-white/45 transition-colors duration-200">{s.desc}</p>
+                      <div className="flex items-center gap-2 font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 group-hover:text-white/40 transition-colors duration-200">
+                        Learn more <ArrowRight className="w-3 h-3" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-8 text-center">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setCurrentTab("solutions")} className="font-michroma text-[9px] tracking-[0.2em] uppercase text-white/30 hover:text-white/60 transition-colors duration-200 cursor-pointer flex items-center gap-2 mx-auto">
+                    View all 6 services <ArrowRight className="w-3 h-3" />
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* ── CINEMATIC DIVIDER: CONCRETE ─── */}
+              <ParallaxBanner src="/img-concrete.png" label="ARKA · Infrastructure" />
+
+              {/* ── SECTION 3: HOW IT WORKS ─────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                  <div className="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24 relative">
+                    <GhostNum n="03" />
+                    <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">The Process</motion.span>
+                    <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                      <SplitText text="How ARKA Works" />
+                    </h2>
+                    <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide">
+                      From first call to live system in under two weeks. No retainers until the system is working.
+                    </p>
+                    <MagneticButton onClick={() => setCurrentTab("quote")} className="mt-4 w-fit px-6 py-3 rounded-full font-michroma text-[9px] tracking-[0.18em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center gap-2">
+                      Start now <ArrowRight className="w-3 h-3" />
+                    </MagneticButton>
+                  </div>
+                  <div className="lg:col-span-8 flex flex-col gap-0 border-t border-white/[0.06]">
+                    {[
+                      { step: "01", title: "Discovery Call", time: "30 min", desc: "We map your existing workflows, identify the highest-ROI automation opportunities, and scope the build. No fluff, no upsell." },
+                      { step: "02", title: "Custom Build", time: "5–10 days", desc: "We build the system end-to-end — automation flows, AI integrations, CRM connections, and testing. You get daily progress updates." },
+                      { step: "03", title: "Deploy & Monitor", time: "Ongoing", desc: "System goes live. We monitor, iterate, and handle any issues. Most clients see ROI within the first 30 days." },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex gap-6 sm:gap-10 py-8 border-b border-white/[0.06] group step-row"
+                      >
+                        <div className="flex flex-col items-center gap-2 shrink-0 pt-1">
+                          <span className="font-michroma text-[9px] tracking-widest text-white/20">{item.step}</span>
+                          <div className="w-px flex-1 bg-white/[0.06]" />
+                        </div>
+                        <div className="flex flex-col gap-2 flex-1">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <h3 className="font-sans font-light text-lg sm:text-xl tracking-[0.04em] uppercase text-white/80 group-hover:text-white transition-colors duration-200">{item.title}</h3>
+                            <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/25 border border-white/10 px-2.5 py-1 rounded-full">{item.time}</span>
+                          </div>
+                          <p className="text-[13px] text-white/35 font-light leading-relaxed tracking-wide">{item.desc}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 4: WHY ARKA ─────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-space"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <GhostNum n="04" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Why ARKA</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Not an Agency." /><br />
+                    <SplitText text="A Systems Operator." delay={0.2} />
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04]">
+                  {[
+                    { val: "Solo-built", label: "No agency overhead. One senior operator builds and runs every system." },
+                    { val: "5–10 days", label: "Average delivery time from signed contract to live system." },
+                    { val: "Month-to-month", label: "No lock-in contracts. If it's not working, cancel anytime." },
+                    { val: "US & Canada", label: "We operate in your timezone. Available remotely across North America." },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ delay: i * 0.1, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ backgroundColor: "rgba(255,255,255,0.025)" }}
+                      className="flex flex-col gap-3 p-6 sm:p-8 glass-card transition-colors duration-300 glow-border"
+                    >
+                      <span className="font-sans font-light text-2xl sm:text-3xl text-white tracking-tight">{item.val}</span>
+                      <p className="text-[12px] text-white/30 font-light leading-relaxed tracking-wide">{item.label}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 5: CLIENT RESULTS ───────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-solutions"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <GhostNum n="05" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Social Proof</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="What clients say." />
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.04]">
+                  {[
+                    { quote: "ARKA automated our entire follow-up sequence. Response times dropped from days to under 4 minutes. We closed 3× more deals in the first month.", name: "Marcus T.", role: "Founder, Commercial Real Estate Group", metric: "3× more closed deals" },
+                    { quote: "The website ARKA built converts at 6.8%. Our previous agency delivered 0.4%. The difference is night and day — and it took 7 days to ship.", name: "Sarah K.", role: "CMO, B2B SaaS Platform", metric: "6.8% conversion rate" },
+                    { quote: "We eliminated 15 manual tasks daily across sales and ops. My team now spends 100% of their time on growth work instead of copy-paste.", name: "Jason R.", role: "Operations Director, E-Commerce Brand", metric: "15 tasks automated daily" },
+                  ].map((t, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ delay: i * 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex flex-col gap-6 p-6 sm:p-8 glass-card"
+                    >
+                      <span className="font-michroma text-[9px] tracking-[0.15em] uppercase text-white/20 border border-white/10 px-2.5 py-1 rounded-full w-fit">{t.metric}</span>
+                      <p className="text-[13px] text-white/55 font-light leading-relaxed tracking-wide flex-1">"{t.quote}"</p>
+                      <div className="flex flex-col gap-0.5 border-t border-white/[0.06] pt-4">
+                        <span className="font-sans font-light text-[13px] text-white/70">{t.name}</span>
+                        <span className="font-michroma text-[8px] tracking-[0.1em] uppercase text-white/25">{t.role}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 6: KNOWLEDGE BASE (AEO) ──────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-section"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <GhostNum n="06" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Knowledge Base</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Common Questions." />
+                  </h2>
+                  <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide max-w-xs">
+                    Direct answers to the most common questions about AI automation, web development, and working with ARKA.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-white/[0.04]" aria-label="Frequently asked questions">
+                  {[
+                    {
+                      q: "What is AI automation and how can it help my business?",
+                      a: "AI automation uses artificial intelligence to execute business tasks automatically — lead follow-up, CRM syncing, email campaigns, data entry, report generation — without human intervention. Most ARKA clients reduce manual operational work by 40–60% and see measurable ROI within the first 30 days."
+                    },
+                    {
+                      q: "How is ARKA different from a traditional marketing agency?",
+                      a: "ARKA is AI-native. Every system is built with AI at its core — not bolted on. There is no account manager overhead, no junior handoffs, and no 3-month timelines. ARKA delivers working systems in 5–10 days, run by a single senior operator, on month-to-month agreements with no lock-in."
+                    },
+                    {
+                      q: "What is the difference between AI automation and traditional automation?",
+                      a: "Traditional automation follows rigid rules: if X then Y. AI automation adds intelligence — it can understand natural language, make contextual decisions, generate personalised content, and handle exceptions that rule-based systems cannot. An AI follow-up system writes unique emails for each lead; a traditional automation sends the same template to everyone."
+                    },
+                    {
+                      q: "How does AI lead generation work?",
+                      a: "ARKA's AI lead generation works in three stages: (1) Prospecting — AI identifies high-intent prospects based on your ideal customer profile; (2) Personalised outreach — AI writes unique messages for each prospect at scale; (3) Qualification and routing — AI scores responses and books meetings directly into your calendar. The entire process runs continuously without manual input."
+                    },
+                    {
+                      q: "What types of businesses benefit most from AI automation?",
+                      a: "Businesses with high volumes of repetitive tasks, fast-moving sales cycles, or growing teams where adding headcount is expensive see the highest ROI from AI automation. Industries that benefit most: real estate, e-commerce, SaaS, professional services, marketing agencies, financial services, and healthcare technology."
+                    },
+                    {
+                      q: "What marketing automation services does ARKA offer?",
+                      a: "ARKA builds AI-enhanced marketing automation including email sequences, lead nurture flows, re-engagement campaigns, social scheduling, ad retargeting triggers, and campaign performance reporting — all running automatically based on behaviour and business rules. Unlike generic platforms, ARKA's systems use AI to personalise content for each recipient."
+                    },
+                    {
+                      q: "What does ARKA's web design include?",
+                      a: "ARKA's web design includes full custom design and development (React/Next.js), mobile-first responsive layouts, sub-1s load time optimisation, conversion rate optimisation, SEO structure, AI integrations (chatbots, lead capture, CRM sync), and ongoing performance monitoring. Most websites are delivered in 5–7 days."
+                    },
+                    {
+                      q: "What cybersecurity services does ARKA provide?",
+                      a: "ARKA provides security audits, vulnerability assessments, data protection strategy, compliance implementation (ISO-27001, SOC 2, GDPR), secure development practices for all builds, and security monitoring setup. All ARKA-built systems use multi-region encryption and secure API handling by default."
+                    },
+                    {
+                      q: "What video production services does ARKA offer?",
+                      a: "ARKA creates brand videos, product demo videos, testimonial videos, social media content (short-form for LinkedIn, Instagram, YouTube), and sales enablement videos. ARKA uses AI-assisted production workflows to deliver professional video content significantly faster than traditional production timelines."
+                    },
+                    {
+                      q: "How quickly can ARKA deliver a system?",
+                      a: "Most automation systems and websites go live in 5–10 business days. Simple automation flows and single-page websites can be delivered in as few as 3–5 days. Complex multi-integration builds take 10–14 days. Clients receive daily progress updates throughout the build."
+                    },
+                    {
+                      q: "Do I own the systems ARKA builds for me?",
+                      a: "Yes. You own everything ARKA builds — all code, workflows, integrations, and automation systems are transferred to you. ARKA does not lock clients into proprietary platforms. If you stop working with ARKA, you keep everything and can continue running or modifying your systems independently."
+                    },
+                    {
+                      q: "Does ARKA require a long-term contract?",
+                      a: "No. All ARKA engagements are month-to-month. There is no lock-in, no minimum term, and no cancellation fee. The work continues as long as it is delivering results for your business."
+                    },
+                  ].map((faq, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-30px" }}
+                      transition={{ delay: Math.floor(i / 2) * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex flex-col gap-3 p-6 sm:p-8 glass-card aeo-speakable"
+                    >
+                      <h3 className="font-sans font-light text-[14px] sm:text-[15px] tracking-[0.02em] text-white/80 leading-snug">{faq.q}</h3>
+                      <p className="text-[12px] text-white/35 font-light leading-relaxed tracking-wide">{faq.a}</p>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="mt-10 text-center">
+                  <MagneticButton onClick={() => setCurrentTab("quote")} className="font-michroma text-[9px] tracking-[0.2em] uppercase text-white/30 hover:text-white/60 transition-colors duration-200 cursor-pointer flex items-center gap-2 mx-auto">
+                    Still have questions? Book a free call <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 7: FINAL CTA ────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="pt-20 sm:pt-28 border-t border-white/[0.06] flex flex-col gap-10"
+              >
+                {/* Full-width corridor image */}
+                <ParallaxBanner src="/img-corridor.png" label="ARKA · Systems Global" ratio="21/9" brightness={0.55} />
+
+                <div className="pb-20 sm:pb-28 flex flex-col sm:flex-row sm:items-end justify-between gap-10">
+                  <div className="flex flex-col gap-4">
+                    <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Get Started</span>
+                    <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                      Start automating.<br />Today.
+                    </p>
+                    <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Book a free 30-minute call. We'll map out exactly what to automate and what it'll return.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-4 shrink-0">
+                    <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to booking"); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                      Book a Free Call <ArrowRight className="w-3 h-3" />
+                    </MagneticButton>
+                    <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">No commitment · Free strategy call</span>
+                  </div>
+                </div>
+              </motion.div>
 
             </motion.div>
           )}
 
-          {/* PAGE 2: SOLUTIONS INTERACTIVE MATRIX */}
+          {/* PAGE 2: SOLUTIONS */}
           {currentTab === "solutions" && (
             <motion.div
               key="solutions-page"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.22 }}
-              className="flex flex-col gap-8 text-left"
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col pb-24"
             >
-              <div>
-                <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Bespoke Enterprise Capabilities</span>
-                <h2 className="font-sans text-3xl md:text-5xl text-white/95 leading-none">Interactive ARKA Solutions Matrix</h2>
-                <p className="text-xs sm:text-sm text-white/50 mt-2 max-w-2xl leading-relaxed">
-                  Experience live interactive simulations of each core service pillar of the ARKA organization. Connect nodes, validate logic and view latency performance.
-                </p>
+
+              {/* ── SECTION 1: HERO ─── */}
+              <div className="relative flex flex-col justify-center min-h-[calc(100dvh-80px)] py-16">
+
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-6 bg-white/20" />
+                  <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · Services</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white block">What We</motion.span></div>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.42, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="block" style={{ color: "rgba(255,255,255,0.18)" }}>Build.</motion.span></div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Digital infrastructure for brands that need to move fast and scale further. Six core capabilities, one operator.
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-5">
+                  {[{ val: "6", label: "Core Services" }, { val: "5–10d", label: "Delivery" }, { val: "100%", label: "Custom Built" }, { val: "0", label: "Lock-in Contracts" }].map((item, i) => (
+                    <div key={i} className="flex items-baseline gap-1.5">
+                      <span className="font-michroma text-[11px] text-white/70">{item.val}</span>
+                      <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
+                    </div>
+                  ))}
+                </motion.div>
               </div>
 
-              {/* Bento Grid Solutions Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                
-                {/* 1. Conversational NLP Bots Simulator (7 Columns) */}
-                <motion.div
-                  whileHover={{ borderColor: "rgba(255, 255, 255, 0.15)", scale: 1.005 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className="md:col-span-7 liquid-glass rounded-[2rem] p-6 flex flex-col justify-between bg-white/[0.01] border border-white/5 transition-colors relative overflow-hidden"
-                  style={{ transform: `translateY(${Math.min(25, Math.max(-25, (scrollY - 250) * -0.035))}px)`, willChange: "transform" }}
-                >
-                  {/* Glossy Apple high-contrast glare refraction overlay */}
-                  <div className="absolute inset-0 apple-spotlight-bg opacity-30 z-0 pointer-events-none" />
-                  <div className="relative z-10 flex flex-col h-full justify-between">
-                    <div>
-                      <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] uppercase tracking-wider font-mono text-cyan-300">Live Simulator</span>
-                      <span className="text-[10px] font-mono text-white/30">NLP LATENCY: 42MS</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white/95 mt-3 font-sans">Conversational Chatbot Node</h3>
-                    <p className="text-xs text-white/50 mt-1 max-w-lg leading-relaxed">
-                      Custom-trained intelligence blocks matching query syntax to semantic backend intents instantly. Try the simulated console prompt below.
-                    </p>
-                  </div>
-
-                  {/* Chat Console Sandbox */}
-                  <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-3 my-5 h-56 justify-between overflow-hidden">
-                    <div className="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-1 custom-scrollbar text-xs">
-                      {chatMessages.map((msg, idx) => (
-                        <div key={idx} className={`max-w-[80%] p-2.5 rounded-xl ${
-                          msg.sender === "bot" 
-                            ? "bg-white/5 self-start text-white/90 border border-white/5 text-left" 
-                            : "bg-white text-black self-end font-medium text-right"
-                        }`}>
-                          <p>{msg.text}</p>
-                          <span className={`text-[8px] block mt-1 ${msg.sender === "bot" ? "text-white/30" : "text-black/40"}`}>{msg.time}</span>
-                        </div>
-                      ))}
-                      {isTyping && (
-                        <div className="p-2 bg-white/5 self-start rounded-lg text-white/40 text-[10px] font-mono animate-pulse">
-                          ARKA chatbot formulating response stream...
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        placeholder="Type 'pricing', 'scale', 'safety' or any goal..."
-                        onKeyDown={(e) => { if (e.key === "Enter") handleSendMessage(); }}
-                        className="flex-1 bg-white/[0.03] outline-none px-4 py-2.5 rounded-xl text-xs text-white border border-white/5 focus:border-white/10 transition-colors"
-                      />
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.93 }}
-                        onClick={handleSendMessage}
-                        className="p-2.5 bg-white text-black hover:bg-neutral-200 rounded-xl transition-all cursor-pointer"
-                      >
-                        <Send className="w-4 h-4" />
-                      </motion.button>
-                    </div>
-                  </div>
-
-                  {/* Action Link */}
-                  <motion.button
-                    whileHover={{ x: 3 }}
-                    onClick={() => {
-                      setLabPreset("chatbot");
-                      setCurrentTab("lab");
-                      addRegistryLog("[NAV] Intent mapped to lab for Chatbot development");
-                    }}
-                    className="text-xs font-semibold text-white text-left underline underline-offset-4 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    Build customized chatbot model in Lab &rarr;
-                  </motion.button>
+              {/* ── SECTION 2: SERVICES LIST ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-space"
+              >
+                <div className="relative flex flex-col gap-3 mb-12">
+                  <GhostNum n="02" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Full Service List</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Six Capabilities" />
+                  </h2>
                 </div>
-                </motion.div>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-t border-white/5">
+                  {[
+                    { num: "01", name: "AI Automation", desc: "End-to-end automation systems that handle lead follow-up, scheduling, CRM syncing, and repetitive workflows — around the clock, without a team." },
+                    { num: "02", name: "AI Lead Generation", desc: "AI-powered systems that find, qualify, and nurture high-intent leads on autopilot — more pipeline, less manual work." },
+                    { num: "03", name: "Web Design & Development", desc: "Custom websites built to convert — fast, mobile-first, and structured for results. AI-enhanced design and development." },
+                    { num: "04", name: "AI Application Development", desc: "Custom AI apps, internal tools, and intelligent dashboards built specifically for your business workflows and data." },
+                    { num: "05", name: "AI Chatbots & Assistants", desc: "Conversational AI systems deployed on your site, CRM, or internal tools — trained on your business to answer, qualify, and book." },
+                    { num: "06", name: "Marketing Automation", desc: "AI-driven email sequences, retargeting flows, and campaign logic that run without manual input and scale with your revenue." }
+                  ].map((service, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ x: 6, backgroundColor: "rgba(255,255,255,0.03)", transition: { duration: 0.22 } }}
+                      onClick={() => { setCurrentTab("quote"); addRegistryLog(`[NAV] Service interest: ${service.name}`); }}
+                      className="md:col-span-12 border-b border-white/5 py-6 sm:py-8 px-3 sm:px-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-16 cursor-pointer group step-row"
+                    >
+                      <span className="text-[10px] font-michroma text-white/20 tracking-widest w-8 shrink-0 transition-colors duration-200 group-hover:text-white/35">{service.num}</span>
+                      <h3 className="font-sans font-light text-xl md:text-2xl tracking-[0.04em] uppercase text-white/80 group-hover:text-white transition-colors duration-200 md:w-72 shrink-0">{service.name}</h3>
+                      <p className="text-[13px] text-white/35 font-light leading-relaxed tracking-wide flex-1 group-hover:text-white/50 transition-colors duration-200">{service.desc}</p>
+                      <ArrowRight className="w-4 h-4 text-white/15 group-hover:text-white/55 group-hover:translate-x-2 transition-all duration-200 shrink-0 hidden md:block" />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
 
-                {/* 2. Automated API Workflow Pipelines (5 Columns) */}
-                <motion.div
-                  whileHover={{ borderColor: "rgba(255, 255, 255, 0.15)", scale: 1.005 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className="md:col-span-5 liquid-glass rounded-[2rem] p-6 flex flex-col justify-between bg-white/[0.01] border border-white/5 transition-colors"
-                  style={{ transform: `translateY(${Math.min(25, Math.max(-25, (scrollY - 250) * 0.03))}px)`, willChange: "transform" }}
-                >
-                  <div>
-                    <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] uppercase tracking-wider font-mono text-indigo-300">Edge Integrator</span>
-                    <h3 className="text-xl font-semibold text-white/95 mt-3 font-sans">Autonomous API Pipelines</h3>
-                    <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                      Sync client inputs to CRMs, notify managers via Gmail instantly, and update Stripe ledgers without server-side maintenance.
+              {/* ── CINEMATIC DIVIDER: MONOLITH ─── */}
+              <ParallaxBanner src="/img-monolith.png" label="ARKA · Singular. Powerful." brightness={0.6} />
+
+              {/* ── SECTION 3: HOW WE APPROACH IT ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                  <div className="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24 relative">
+                    <GhostNum n="03" />
+                    <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Our Approach</motion.span>
+                    <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                      <SplitText text="Built Different" />
+                    </h2>
+                    <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide">
+                      Every system is designed around your specific business logic — not recycled templates or off-the-shelf tools.
                     </p>
                   </div>
-
-                  {/* API route visualizer node map */}
-                  <div className="my-5 p-4 bg-white/[0.02] rounded-2xl border border-white/5 text-[11px] font-mono flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-white/70">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Ingress request payload validated</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-white/70">
-                      <div className="w-1.5 h-1.5 bg-white/30 rounded-full animate-ping" />
-                      <span>Dispatching transaction webhooks...</span>
-                    </div>
-                    <div className="h-0.5 bg-white/10 w-full relative overflow-hidden my-1">
-                      <div className="h-full bg-cyan-400 w-1/3 rounded animate-[shimmer_2s_infinite]" />
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-white/40">
-                      <span>Target: Stripe API v3</span>
-                      <span>Latency: 72ms</span>
-                    </div>
-                  </div>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setLabPreset("workflow");
-                      setCurrentTab("lab");
-                      addRegistryLog("[NAV] Intent mapped to lab for API Pipeline setup");
-                    }}
-                    className="w-full py-3 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-neutral-200 transition-colors cursor-pointer text-center"
-                  >
-                    Deploy live Workflow Pipeline
-                  </motion.button>
-                </motion.div>
-
-                {/* 3. Immersive UX/UI Web Design (6 Columns) */}
-                <motion.div
-                  whileHover={{ borderColor: "rgba(255, 255, 255, 0.15)", scale: 1.005 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className="md:col-span-6 liquid-glass rounded-[2rem] p-6 flex flex-col justify-between bg-white/[0.01] border border-white/5 transition-colors"
-                  style={{ transform: `translateY(${Math.min(25, Math.max(-25, (scrollY - 450) * -0.03))}px)`, willChange: "transform" }}
-                >
-                  <div>
-                    <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] uppercase tracking-wider font-mono text-orange-300">Aesthetic Premium</span>
-                    <h3 className="text-xl font-semibold text-white/95 mt-3 font-sans">Fluid Immersive Web design</h3>
-                    <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                      We craft high-fidelity, responsive responsive web canvases styled with glossy glass structures, floating depth axes, and smooth frame transitions that absolute convert visitors.
-                    </p>
-                  </div>
-
-                  {/* Portfolio Gallery Preview Component */}
-                  <div className="my-5 flex gap-3 overflow-hidden">
+                  <div className="lg:col-span-8 flex flex-col gap-0 border-t border-white/[0.06]">
                     {[
-                      { title: "Bento Slate", img: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=400", desc: "Glossy structure grid" },
-                      { title: "Quantum Glass", img: "https://images.unsplash.com/photo-1542744094-3a31f103e35f?auto=format&fit=crop&q=80&w=400", desc: "Depth layout UI" }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex-1 rounded-xl bg-black/40 border border-white/5 overflow-hidden group/item">
-                        <img src={item.img} alt={item.title} className="w-full h-24 object-cover filter grayscale group-hover/item:grayscale-0 transition-all duration-700 group-hover/item:scale-105" />
-                        <div className="p-2 text-left">
-                          <h4 className="text-[10px] font-bold text-white/90">{item.title}</h4>
-                          <p className="text-[9px] text-white/40">{item.desc}</p>
+                      { step: "01", title: "No templates", desc: "Every system is built from scratch around your workflows, your CRM, and your customers — not adapted from a generic playbook." },
+                      { step: "02", title: "Solo operator", desc: "You work directly with the person building your system. No account managers, no handoffs, no communication lag." },
+                      { step: "03", title: "Results first", desc: "We don't charge retainers until the system is live and performing. If it doesn't work, you don't pay." },
+                      { step: "04", title: "Permanent leverage", desc: "What we build keeps working after the engagement ends. You own the systems, the code, and the workflows." },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex gap-6 sm:gap-10 py-8 border-b border-white/[0.06] group step-row"
+                      >
+                        <div className="flex flex-col items-center gap-2 shrink-0 pt-1">
+                          <span className="font-michroma text-[9px] tracking-widest text-white/20">{item.step}</span>
+                          <div className="w-px flex-1 bg-white/[0.06]" />
                         </div>
-                      </div>
+                        <div className="flex flex-col gap-2 flex-1">
+                          <h3 className="font-sans font-light text-lg sm:text-xl tracking-[0.04em] uppercase text-white/80 group-hover:text-white transition-colors duration-200">{item.title}</h3>
+                          <p className="text-[13px] text-white/35 font-light leading-relaxed tracking-wide">{item.desc}</p>
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
+                </div>
+              </motion.div>
 
-                  <motion.button
-                    whileHover={{ x: 3 }}
-                    onClick={() => {
-                      setLabPreset("webdesign");
-                      setCurrentTab("lab");
-                      addRegistryLog("[NAV] Intent mapped to lab for Webdesign workspace rendering");
-                    }}
-                    className="text-xs font-semibold text-white text-left flex items-center gap-1 hover:underline cursor-pointer"
-                  >
-                    Generate stunning design blueprint &rarr;
-                  </motion.button>
-                </motion.div>
+              {/* ── SECTION 4: INTEGRATIONS ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-concrete"
+              >
+                <div className="flex flex-col gap-3 mb-14">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Integrations</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">Connects to Everything</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-white/[0.04]">
+                  {["HubSpot", "Salesforce", "Stripe", "Shopify", "Gmail", "Slack", "Notion", "Airtable", "Zapier", "Make", "PostgreSQL", "OpenAI"].map((tool, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.04, duration: 0.4 }}
+                      className="flex flex-col items-center justify-center py-8 px-4 glass-card hover:bg-white/[0.06]! transition-colors duration-200 group"
+                    >
+                      <span className="font-michroma text-[9px] tracking-[0.12em] uppercase text-white/30 group-hover:text-white/55 transition-colors duration-200 text-center">{tool}</span>
+                    </motion.div>
+                  ))}
+                </div>
+                <p className="mt-6 text-[11px] font-michroma tracking-[0.12em] uppercase text-white/20 text-center">+ any REST API or webhook endpoint</p>
+              </motion.div>
 
-                {/* 4. Autonomous Cognitive Agents (6 Columns) */}
-                <motion.div
-                  whileHover={{ borderColor: "rgba(255, 255, 255, 0.15)", scale: 1.005 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className="md:col-span-6 liquid-glass rounded-[2rem] p-6 flex flex-col justify-between bg-white/[0.01] border border-white/5 transition-colors"
-                  style={{ transform: `translateY(${Math.min(25, Math.max(-25, (scrollY - 450) * 0.035))}px)`, willChange: "transform" }}
-                >
-                  <div>
-                    <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] uppercase tracking-wider font-mono text-emerald-300">Cognitive Layer</span>
-                    <h3 className="text-xl font-semibold text-white/95 mt-3 font-sans">Autonomous Agents Layer</h3>
-                    <p className="text-xs text-white/50 mt-1 leading-relaxed font-sans mt-2">
-                      Deploy recursive software agents that execute deep model searches, automate product management, process customer transactions and audit logs on schedule.
-                    </p>
-                  </div>
-
-                  {/* Agent intelligence slider simulation */}
-                  <div className="my-5 p-4 bg-white/[0.02] border border-white/5 rounded-xl text-left">
-                    <div className="flex justify-between items-center text-[10px] font-mono text-white/50 mb-1">
-                      <span>MOCK WORKLOAD HOURS SAVED</span>
-                      <span className="text-emerald-400 font-bold">~ 180 hrs / month</span>
+              {/* ── SECTION 5: RESULTS ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-solutions"
+              >
+                <div className="flex flex-col gap-3 mb-14">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Outcomes</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">What Clients Get</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/[0.04]">
+                  {[
+                    { metric: "40–60%", label: "Reduction in manual ops work", desc: "Systems handle the repetitive tasks so your team works on what matters." },
+                    { metric: "30 days", label: "Average time to first ROI", desc: "Most clients recoup the monthly retainer within the first month of operation." },
+                    { metric: "Sub-100ms", label: "Global response latency", desc: "Edge-cached systems respond faster than any human team can." },
+                    { metric: "99.9%", label: "Uptime SLA on all pipelines", desc: "Multi-region failover keeps your systems running around the clock." },
+                    { metric: "2×–5×", label: "Lead pipeline increase", desc: "AI lead gen systems consistently outperform manual outreach at scale." },
+                    { metric: "Zero", label: "Lock-in. Cancel anytime.", desc: "Month-to-month agreements. If it stops working, you walk. Simple." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col gap-3 p-6 sm:p-8 glass-card">
+                      <span className="font-sans font-light text-2xl sm:text-3xl text-white tracking-tight">{item.metric}</span>
+                      <span className="font-michroma text-[9px] tracking-[0.12em] uppercase text-white/45">{item.label}</span>
+                      <p className="text-[12px] text-white/30 font-light leading-relaxed tracking-wide">{item.desc}</p>
                     </div>
-                    <div className="flex gap-2 items-center text-xs text-white mt-1">
-                      <Server className="w-4 h-4 text-white/60" />
-                      <span className="text-xs font-bold">Deep Cognitive Level 8 Node</span>
-                    </div>
-                  </div>
+                  ))}
+                </div>
+              </motion.div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setLabPreset("agents");
-                      setCurrentTab("lab");
-                      addRegistryLog("[NAV] Intent mapped to lab for Autonomous Agents workbench");
-                    }}
-                    className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/90 text-xs font-semibold tracking-wider rounded-xl transition-all cursor-pointer text-center"
-                  >
-                    Test Autonomous Agent logic
-                  </motion.button>
-                </motion.div>
+              {/* ── SECTION 6: CTA ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-10 section-with-bg sbg-monolith"
+              >
+                <div className="flex flex-col gap-4">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Get Started</span>
+                  <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                    Pick a service.<br />Let's build.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to contact from services"); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Start a Project <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">Free strategy call · No commitment</span>
+                </div>
+              </motion.div>
 
-              </div>
             </motion.div>
           )}
 
-          {/* PAGE 3: EMBEDDED AUTOMATION LAB WORKBENCH */}
+          {/* PAGE 3: CASE STUDIES & RESULTS */}
           {currentTab === "lab" && (
             <motion.div
               key="lab-page"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.22 }}
-              className="flex flex-col gap-6 text-left"
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col pb-24"
             >
-              <div>
-                <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">ARKA WORKSTATION</span>
-                <h2 className="font-sans text-3xl md:text-5xl text-white/95">Lab Automation Workbench</h2>
-                <p className="text-xs sm:text-sm text-white/50 mt-1.5 max-w-2xl">
-                  Configure custom chatbot directives, workflow webhook endpoints, and hosting backbone requirements. Compile and test live simulation schemas on standard edge networks.
-                </p>
+
+              {/* ── SECTION 1: HERO ─── */}
+              <div className="relative flex flex-col justify-center min-h-[calc(100dvh-80px)] py-16 overflow-hidden">
+                <GhostNum n="03" />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-6 bg-white/20" />
+                  <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · Proof of Work</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white block">Proven</motion.span></div>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.42, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="block" style={{ color: "rgba(255,255,255,0.18)" }}>Results.</motion.span></div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Real systems. Real outcomes. Built for businesses that need to scale without adding headcount.
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                  <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to booking from work page"); }} className="btn-glow-pulse w-full sm:w-auto px-8 py-4 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Book a Free Call <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <MagneticButton onClick={() => { setCurrentTab("solutions"); }} className="py-3 font-michroma text-[9px] tracking-[0.2em] uppercase text-white/30 hover:text-white/65 transition-colors duration-200 flex items-center gap-2">
+                    Explore Services <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                </motion.div>
               </div>
 
-              {/* Lab Embedded Body */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                
-                {/* Embedded Controls Formulation (Columns 7) */}
-                <div className="lg:col-span-7 liquid-glass rounded-[2rem] p-6 lg:p-8 flex flex-col gap-6 bg-white/[0.01]">
-                  
-                  {/* Objective Input */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs tracking-wider uppercase text-white/40 font-bold">
-                      Automation Pipeline Objective
-                    </label>
-                    <input
-                      type="text"
-                      value={labPrompt}
-                      onChange={(e) => setLabPrompt(e.target.value)}
-                      placeholder="e.g. Sync high-ticket leads to CRM and dispatch billing summaries via email"
-                      className="w-full px-4 py-3.5 bg-white/[0.03] focus:bg-white/[0.06] rounded-xl outline-none text-xs text-white border-none transition-colors"
-                    />
-                  </div>
-
-                  {/* Preset Matrix */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs tracking-wider uppercase text-white/40 font-bold">
-                      Implementation Architecture
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {[
-                        { id: "workflow", name: "Workflows" },
-                        { id: "chatbot", name: "Conversational" },
-                        { id: "webdesign", name: "Interfaces" },
-                        { id: "agents", name: "Autonomous" }
-                      ].map((preset) => (
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          key={preset.id}
-                          onClick={() => {
-                            setLabPreset(preset.id as any);
-                            addRegistryLog(`[LAB] Swap preset architecture to: ${preset.name}`);
-                          }}
-                          className={`p-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            labPreset === preset.id
-                              ? "bg-white text-black font-extrabold"
-                              : "bg-white/5 text-white/60 hover:bg-white/10"
-                          }`}
-                        >
-                          {preset.name}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Complexity & Connectivity sliders */}
-                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex justify-between text-xs font-semibold text-white/50">
-                        <span>SYSTEM RELIABILITY CO-EFFICIENT</span>
-                        <span>{labComplexity}% SLA Cap</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="100"
-                        value={labComplexity}
-                        onChange={(e) => setLabComplexity(parseInt(e.target.value))}
-                        className="w-full h-1 bg-white/10 appearance-none rounded cursor-pointer accent-white"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex justify-between text-xs font-semibold text-white/50">
-                        <span>CONNECTED API ENDPOINTS</span>
-                        <span>{labSymmetry} webhooks</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="2"
-                        max="16"
-                        value={labSymmetry}
-                        onChange={(e) => setLabSymmetry(parseInt(e.target.value))}
-                        className="w-full h-1 bg-white/10 appearance-none rounded cursor-pointer accent-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Backbone Selection */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs tracking-wider uppercase text-white/40 font-bold">
-                      Execution Backbone
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "cosmic", label: "Edge Accelerated CJS" },
-                        { id: "dawn", label: "Multi-Region Cloud Sync" },
-                        { id: "eclipse", label: "ISO-27001 Enterprise" },
-                        { id: "aurora", label: "Smart Cognitive Route" }
-                      ].map((backbone) => (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          key={backbone.id}
-                          onClick={() => {
-                            setLabGlow(backbone.id as any);
-                            addRegistryLog(`[LAB] Swap backbone infrastructure to: ${backbone.label}`);
-                          }}
-                          className={`px-3.5 py-2 rounded-full text-[10px] uppercase font-bold tracking-wider border transition-all cursor-pointer ${
-                            labGlow === backbone.id
-                              ? "bg-white/15 text-white border-white/30"
-                              : "bg-white/[0.02] text-white/55 border-white/5 hover:bg-white/[0.05]"
-                          }`}
-                        >
-                          {backbone.label}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleEmbeddedCompile}
-                    disabled={isEmbeddedProcessing}
-                    className="w-full mt-2 py-4 bg-white text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-neutral-200 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {isEmbeddedProcessing ? (
-                      <>
-                        <Activity className="w-4 h-4 animate-spin" />
-                        Synchronising schemas: {embeddedProgress}%
-                      </>
-                    ) : (
-                      <>
-                        <Cpu className="w-4 h-4" />
-                        Compile microservice schema
-                      </>
-                    )}
-                  </motion.button>
-
+              {/* ── SECTION 2: CASE STUDIES ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-space"
+              >
+                <div className="relative flex flex-col gap-3 mb-12">
+                  <GhostNum n="02" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Case Studies</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="What We've Built" />
+                  </h2>
                 </div>
-
-                {/* Compile diagnostics preview sandbox (Columns 5) */}
-                <div className="lg:col-span-5 rounded-[2rem] bg-black/45 border border-white/5 flex flex-col p-6 text-center justify-center items-center min-h-[350px]">
-                  <AnimatePresence mode="wait">
-                    {isEmbeddedProcessing ? (
-                      <motion.div
-                        key="embedding-pro"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex flex-col items-center gap-4 w-full"
-                      >
-                        <div className="relative w-16 h-16 flex items-center justify-center">
-                          <div className="absolute inset-0 rounded-full border border-white/10 border-t-white animate-spin" />
-                          <Activity className="w-6 h-6 text-white/80 animate-pulse" />
-                        </div>
-                        <span className="text-xs font-mono text-white/80 leading-tight mt-2">{embeddedStep}</span>
-                        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-white transition-all duration-300" style={{ width: `${embeddedProgress}%` }} />
-                        </div>
-                        <span className="text-[10px] font-mono text-white/40">{embeddedProgress}% validated</span>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="lab-uncompiled"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-col items-center justify-center p-6 text-center"
-                      >
-                        <div className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mb-4">
-                          <Code className="w-6 h-6 text-white/30" />
-                        </div>
-                        <h4 className="text-sm font-semibold uppercase tracking-wider text-white/85">Awaiting Parameters Formulation</h4>
-                        <p className="text-xs text-white/50 max-w-xs mt-2 leading-relaxed">
-                          Enter your custom business details on the left, slide connectivity indexes, and click 'Compile Pipeline' to review code responses here.
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.04]">
+                  {[
+                    {
+                      service: "AI Automation",
+                      result: "3× more closed deals in 30 days",
+                      title: "Commercial Real Estate Lead Pipeline",
+                      desc: "Replaced manual follow-up with a multi-step AI sequence across email, SMS, and CRM. Response times dropped from days to under 4 minutes. The system now handles 400+ leads per month autonomously.",
+                      industry: "Real Estate",
+                      timeline: "8 days to go live",
+                    },
+                    {
+                      service: "Web Design & Dev",
+                      result: "6.8% conversion rate (up from 0.4%)",
+                      title: "B2B SaaS Marketing Site Rebuild",
+                      desc: "Full rebuild from the ground up — mobile-first, sub-1s load times, and structured around a clear funnel. Replaced a bloated agency site with a lean, conversion-focused architecture that actually converts.",
+                      industry: "SaaS / Technology",
+                      timeline: "7 days to go live",
+                    },
+                    {
+                      service: "AI Lead Generation",
+                      result: "2.4× more booked calls per week",
+                      title: "E-Commerce Brand Outbound Engine",
+                      desc: "Built an AI-powered outbound system targeting wholesale and retail buyers. Auto-qualifies prospects, personalises outreach at scale, and routes hot leads directly into the sales calendar. Zero manual effort.",
+                      industry: "E-Commerce",
+                      timeline: "10 days to go live",
+                    },
+                    {
+                      service: "Marketing Automation",
+                      result: "15 manual tasks eliminated daily",
+                      title: "Operations & Sales Workflow Automation",
+                      desc: "Mapped 15 recurring manual tasks across ops and sales. Built automated flows that sync data between tools, trigger follow-ups on deal stage changes, and generate weekly reports without a human touching anything.",
+                      industry: "Professional Services",
+                      timeline: "6 days to go live",
+                    },
+                  ].map((cs, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      whileHover={{ backgroundColor: "rgba(255,255,255,0.02)", transition: { duration: 0.2 } }}
+                      className="flex flex-col gap-5 p-6 sm:p-8 glass-card group glow-border cursor-default"
+                    >
+                      <div className="flex items-start justify-between flex-wrap gap-2">
+                        <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20 border border-white/10 px-2.5 py-1 rounded-full">{cs.service}</span>
+                        <span className="font-michroma text-[8px] tracking-[0.1em] uppercase text-white/35">{cs.timeline}</span>
+                      </div>
+                      <div>
+                        <span className="font-sans font-light text-2xl sm:text-3xl text-white tracking-tight block mb-1">{cs.result}</span>
+                        <h3 className="font-michroma text-[9px] tracking-[0.12em] uppercase text-white/30">{cs.title}</h3>
+                      </div>
+                      <p className="text-[12px] text-white/35 font-light leading-relaxed tracking-wide flex-1 group-hover:text-white/50 transition-colors duration-200">{cs.desc}</p>
+                      <div className="border-t border-white/[0.06] pt-4">
+                        <span className="font-michroma text-[8px] tracking-[0.1em] uppercase text-white/20">Industry: {cs.industry}</span>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
+              </motion.div>
 
-              </div>
+              {/* ── CINEMATIC DIVIDER ─── */}
+              <ParallaxBanner src="/img-concrete.png" label="ARKA · Proof of Work" brightness={0.55} />
+
+              {/* ── SECTION 3: TECH STACK ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <GhostNum n="03" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Stack</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Built With Best-in-Class Tools" />
+                  </h2>
+                  <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide max-w-sm">
+                    We use the tools that are genuinely best for the job — not the ones with the biggest marketing budget.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-white/[0.04]">
+                  {[
+                    { name: "Make.com", cat: "Automation" },
+                    { name: "n8n", cat: "Automation" },
+                    { name: "OpenAI", cat: "AI / LLMs" },
+                    { name: "Anthropic", cat: "AI / LLMs" },
+                    { name: "HubSpot", cat: "CRM" },
+                    { name: "Salesforce", cat: "CRM" },
+                    { name: "React / Next.js", cat: "Web Dev" },
+                    { name: "Vercel", cat: "Infrastructure" },
+                    { name: "Cloudflare", cat: "Security" },
+                    { name: "Stripe", cat: "Payments" },
+                    { name: "Zapier", cat: "Integrations" },
+                    { name: "Airtable", cat: "Databases" },
+                  ].map((tool, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.04, duration: 0.4 }}
+                      whileHover={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+                      className="flex flex-col gap-1 p-5 glass-card transition-colors duration-200"
+                    >
+                      <span className="font-sans font-light text-[13px] text-white/70">{tool.name}</span>
+                      <span className="font-michroma text-[8px] tracking-[0.1em] uppercase text-white/20">{tool.cat}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 4: INDUSTRIES ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-concrete"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Industries</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Who We Work With" />
+                  </h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-px bg-white/[0.04]">
+                  {[
+                    "Real Estate", "E-Commerce", "SaaS / Technology", "Marketing Agencies",
+                    "Professional Services", "Healthcare Tech", "Financial Services", "Media & Content",
+                  ].map((ind, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05, duration: 0.4 }}
+                      className="p-5 sm:p-6 glass-card"
+                    >
+                      <span className="font-sans font-light text-[13px] sm:text-[15px] text-white/55">{ind}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 5: CTA ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-10 section-with-bg sbg-corridor"
+              >
+                <div className="flex flex-col gap-4">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Next Steps</span>
+                  <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                    Your results<br />start here.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to booking from work page CTA"); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Book Free Strategy Call <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">Free call · No commitment · Results in 30 days</span>
+                </div>
+              </motion.div>
+
             </motion.div>
           )}
 
@@ -1281,20 +1802,65 @@ export default function App() {
           {currentTab === "registry" && (
             <motion.div
               key="registry-page"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.22 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col pb-24"
             >
-              
+
+              {/* ── SECTION 1: HERO ─── */}
+              <div className="relative flex flex-col justify-center min-h-[calc(100dvh-80px)] py-16 overflow-hidden">
+                <GhostNum n="04" />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-6 bg-white/20" />
+                  <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · System Registry</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white block">Blueprint</motion.span></div>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.42, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="block" style={{ color: "rgba(255,255,255,0.18)" }}>Registry.</motion.span></div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Active integrations, parameter configurations, and live telemetry feeds for every deployed pipeline.
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-5">
+                  {[{ val: `${specimens.length}`, label: "Active Blueprints" }, { val: "5", label: "Edge Gateways" }, { val: "99.9%", label: "Uptime" }, { val: "24/7", label: "Telemetry" }].map((item, i) => (
+                    <div key={i} className="flex items-baseline gap-1.5">
+                      <span className="font-michroma text-[11px] text-white/70">{item.val}</span>
+                      <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
+
+              {/* ── CINEMATIC DIVIDER: SPACE ─── */}
+              <ParallaxBanner src="/img-space.png" label="ARKA · Global Edge Network" brightness={0.7} />
+
+              {/* ── SECTION 2: BLUEPRINTS + LOGS ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-space"
+              >
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+
               {/* Left Column: List of saved specimens (Columns 7) */}
-              <div className="lg:col-span-7 flex flex-col gap-6">
-                <div>
-                  <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Compiled Blueprints Repository</span>
-                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Registered ARKA Blueprints</h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    Manage active enterprise integrations, inspect parameter configurations, and fire mock payloads to live state terminals below.
+              <div className="lg:col-span-7 flex flex-col gap-8">
+                <div className="relative flex flex-col gap-3">
+                  <GhostNum n="02" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-[10px] font-michroma tracking-[0.2em] uppercase text-white/25">System Registry</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Blueprints" />
+                  </h2>
+                  <p className="text-[13px] font-light text-white/40 leading-relaxed max-w-sm tracking-wide">
+                    Active integrations, parameter configurations, and live telemetry feeds.
                   </p>
                 </div>
 
@@ -1304,10 +1870,10 @@ export default function App() {
                       <BookOpen className="w-8 h-8 text-white/20" />
                       <p className="text-xs text-white/50">No blueprints registered in edge database.</p>
                       <button
-                        onClick={() => setCurrentTab("lab")}
+                        onClick={() => setCurrentTab("quote")}
                         className="text-xs font-bold text-white underline underline-offset-4"
                       >
-                        Compile your first blueprint schema inside workstation &rarr;
+                        Book a free strategy call to get started &rarr;
                       </button>
                     </div>
                   ) : (
@@ -1330,7 +1896,7 @@ export default function App() {
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/80 text-[8px] uppercase tracking-wider font-extrabold">{spec.preset}</span>
-                            <span className="text-[9px] font-mono text-cyan-400">ID: {spec.id}</span>
+                            <span className="text-[9px] font-mono text-white/40">ID: {spec.id}</span>
                           </div>
                           <h4 className="text-sm font-semibold tracking-tight text-white">{spec.name}</h4>
                           <span className="text-[10px] text-white/40 mt-1 leading-normal font-mono">
@@ -1346,11 +1912,11 @@ export default function App() {
                                 e.stopPropagation();
                                 addRegistryLog(`[TRIGGER] Fired mock payload to gateway: '${spec.name}' [Throughput: ${spec.silicaContent} msg/s]`);
                               }}
-                              className="px-2.5 py-1 bg-white/15 hover:bg-white/20 rounded text-[9px] font-semibold text-white tracking-wider uppercase transition-colors pointer-events-auto cursor-pointer"
+                              className="px-3 py-2 bg-white/15 hover:bg-white/20 rounded-lg font-michroma text-[9px] tracking-[0.1em] uppercase text-white transition-colors pointer-events-auto cursor-pointer"
                             >
                               Dispatch Ping
                             </motion.button>
-                            <span className="text-[9px] font-mono text-white/30 truncate">Target: {spec.lumens}ms latency</span>
+                            <span className="font-michroma text-[8px] tracking-[0.08em] uppercase text-white/25 truncate">{spec.lumens}ms</span>
                           </div>
                         </div>
 
@@ -1359,7 +1925,7 @@ export default function App() {
                           whileHover={{ scale: 1.1, color: "#ef4444" }}
                           whileTap={{ scale: 0.9 }}
                           onClick={(e) => handleDeleteSpecimen(spec.id, e)}
-                          className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/5 text-white/30 transition-colors cursor-pointer z-10"
+                          className="absolute right-3 top-3 p-3 rounded-full hover:bg-white/5 text-white/30 transition-colors cursor-pointer z-10"
                           title="Delete schema"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1375,16 +1941,16 @@ export default function App() {
                 <div className="liquid-glass rounded-[2rem] p-6 flex flex-col gap-3 justify-between bg-white/[0.01] h-full h-[400px] md:h-[480px]">
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold font-mono">SYS TELEMETRY FEEDS</span>
+                    <span className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/30">Sys Telemetry Feeds</span>
                     <button
                       onClick={() => {
                         setRegistryLogs([
                           `[SYS] Logger state cleared. Awaiting signals...`
                         ]);
                       }}
-                      className="text-[9.5px] uppercase font-mono text-white/40 hover:text-white transition-colors underline underline-offset-2"
+                      className="px-3 py-2 font-michroma text-[9px] tracking-[0.1em] uppercase text-white/30 hover:text-white transition-colors cursor-pointer"
                     >
-                      Clear Shell
+                      Clear
                     </button>
                   </div>
 
@@ -1398,11 +1964,76 @@ export default function App() {
                     <div className="h-2 w-1 bg-white inline-block animate-pulse shrink-0" />
                   </div>
 
-                  <div className="text-[9px] uppercase font-mono tracking-widest text-white/35">
+                  <div className="text-[9px] uppercase font-michroma tracking-widest text-white/35">
                     STATE: SECURE EDGE PORT 3000 // ARKA CORE PROTOCOL V2
                   </div>
                 </div>
               </div>
+
+              </div>
+              </motion.div>
+
+              {/* ── SECTION 3: GLOBAL EDGE STATS ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="flex flex-col gap-3 mb-14">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Infrastructure</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">Global Edge Network</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-white/[0.04]">
+                  {[
+                    { city: "SFO", region: "West Coast", ping: "42ms", status: "Optimal" },
+                    { city: "LDN", region: "Europe", ping: "94ms", status: "Active" },
+                    { city: "TKY", region: "Asia Pacific", ping: "135ms", status: "Optimal" },
+                    { city: "SGP", region: "Southeast Asia", ping: "188ms", status: "Active" },
+                    { city: "FRA", region: "Central Europe", ping: "82ms", status: "Optimal" },
+                  ].map((loc, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.07, duration: 0.4 }}
+                      onClick={() => addRegistryLog(`[PING] Diagnostic sweep routed through ${loc.city} gateway. Roundtrip: ${loc.ping}`)}
+                      className="flex flex-col gap-3 p-6 sm:p-8 glass-card hover:bg-white/[0.02] transition-colors duration-200 cursor-pointer group"
+                    >
+                      <span className="font-sans font-light text-2xl text-white">{loc.city}</span>
+                      <span className="font-michroma text-[9px] tracking-[0.12em] uppercase text-white/30">{loc.region}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40 group-hover:bg-white/70 transition-colors duration-200" />
+                        <span className="font-michroma text-[8px] tracking-[0.1em] uppercase text-white/25">{loc.ping} · {loc.status}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 4: CTA ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-10 section-with-bg sbg-monolith"
+              >
+                <div className="flex flex-col gap-4">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Deploy</span>
+                  <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                    Build your<br />first blueprint.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to booking from registry"); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Book Free Strategy Call <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">Free call · No commitment</span>
+                </div>
+              </motion.div>
 
             </motion.div>
           )}
@@ -1411,31 +2042,39 @@ export default function App() {
           {currentTab === "globe" && (
             <motion.div
               key="globe-page"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left items-stretch"
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col gap-6 text-left py-10"
             >
-              
-              {/* Left Sidebar Control Box (Columns 4) */}
-              <div className="lg:col-span-4 flex flex-col gap-6 justify-between">
-                <div>
-                  <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Interactive Edge Network</span>
-                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Telemetry Dome</h2>
-                  <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                    Adjust orbital coordinate layers, holographic pitch, and sub-routing nests. Trigger ping signals dynamically by clicking global data gateways on the globe.
+              {/* Mobile-only title (sidebar is hidden on mobile) */}
+              <div className="lg:hidden flex flex-col gap-2">
+                <span className="text-[10px] font-michroma tracking-[0.2em] uppercase text-white/25">Network</span>
+                <h2 className="font-sans font-light text-[2rem] tracking-[0.04em] uppercase text-white leading-[1.05]">Telemetry</h2>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+
+              {/* Left Sidebar Control Box (Columns 4) — hidden on mobile to avoid duplicate heavy canvas */}
+              <div className="hidden lg:flex lg:col-span-4 flex-col gap-8 justify-between">
+                <div className="flex flex-col gap-3">
+                  <span className="text-[10px] font-michroma tracking-[0.2em] uppercase text-white/25">Network</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">Telemetry</h2>
+                  <p className="text-[13px] font-light text-white/40 leading-relaxed max-w-xs tracking-wide">
+                    Global edge network visualization. Click regional gateways to dispatch diagnostic sweeps.
                   </p>
                 </div>
 
                 <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[1.5rem] flex flex-col gap-4">
-                  <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold block font-mono">Mesh Tuning Controls</span>
+                  <span className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/30 block">Mesh Tuning Controls</span>
                   <StructureSimulator />
                 </div>
 
-                <div className="flex gap-2 text-[10px] font-mono text-white/40 uppercase">
-                  <span>ORBITAL SPEED: 40s/CYCLE</span>
+                <div className="flex gap-2 font-michroma text-[9px] uppercase tracking-[0.1em] text-white/25">
+                  <span>40s / Cycle</span>
                   <span>·</span>
-                  <span>TILT LEVEL: 15° PITCH</span>
+                  <span>15° Pitch</span>
                 </div>
               </div>
 
@@ -1445,8 +2084,8 @@ export default function App() {
                 {/* Floating details heading overlay */}
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10 select-none">
                   <div className="text-left">
-                    <span className="text-[9px] tracking-widest uppercase text-cyan-400 font-bold block font-mono">Live Edge Viewport</span>
-                    <h3 className="font-sans text-2xl text-white/90">Orthographic Core</h3>
+                    <span className="text-[9px] tracking-[0.25em] uppercase text-white/30 font-mono">Live Edge Viewport</span>
+                    <h3 className="font-sans font-light text-xl tracking-[0.06em] uppercase text-white/80">Orthographic Core</h3>
                   </div>
                   <div className="text-right text-[10px] font-mono text-white/40">
                     <div>LATENCY GRADE: SLA-A</div>
@@ -1469,245 +2108,362 @@ export default function App() {
                       { city: "SGP Cloud Link", ping: "188ms", health: "Active" },
                       { city: "FRA Ledger Proxy", ping: "82ms", health: "Optimal" }
                     ].map((loc, idx) => (
-                      <div key={idx} className="p-2 bg-white/[0.02] rounded border border-white/5 hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer" onClick={() => {
+                      <div key={idx} className="p-2 bg-white/[0.02] rounded border border-white/5 hover:bg-white/[0.07] hover:border-white/10 hover:scale-[1.03] transition-all duration-200 pointer-events-auto cursor-pointer" onClick={() => {
                         addRegistryLog(`[PING SUCCESS] Routed diagnostic sweep packets through regional ledger ${loc.city}. Roundtrip: ${loc.ping}`);
                       }}>
                         <div className="font-bold text-white/95 truncate">{loc.city.split(" ")[0]}</div>
-                        <div className="text-cyan-400 mt-1">{loc.ping}</div>
+                        <div className="text-white/40 mt-1">{loc.ping}</div>
                         <div className="text-white/30 text-[8px] uppercase mt-0.5">{loc.health}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="w-full text-center text-[10px] text-white/30 uppercase tracking-widest">
+                <div className="w-full text-center font-michroma text-[9px] text-white/20 uppercase tracking-[0.15em]">
                   Click any regional gate block above to dispatch diagnostic sweep packets
                 </div>
 
               </div>
 
+              </div>{/* end inner grid */}
+
             </motion.div>
           )}
 
-          {/* PAGE 6: AGREEMENT kalkulator / STRATEGIC SLA QUOTE */}
+          {/* PAGE 6: CONTACT / QUOTE */}
           {currentTab === "quote" && (
             <motion.div
               key="quote-page"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.22 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left items-stretch"
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col pb-24"
             >
-              
-              {/* Sliders and pricing parameters (Columns 7) */}
-              <div className="lg:col-span-7 flex flex-col gap-6 justify-between">
-                <div>
-                  <span className="text-[10px] tracking-widest uppercase text-white/40 block font-bold mb-1 font-mono">Automated Strategic Onboarding</span>
-                  <h2 className="font-sans text-3xl md:text-5xl text-white/95">Agreement Builder</h2>
-                  <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                    Configure desired query volume capacity, choose the corresponding support tier, and select the tools you want to connect. Real-time cost formulation.
-                  </p>
-                </div>
 
-                <div className="flex flex-col gap-5 p-6 bg-white/[0.01] border border-white/5 rounded-[2rem]">
-                  
-                  {/* Estimator Volume Slider */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-xs font-bold text-white/50">
-                      <span>ESTIMATED CONVERSATIONS / WORKFLOWS</span>
-                      <span className="text-white font-mono">{estimateVolume}k / month</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="50"
-                      max="1000"
-                      step="50"
-                      value={estimateVolume}
-                      onChange={(e) => setEstimateVolume(parseInt(e.target.value))}
-                      className="w-full h-1 bg-white/10 appearance-none rounded cursor-pointer accent-white"
-                    />
-                    <span className="text-[10px] text-white/40">Adjust parameters from 50,000 up to 1,000,000 requests/mo.</span>
+              {/* ── SECTION 1: HERO ─── */}
+              <div className="relative flex flex-col justify-center min-h-[calc(100dvh-80px)] py-16 overflow-hidden">
+                <GhostNum n="06" />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-6 bg-white/20" />
+                  <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · Contact</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white block">Let's</motion.span></div>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.42, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="block" style={{ color: "rgba(255,255,255,0.18)" }}>Build.</motion.span></div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Tell us what you're working on. We'll scope it, quote it, and have it live in under two weeks.
+                    </p>
                   </div>
-
-                  {/* SLA Support Tiers Grid */}
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs tracking-wider uppercase text-white/40 font-bold">Guaranteed SLA support Tier</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        { id: "standard", name: "Standard SLA", desc: "24h Response · Email support" },
-                        { id: "gold", name: "Enterprise Gold", desc: "2h Response · Team collaboration" },
-                        { id: "defence", name: "Defence Level SLA", desc: "15m Response · Technical engineer line" }
-                      ].map((tier) => (
-                        <button
-                          key={tier.id}
-                          onClick={() => setSlaTier(tier.id as any)}
-                          className={`p-3 rounded-xl text-left border transition-all ${
-                            slaTier === tier.id
-                              ? "bg-white text-black border-white scale-102"
-                              : "bg-white/[0.02] border-white/5 text-white/60 hover:bg-white/[0.05]"
-                          }`}
-                        >
-                          <span className="text-xs font-bold block">{tier.name}</span>
-                          <span className={`text-[9px] leading-tight block mt-1 ${slaTier === tier.id ? "text-black/60" : "text-white/40"}`}>{tier.desc}</span>
-                        </button>
-                      ))}
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-5">
+                  {[{ val: "Free", label: "Strategy Call" }, { val: "24h", label: "Response Time" }, { val: "5–10d", label: "To Go Live" }, { val: "Zero", label: "Lock-in" }].map((item, i) => (
+                    <div key={i} className="flex items-baseline gap-1.5">
+                      <span className="font-michroma text-[11px] text-white/70">{item.val}</span>
+                      <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
                     </div>
-                  </div>
-
-                  {/* Connectors checkboxes toggles */}
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs tracking-wider uppercase text-white/40 font-bold">Encrypted Integrations Nodes</span>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "stripe", label: "Stripe Ledger Broker" },
-                        { id: "crm", label: "HubSpot CRM Contacts" },
-                        { id: "shopify", label: "Shopify Webhooks Sync" },
-                        { id: "gmail", label: "Gmail Notification Gateway" },
-                        { id: "database", label: "Structured Postgres Sync" }
-                      ].map((connector) => (
-                        <button
-                          key={connector.id}
-                          onClick={() => setConnectors((prev: any) => ({ ...prev, [connector.id]: !prev[connector.id] }))}
-                          className={`px-3.5 py-1.5 rounded-full text-[10px] uppercase font-bold tracking-wider transition-all border ${
-                            connectors[connector.id as keyof typeof connectors]
-                              ? "bg-white/15 text-white border-white/20"
-                              : "bg-white/[0.01] border-white/5 text-white/40 hover:bg-white/[0.04]"
-                          }`}
-                        >
-                          {connectors[connector.id as keyof typeof connectors] ? "✓ " : "+ "}
-                          {connector.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                <div className="text-[10px] font-mono text-white/40">
-                  ESTIMATES GENERATED INSTANTLY ACCORDING TO REALTIME EDGE ROUTING COMPILATION.
-                </div>
+                  ))}
+                </motion.div>
               </div>
 
-              {/* Visualized final Quote Summary Agreement card (Columns 5) */}
+              {/* ── SECTION 2: CONTACT FORM ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-space"
+              >
+              <div className="relative flex flex-col gap-3 mb-10">
+                <GhostNum n="02" />
+                <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Get in Touch</motion.span>
+                <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                  <SplitText text="Tell us what you need." />
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left items-start">
+
+              {/* Left Column — Contact Form (Columns 7) */}
+              <div className="lg:col-span-7 flex flex-col gap-6">
+                <div className="flex flex-col gap-6 p-6 sm:p-8 bg-white/[0.01] border border-white/5 rounded-[2rem]">
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/35">Your Name</label>
+                      <input
+                        type="text"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        placeholder="Jane Smith"
+                        className="w-full px-4 py-3.5 bg-white/[0.03] focus:bg-white/[0.06] rounded-xl outline-none font-michroma text-[10px] sm:text-[10px] tracking-[0.05em] text-white border border-white/5 focus:border-white/15 transition-colors"
+                        style={{ fontSize: "max(16px, 10px)" }}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/35">Business Email</label>
+                      <input
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        placeholder="jane@company.com"
+                        className="w-full px-4 py-3.5 bg-white/[0.03] focus:bg-white/[0.06] rounded-xl outline-none font-michroma text-[10px] tracking-[0.05em] text-white border border-white/5 focus:border-white/15 transition-colors"
+                        style={{ fontSize: "max(16px, 10px)" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/35">What do you need? (select all that apply)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["AI Automation", "Web Design & Dev", "AI Lead Generation", "Marketing Automation", "AI App Development", "Video Production", "Cybersecurity / IT"].map((svc) => (
+                        <button
+                          key={svc}
+                          type="button"
+                          onClick={() => toggleContactService(svc)}
+                          className={`px-3.5 py-2.5 rounded-full font-michroma text-[9px] tracking-[0.08em] uppercase transition-all border cursor-pointer ${
+                            contactService.includes(svc)
+                              ? "bg-white/15 text-white border-white/25"
+                              : "bg-white/[0.01] border-white/5 text-white/30 hover:text-white/50 hover:bg-white/[0.04]"
+                          }`}
+                        >
+                          {contactService.includes(svc) ? "✓ " : ""}{svc}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="font-michroma text-[9px] tracking-[0.18em] uppercase text-white/35">Tell us about your project</label>
+                    <textarea
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="What are you trying to automate or build? What’s the biggest bottleneck right now?"
+                      rows={4}
+                      className="w-full px-4 py-3.5 bg-white/[0.03] focus:bg-white/[0.06] rounded-xl outline-none font-michroma text-[10px] tracking-[0.05em] text-white border border-white/5 focus:border-white/15 transition-colors resize-none"
+                      style={{ fontSize: "max(16px, 10px)" }}
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => {
+                      if (!contactName || !contactEmail) return;
+                      setIsContactSubmitted(true);
+                      addRegistryLog(`[CONTACT] Strategy call request submitted from: ${contactEmail}`);
+                    }}
+                    disabled={!contactName || !contactEmail}
+                    className="w-full py-4 bg-white text-black font-michroma text-[10px] tracking-[0.2em] uppercase rounded-xl hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    Request Free Strategy Call <ArrowRight className="w-3.5 h-3.5" />
+                  </motion.button>
+                </div>
+
+                <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20">
+                  We respond within 24 hours. No commitment required.
+                </span>
+              </div>
+
+              {/* Right Column — Trust & Next Steps (Columns 5) */}
               <div className="lg:col-span-5 flex flex-col gap-4">
                 <AnimatePresence mode="wait">
-                  {!isQuoteLocked ? (
+                  {!isContactSubmitted ? (
                     <motion.div
-                      key="quote-form-state"
+                      key="contact-idle"
                       initial={{ opacity: 0, x: 15 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -15 }}
-                      className="liquid-glass rounded-[2rem] p-6 lg:p-8 flex flex-col justify-between bg-white/[0.01] h-full min-h-[440px] border border-white/5"
+                      className="liquid-glass rounded-[2rem] p-6 lg:p-8 flex flex-col gap-8 bg-white/[0.01] h-full border border-white/5"
                     >
-                      <div className="text-left flex flex-col gap-1">
-                        <span className="text-[10px] tracking-widest uppercase text-white/40 font-bold font-mono">CONSOLIDATED PROPOSAL</span>
-                        <h3 className="font-sans text-2xl text-white/90">Strategic SLA Summary</h3>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-michroma tracking-[0.2em] uppercase text-white/25">What happens next</span>
+                        <h3 className="font-sans font-light text-xl tracking-[0.06em] uppercase text-white/80">3 Steps to Live</h3>
                       </div>
 
-                      {/* Quote metrics list */}
-                      <div className="my-6 flex flex-col gap-3.5 text-left border-y border-white/5 py-5 text-sm">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-white/50">Simulated Traffic Capacity</span>
-                          <span className="font-mono text-white/90">{estimateVolume},000 workflows / mo</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-white/50">Enterprise Support Tier</span>
-                          <span className="text-white/90 uppercase font-bold">{slaTier} Grade</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-white/50 font-sans">Encrypted Connected APIs</span>
-                          <span className="font-mono text-cyan-400">
-                            {Object.values(connectors).filter(Boolean).length} node routes
-                          </span>
-                        </div>
-                        
-                        <div className="h-0.5 bg-white/5 w-full my-1" />
-
-                        <div className="flex justify-between items-end">
-                          <span className="text-white/55 font-sans">Monthly Retainer Option</span>
-                          <div className="text-right">
-                            <span className="text-2xl font-bold font-mono text-white">${calculatedPrice()}</span>
-                            <span className="text-[9px] block text-white/35 uppercase font-mono mt-0.5">USD / month</span>
+                      <div className="flex flex-col gap-0 border-t border-white/[0.06]">
+                        {[
+                          { step: "01", title: "We reach out within 24h", desc: "A quick confirmation email, then we book your free 30-minute strategy call at a time that works for you." },
+                          { step: "02", title: "30-min strategy call", desc: "We map your workflows, identify quick wins, and scope the build. No upsell. Just a clear plan." },
+                          { step: "03", title: "System live in 5–10 days", desc: "We build and deploy. You get daily updates. Most clients see ROI before the first 30 days are up." },
+                        ].map((item, i) => (
+                          <div key={i} className="flex gap-5 py-5 border-b border-white/[0.06]">
+                            <span className="font-michroma text-[9px] tracking-widest text-white/20 pt-0.5 shrink-0">{item.step}</span>
+                            <div className="flex flex-col gap-1">
+                              <span className="font-michroma text-[9px] tracking-[0.08em] uppercase text-white/55">{item.title}</span>
+                              <p className="text-[11px] text-white/25 font-light leading-relaxed">{item.desc}</p>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
 
-                      <motion.button
-                        whileHover={{ scale: 1.02, y: -1 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          setIsQuoteLocked(true);
-                          addRegistryLog(`[SLA QUOTE COMPLETE] Locked strategic SLA proposal: Tier ${slaTier.toUpperCase()}, Vol ${estimateVolume}k at $${calculatedPrice()}/mo.`);
-                        }}
-                        className="w-full py-4 bg-white text-black text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition-all cursor-pointer"
-                      >
-                        Lock Proposal & Onboard
-                      </motion.button>
-
-                      <div className="flex items-center gap-2 justify-center text-[9px] text-white/40 uppercase font-mono leading-none mt-4">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>ISO-27001 Strict Compliance Guaranteed</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { val: "Free", label: "Strategy Call" },
+                          { val: "24h", label: "Response Time" },
+                          { val: "5–10d", label: "To Go Live" },
+                          { val: "Zero", label: "Lock-in" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex flex-col gap-0.5 p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                            <span className="font-michroma text-[13px] text-white/75">{item.val}</span>
+                            <span className="font-michroma text-[7.5px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
+                          </div>
+                        ))}
                       </div>
                     </motion.div>
                   ) : (
                     <motion.div
-                      key="quote-locked-state"
+                      key="contact-submitted"
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="liquid-glass rounded-[2rem] p-6 lg:p-8 flex flex-col justify-between bg-emerald-950/[0.05] border border-emerald-500/20 h-full min-h-[440px] text-center"
+                      className="liquid-glass rounded-[2rem] p-6 lg:p-8 flex flex-col items-center justify-center text-center gap-6 bg-white/[0.01] border border-white/5 h-full min-h-[440px]"
                     >
-                      <div className="flex flex-col items-center gap-3 mt-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center animate-bounce">
-                          <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                        </div>
-                        <h4 className="text-xs tracking-widest uppercase font-mono font-extrabold text-emerald-400 mt-2">SLA CORE PROTOCOL INITIATED</h4>
-                        <h3 className="font-sans text-2xl text-white/95">Proposal Locked Successfully</h3>
-                        <p className="text-xs text-white/60 max-w-xs mt-2 leading-relaxed">
-                          We have recorded your specifications in our secure database ledger. A direct communication line is being established between ARKA’s lead technical architect and your company’s technical contact inbox.
+                      <div className="w-12 h-12 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
+                        <ShieldCheck className="w-5 h-5 text-white/70" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <h3 className="font-sans font-light text-2xl tracking-[0.06em] uppercase text-white/80">Request Received</h3>
+                        <p className="font-michroma text-[9px] tracking-[0.08em] text-white/35 max-w-xs leading-relaxed">
+                          We’ll reach out to {contactEmail} within 24 hours to book your free strategy call.
                         </p>
                       </div>
-
-                      <div className="my-5 p-4 bg-black/40 rounded-2xl border border-emerald-500/10 text-left font-mono text-[10px] text-emerald-300 flex flex-col gap-2">
-                        <div className="flex justify-between">
-                          <span className="text-white/40">PLAN TIER:</span>
-                          <span className="font-bold text-white uppercase">{slaTier}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/40">CAPACITY MESH:</span>
-                          <span className="text-white">{estimateVolume},000 msg/mo</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/40">MONTHLY FIXED RET:</span>
-                          <span className="text-white font-bold">${calculatedPrice()}/mo</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/40">LEDGER HASH:</span>
-                          <span className="text-white/70 overflow-hidden text-ellipsis max-w-[140px] whitespace-nowrap">ark_tx_s0f2b9a7</span>
-                        </div>
+                      <div className="w-full p-4 bg-black/40 rounded-2xl border border-white/5 text-left flex flex-col gap-2">
+                        <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/25 block mb-1">What to expect</span>
+                        {["Confirmation email shortly", "Strategy call booked within 48h", "Custom proposal delivered after call", "System live within 5–10 days"].map((line, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <span className="w-1 h-1 rounded-full bg-white/30 shrink-0" />
+                            <span className="font-michroma text-[8px] tracking-[0.05em] text-white/45">{line}</span>
+                          </div>
+                        ))}
                       </div>
-
-                      <div className="flex flex-col gap-2.5 w-full">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            setIsQuoteLocked(false);
-                            addRegistryLog("[SLA QUOTE REEDIT] User unlocked SLA proposal parameters.");
-                          }}
-                          className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/80 text-xs font-semibold rounded-xl border border-white/10 transition-colors cursor-pointer"
-                        >
-                          Modify Parameters
-                        </motion.button>
-                        <span className="text-[9px] uppercase tracking-wider font-mono text-white/35">
-                          ISO-27001 Cryptically Signed Reference
-                        </span>
-                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => { setIsContactSubmitted(false); setContactName(""); setContactEmail(""); setContactService([]); setContactMessage(""); }}
+                        className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/25 hover:text-white/50 transition-colors cursor-pointer"
+                      >
+                        Submit another request
+                      </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+
+              </div>
+              </motion.div>
+
+              {/* ── CINEMATIC DIVIDER: HALL ─── */}
+              <ParallaxBanner src="/img-hall.png" label="ARKA · The Gateway" brightness={0.55} />
+
+              {/* ── SECTION 3: FAQ ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-section"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                  <div className="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24 relative">
+                    <GhostNum n="03" />
+                    <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">FAQ</motion.span>
+                    <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                      <SplitText text="Common Questions" />
+                    </h2>
+                    <p className="text-[13px] font-light text-white/35 leading-relaxed tracking-wide">
+                      Straight answers. No filler.
+                    </p>
+                  </div>
+                  <div className="lg:col-span-8 flex flex-col gap-0 border-t border-white/[0.06]">
+                    {[
+                      { q: "How fast can you actually deliver?", a: "Most systems go live in 5–10 business days from signed contract. Complex multi-integration builds can take up to 2 weeks. You get daily progress updates throughout." },
+                      { q: "Do I need technical knowledge to work with you?", a: "No. You explain what you need in plain terms — the bottlenecks, the manual work, the goals. I handle everything technical." },
+                      { q: "What happens if the system breaks after delivery?", a: "All active retainer clients get priority support with guaranteed response times based on their SLA tier. Issues are resolved — not handed off." },
+                      { q: "Can I cancel at any time?", a: "Yes. Every engagement is month-to-month. If the system stops working for your business, you cancel. No lock-in, no penalty clauses." },
+                      { q: "Who owns the systems you build?", a: "You do. The code, the workflows, the integrations — all transferred to you. ARKA doesn't retain IP on client-specific builds." },
+                      { q: "Do you work with companies outside North America?", a: "Yes. We work remotely across time zones. Primary clients are in the US and Canada, but international engagements are common." },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.07, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex gap-6 sm:gap-10 py-7 border-b border-white/[0.06] group step-row"
+                      >
+                        <div className="flex flex-col gap-2 flex-1">
+                          <h3 className="font-sans font-light text-base sm:text-lg tracking-[0.03em] uppercase text-white/80 group-hover:text-white transition-colors duration-200">{item.q}</h3>
+                          <p className="text-[13px] text-white/35 font-light leading-relaxed tracking-wide">{item.a}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 4: OTHER WAYS TO REACH US ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="relative flex flex-col gap-3 mb-14">
+                  <GhostNum n="04" />
+                  <motion.span initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Direct Contact</motion.span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">
+                    <SplitText text="Reach Out Directly" />
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.04]">
+                  {[
+                    { method: "Email", value: "hello@arka.systems", desc: "For detailed project briefs or partnership inquiries. Responds within 24 hours." },
+                    { method: "LinkedIn", value: "ARKA Systems", desc: "Connect for quick questions, company updates, and case study walkthroughs." },
+                    { method: "Strategy Call", value: "Book Free Call →", desc: "30 minutes. We map out your highest-ROI automation and scope the build.", action: true },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, duration: 0.5 }}
+                      onClick={item.action ? () => { const el = document.querySelector("#quote-builder"); el?.scrollIntoView({ behavior: "smooth" }); } : undefined}
+                      className={`flex flex-col gap-3 p-6 sm:p-8 glass-card group glow-border ${item.action ? "cursor-pointer" : ""}`}
+                    >
+                      <span className="font-michroma text-[9px] tracking-[0.2em] uppercase text-white/25">{item.method}</span>
+                      <span className="font-sans font-light text-xl text-white/80 group-hover:text-white transition-colors duration-200">{item.value}</span>
+                      <p className="text-[12px] text-white/30 font-light leading-relaxed tracking-wide">{item.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 5: FINAL CTA ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-10 section-with-bg sbg-monolith"
+              >
+                <div className="flex flex-col gap-4">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Start Now</span>
+                  <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                    30 minutes.<br />Then we build.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <MagneticButton onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Start Your Project <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">Free call · No commitment · Results in 30 days</span>
+                </div>
+              </motion.div>
 
             </motion.div>
           )}
@@ -1715,53 +2471,142 @@ export default function App() {
           {currentTab === "pingscan" && (
             <motion.div
               key="pingscan-page"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.22 }}
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col pb-24"
             >
-              <PingScanner theme={theme} addLog={addRegistryLog} />
+              {/* ── SECTION 1: HERO ─── */}
+              <div className="relative flex flex-col justify-center min-h-[calc(100dvh-80px)] py-16 overflow-hidden">
+                <GhostNum n="05" />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="flex items-center gap-4 mb-12">
+                  <div className="h-px w-6 bg-white/20" />
+                  <span className="font-michroma text-[9px] tracking-[0.3em] text-white/30 uppercase">ARKA · Diagnostics</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
+                  <h1 className="font-sans font-light tracking-[-0.01em] uppercase select-none overflow-hidden" style={{ fontSize: "clamp(3rem, 10vw, 9.5rem)", lineHeight: 0.9 }}>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white block">Network</motion.span></div>
+                    <div className="overflow-hidden"><motion.span initial={{ y: "110%", opacity: 0 }} animate={{ y: "0%", opacity: 1 }} transition={{ delay: 0.42, duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="block" style={{ color: "rgba(255,255,255,0.18)" }}>Scanner.</motion.span></div>
+                  </h1>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-12 mt-8 sm:mt-10">
+                    <div className="h-px w-16 bg-white/15 mt-1 shrink-0 hidden sm:block" />
+                    <p className="font-sans font-light text-[13px] sm:text-[14px] text-white/35 leading-relaxed tracking-wide max-w-xs">
+                      Real-time network diagnostics and edge gateway latency analysis across global ARKA infrastructure.
+                    </p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-5">
+                  {[{ val: "5", label: "Edge Gateways" }, { val: "<100ms", label: "Avg Latency" }, { val: "Live", label: "Diagnostics" }, { val: "ISO-27001", label: "Encrypted" }].map((item, i) => (
+                    <div key={i} className="flex items-baseline gap-1.5">
+                      <span className="font-michroma text-[11px] text-white/70">{item.val}</span>
+                      <span className="font-michroma text-[8px] tracking-[0.12em] uppercase text-white/20">{item.label}</span>
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
+
+              {/* ── SECTION 2: SCANNER ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-concrete"
+              >
+                <div className="flex flex-col gap-3 mb-10">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Live Tool</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[2.8rem] tracking-[0.04em] uppercase text-white leading-[1.05]">Ping Scanner</h2>
+                </div>
+                <PingScanner theme={theme} addLog={addRegistryLog} />
+              </motion.div>
+
+              {/* ── SECTION 3: WHAT IT TESTS ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] section-with-bg sbg-hall"
+              >
+                <div className="flex flex-col gap-3 mb-12">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Diagnostics</span>
+                  <h2 className="font-sans font-light text-[2rem] md:text-[3rem] tracking-[0.04em] uppercase text-white leading-[1.05]">What Gets Tested</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.04]">
+                  {[
+                    { num: "01", name: "Latency Analysis", desc: "Round-trip time measured from your connection to each regional edge gateway. Identifies bottlenecks across the global mesh." },
+                    { num: "02", name: "Gateway Health", desc: "Status checks across all five ARKA edge nodes — SFO, LDN, TKY, SGP, and FRA — with real-time health grades." },
+                    { num: "03", name: "Route Diagnostics", desc: "Trace the network path your data takes to reach each endpoint. Useful for optimising delivery and reducing latency." },
+                  ].map((s, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex flex-col gap-4 p-6 sm:p-8 glass-card group hover:bg-white/[0.06]! transition-colors duration-200"
+                    >
+                      <span className="font-michroma text-[9px] tracking-widest text-white/20">{s.num}</span>
+                      <h3 className="font-sans font-light text-xl tracking-[0.04em] uppercase text-white/80 group-hover:text-white transition-colors duration-200">{s.name}</h3>
+                      <p className="text-[12px] text-white/30 font-light leading-relaxed tracking-wide group-hover:text-white/45 transition-colors duration-200">{s.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── SECTION 4: CTA ─── */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="py-20 sm:py-28 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-10 section-with-bg sbg-space"
+              >
+                <div className="flex flex-col gap-4">
+                  <span className="font-michroma text-[9px] tracking-[0.25em] uppercase text-white/25">Integrate</span>
+                  <p className="font-sans font-light tracking-[-0.01em] uppercase text-white leading-[1.0]" style={{ fontSize: "clamp(2rem, 7vw, 6rem)" }}>
+                    Need custom<br />monitoring?
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <MagneticButton onClick={() => { setCurrentTab("quote"); addRegistryLog("[NAV] Navigated to contact from scanner"); }} className="btn-glow-pulse w-full sm:w-auto px-10 py-5 rounded-full font-michroma text-[9px] tracking-[0.22em] bg-white text-black hover:bg-neutral-100 transition-colors uppercase flex items-center justify-center gap-3">
+                    Talk to Us <ArrowRight className="w-3 h-3" />
+                  </MagneticButton>
+                  <span className="font-michroma text-[8px] tracking-[0.15em] uppercase text-white/20 text-center">Custom telemetry dashboards available</span>
+                </div>
+              </motion.div>
+
             </motion.div>
           )}
 
           {currentTab === "design" && (
             <motion.div
               key="design-page"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.22 }}
+              initial={{ opacity: 0, y: 22, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
             >
-              <WebDesignStudio theme={theme} addLog={addRegistryLog} />
+              <ROICalculator theme={theme} addLog={addRegistryLog} onBookCall={() => setCurrentTab("quote")} />
             </motion.div>
           )}
 
         </AnimatePresence>
+        </motion.div>
       </main>
 
       {/* ================= GLOBAL SUB-COMPONENTS/MODALS/FOOTERS ================= */}
 
-      {/* Footer Branding Links */}
-      <footer className="w-full py-10 px-4 md:px-8 border-t border-white/5 bg-black/80 backdrop-blur-xl relative z-20">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-white/40">
-          
-          <div className="flex items-center gap-3">
-            <Logo className="w-6 h-6 text-white/60" />
-            <span className="font-sans font-bold uppercase tracking-wider text-white/80">ARKA COGNITIVE WEB</span>
+      {/* Footer */}
+      <footer className="w-full py-6 px-4 md:px-12 border-t border-white/[0.04] relative z-20">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[10px] font-michroma tracking-[0.2em] uppercase text-white/20">ARKA · SYSTEMS GLOBAL · 2026</span>
+          <div className="flex items-center gap-1">
+            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="p-3 text-white/20 hover:text-white/60 hover:scale-110 transition-all duration-200"><Twitter className="w-4 h-4" /></a>
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="p-3 text-white/20 hover:text-white/60 hover:scale-110 transition-all duration-200"><Linkedin className="w-4 h-4" /></a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="p-3 text-white/20 hover:text-white/60 hover:scale-110 transition-all duration-200"><Instagram className="w-4 h-4" /></a>
           </div>
-
-          <p className="text-[11px] leading-relaxed max-w-md text-center md:text-left font-light text-white/50">
-            Pixel-perfect corporate UI layouts paired seamlessly with edge conversational state models. Created with pride for modern multi-region enterprises.
-          </p>
-
-          <div className="flex items-center gap-4 text-white/60">
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors" title="Twitter"><Twitter className="w-4 h-4" /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors" title="LinkedIn"><Linkedin className="w-4 h-4" /></a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors" title="Instagram"><Instagram className="w-4 h-4" /></a>
-            <span className="w-[1px] h-3 bg-white/20" />
-            <span className="text-[10px] tracking-wider font-mono uppercase text-white/40">ARKA CORP 2026</span>
-          </div>
-
         </div>
       </footer>
 
@@ -1793,9 +2638,9 @@ export default function App() {
                   </div>
                   <button
                     onClick={() => setIsArchiveOpen(false)}
-                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer"
+                    className="w-11 h-11 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer"
                   >
-                    <X className="w-4 h-4 text-white" />
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
@@ -1807,7 +2652,7 @@ export default function App() {
                     >
                       <img src={spec.imageUrl} alt={spec.name} className="w-20 h-14 object-cover rounded-md filter grayscale group-hover:grayscale-0 transition-all duration-500" />
                       <div>
-                        <span className="text-[9px] uppercase tracking-wider text-cyan-400 font-mono block">{spec.preset} framework</span>
+                        <span className="text-[9px] uppercase tracking-wider text-white/40 font-mono block">{spec.preset} framework</span>
                         <span className="text-xs font-semibold text-white/90 truncate leading-tight mt-0.5 block">{spec.name}</span>
                         <span className="text-[10px] text-white/50 font-mono mt-1 leading-none block">Latency: {spec.lumens}ms</span>
                       </div>
@@ -1829,11 +2674,11 @@ export default function App() {
                 <button
                   onClick={() => {
                     setIsArchiveOpen(false);
-                    setCurrentTab("lab");
+                    setCurrentTab("quote");
                   }}
                   className="w-full py-3 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 hover:bg-neutral-200 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> Compile new blueprint
+                  <Plus className="w-4 h-4" /> Book a strategy call
                 </button>
               </div>
             </motion.div>
@@ -1862,7 +2707,7 @@ export default function App() {
               </button>
 
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white mt-2 animate-pulse">
-                <Globe className="w-5 h-5 text-cyan-400" />
+                <Globe className="w-5 h-5 text-white/40" />
               </div>
 
               <AnimatePresence mode="wait">
@@ -1870,7 +2715,7 @@ export default function App() {
                   <motion.div
                     key="pre-signup"
                     initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -10 }}
                     className="w-full flex flex-col items-center gap-4"
                   >
@@ -1919,11 +2764,11 @@ export default function App() {
                     exit={{ opacity: 0 }}
                     className="w-full flex flex-col items-center gap-4 py-4"
                   >
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center animate-bounce">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center animate-bounce">
+                      <ShieldCheck className="w-5 h-5 text-white/50" />
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase font-mono tracking-widest text-emerald-400 font-bold">ONBOARDING TRANSMITTAL INITIALISED</h4>
+                      <h4 className="text-xs uppercase font-michroma tracking-widest text-white/50 font-bold">ONBOARDING TRANSMITTAL INITIALISED</h4>
                       <h3 className="font-sans text-xl mt-1 text-white">Direct Verification SLA</h3>
                       <p className="text-xs text-white/50 mt-1.5 max-w-[290px] mx-auto leading-relaxed">
                         Secure endpoint generated! Our corporate technical team is routing your specific token and custom setup files to your designated email inbox. Expected delivery is within 2 hours.
@@ -1949,65 +2794,60 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 4. Complete Mobile/Overlay Navigation Menu Console Drawer */}
+      {/* 4. Navigation Menu Overlay */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-xl" onClick={() => setIsMenuOpen(false)}>
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg rounded-[2.5rem] liquid-glass p-8 flex flex-col justify-between text-white relative z-50"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.25 }}
+              className="w-full max-w-sm bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8 flex flex-col gap-8 text-white relative z-50"
+              onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer"
-              >
-                <X className="w-4 h-4 text-white/70" />
-              </button>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-michroma tracking-[0.2em] uppercase text-white/25">Navigation</span>
+                <button onClick={() => setIsMenuOpen(false)} className="w-11 h-11 flex items-center justify-center text-white/25 hover:text-white/60 transition-colors cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-              <h3 className="font-sans font-medium text-lg uppercase tracking-widest text-white/40 mb-6">ARKA ENTERPRISE SUITE</h3>
-
-              <nav className="flex flex-col gap-4 text-left">
+              <nav className="flex flex-col">
                 {[
-                  { name: "Explore Corporate Overview", desc: "Main corporate portal value propositions & stats", action: () => setCurrentTab("overview") },
-                  { name: "Interactive Services Matrix", desc: "Click and simulate conversational chatbots & schemas", action: () => setCurrentTab("solutions") },
-                  { name: "Bespoke Web Design Studio", desc: "Interactive customized brand mockups configurator", action: () => setCurrentTab("design") },
-                  { name: "Automation Lab workbench", desc: "Compile and manifest new workflow items", action: () => setCurrentTab("lab") },
-                  { name: "Saved Blueprints Registry", desc: "View lists of registered templates, logs & details", action: () => setCurrentTab("registry") },
-                  { name: "Live Edge Telemetry Globe", desc: "Aesthetic rotating 3D projection model", action: () => setCurrentTab("globe") },
-                  { name: "Live Edge Diagnostic Scanner", desc: "Ping latency route scans and corporate bandwidth test", action: () => setCurrentTab("pingscan") },
-                  { name: "Agreement SLA Calculator", desc: "ROI estimator for estimated monthly conversations", action: () => setCurrentTab("quote") }
+                  { name: "Home", action: () => setCurrentTab("overview") },
+                  { name: "Services", action: () => setCurrentTab("solutions") },
+                  { name: "Work", action: () => setCurrentTab("lab") },
+                  { name: "Registry", action: () => setCurrentTab("registry") },
+                  { name: "Telemetry", action: () => setCurrentTab("globe") },
+                  { name: "Scanner", action: () => setCurrentTab("pingscan") },
+                  { name: "ROI Calc", action: () => setCurrentTab("design") },
+                  { name: "Contact", action: () => setCurrentTab("quote") }
                 ].map((route, idx) => (
-                  <button
+                  <motion.button
                     key={idx}
-                    onClick={() => {
-                      route.action();
-                      setIsMenuOpen(false);
-                    }}
-                    className="p-3.5 rounded-2xl bg-white/[0.01] hover:bg-white/[0.04] transition-all flex items-center justify-between text-left group cursor-pointer border border-white/5"
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.045, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={() => { route.action(); setIsMenuOpen(false); }}
+                    className="py-4 text-left text-[12px] font-michroma tracking-[0.12em] uppercase text-white/40 hover:text-white active:text-white transition-colors duration-200 cursor-pointer border-b border-white/[0.04] last:border-0"
                   >
-                    <div>
-                      <h4 className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">{route.name}</h4>
-                      <p className="text-[10px] text-white/40 mt-0.5">{route.desc}</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-1.5 transition-all" />
-                  </button>
+                    {route.name}
+                  </motion.button>
                 ))}
               </nav>
 
-              <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row gap-4 justify-between sm:items-center text-[10px] uppercase font-mono tracking-wider text-white/40">
-                <span>ARKA SYSTEMS GLOBAL 2026</span>
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-[9px] font-michroma tracking-[0.18em] uppercase text-white/20">ARKA · 2026</span>
                 <button
                   onClick={() => {
                     setIsPortalEntered(false);
                     localStorage.setItem("arka_portal_entered", "false");
                     setIsMenuOpen(false);
-                    addRegistryLog("[SYS] Handshake session terminated: Locked Gateway console.");
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-red-950/20 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/15 font-mono text-[9px] uppercase tracking-wider text-center cursor-pointer"
+                  className="py-3 px-2 text-[10px] font-michroma tracking-[0.12em] uppercase text-white/20 hover:text-white/50 transition-colors cursor-pointer"
                 >
-                  RESET GATEWAY (LOGOUT)
+                  Exit Session
                 </button>
               </div>
             </motion.div>

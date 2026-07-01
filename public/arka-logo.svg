@@ -1,0 +1,72 @@
+<svg
+  viewBox="0 0 100 100"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  width="400"
+  height="400"
+>
+  <defs>
+    <clipPath id="logoCircleClip">
+      <circle cx="50" cy="50" r="44" />
+    </clipPath>
+  </defs>
+
+  <!-- Outer Brand Circle Ring -->
+  <circle
+    cx="50"
+    cy="50"
+    r="45.5"
+    stroke="white"
+    stroke-width="3.2"
+    fill="none"
+  />
+
+  <!-- Clipped Internal Elements -->
+  <g clip-path="url(#logoCircleClip)">
+    <!-- Fine vertical acceleration lines -->
+    <line x1="41.0" y1="4" x2="41.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="42.5" y1="4" x2="42.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="44.0" y1="4" x2="44.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="45.5" y1="4" x2="45.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="47.0" y1="4" x2="47.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="48.5" y1="4" x2="48.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="50.0" y1="4" x2="50.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="51.5" y1="4" x2="51.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="53.0" y1="4" x2="53.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="54.5" y1="4" x2="54.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="56.0" y1="4" x2="56.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="57.5" y1="4" x2="57.5" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+    <line x1="59.0" y1="4" x2="59.0" y2="76" stroke="white" stroke-width="0.32" stroke-opacity="0.45"/>
+
+    <!-- Left Pillar (slanted upward toward center) -->
+    <polygon
+      points="43.2,73 43.2,42.5 45.8,39.5 45.8,72"
+      fill="white"
+    />
+
+    <!-- Center Pillar (tallest, diamond/sword-pointed top) -->
+    <polygon
+      points="48.7,70 48.7,35.0 50.0,32.4 51.3,35.0 51.3,70"
+      fill="white"
+    />
+
+    <!-- Right Pillar (slanted upward toward center) -->
+    <polygon
+      points="54.2,72 54.2,39.5 56.8,42.5 56.8,73"
+      fill="white"
+    />
+
+    <!-- Mountain Foundation -->
+    <path
+      d="M 10 75.5
+         L 31 75.5
+         C 39 75.5, 42 74.0, 45 70.8
+         C 47.8 67.8, 49 66.2, 50 66.2
+         C 51 66.2, 52.2 67.8, 55 70.8
+         C 58 74.0, 61 75.5, 69 75.5
+         L 90 75.5
+         A 44 44 0 0 1 10 75.5 Z"
+      fill="white"
+    />
+  </g>
+</svg>

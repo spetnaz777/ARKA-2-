@@ -1,0 +1,15 @@
+/*
+  # Prevent clickjacking — nobody can iframe this site
+  X-Frame-Options: DENY
+  # Prevent MIME sniffing attacks
+  X-Content-Type-Options: nosniff
+  # Only send referrer on same-origin requests
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Lock down browser features — nobody gets camera, mic, geolocation, payments
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), serial=(), interest-cohort=()
+  # Prevent XSS via reflected scripts
+  X-XSS-Protection: 1; mode=block
+  # Content Security Policy — only allow what the site actually uses
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; media-src 'self' https://d8j0ntlcm91z4.cloudfront.net blob:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';
+  # Force HTTPS, remember for 1 year
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload

@@ -1,0 +1,275 @@
+# ═══════════════════════════════════════════════════════════
+#  ARKA Systems — robots.txt
+#  https://arkasystems.io
+#
+#  © 2026 ARKA Systems. All rights reserved.
+#  All content on this website is the exclusive intellectual
+#  property of ARKA Systems. Unauthorized scraping,
+#  reproduction, or use of any content is strictly prohibited.
+# ═══════════════════════════════════════════════════════════
+
+# ── Default: allow all legitimate crawlers ──
+User-agent: *
+Allow: /
+
+# Block internal/build directories from indexing
+Disallow: /src/
+Disallow: /.env
+Disallow: /.env.example
+Disallow: /.git/
+Disallow: /.svn/
+Disallow: /.htaccess
+Disallow: /.htpasswd
+Disallow: /node_modules/
+Disallow: /dist/
+Disallow: /server.js
+Disallow: /metadata.json
+Disallow: /package.json
+Disallow: /tsconfig.json
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /xmlrpc.php
+Disallow: /admin/
+Disallow: /administrator/
+Disallow: /phpmyadmin/
+Disallow: /phpinfo.php
+Disallow: /cgi-bin/
+Disallow: /config/
+Disallow: /backup/
+Disallow: /sql/
+Disallow: /db/
+Disallow: /*.php$
+Disallow: /*.asp$
+Disallow: /*.aspx$
+Disallow: /*.jsp$
+
+# ════════════════════════════════════════════════════════════
+#  AEO: AI Answer Engine Bots — EXPLICITLY ALLOWED
+#  These bots power Perplexity, ChatGPT browsing, Claude web,
+#  Google AI Overviews, and You.com. Blocking them prevents
+#  your content from being cited in AI-generated answers.
+# ════════════════════════════════════════════════════════════
+
+# Perplexity AI — used to index and cite content in answers
+User-agent: PerplexityBot
+Allow: /
+Disallow: /src/
+Disallow: /.env
+Disallow: /.git/
+
+# ChatGPT browsing mode — reads pages during live conversations
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /src/
+Disallow: /.env
+Disallow: /.git/
+
+# Claude browsing — used when Claude cites live web content
+User-agent: Claude-Web
+Allow: /
+Disallow: /src/
+Disallow: /.env
+Disallow: /.git/
+
+# You.com AI search
+User-agent: YouBot
+Allow: /
+Disallow: /src/
+Disallow: /.env
+Disallow: /.git/
+
+# Bing / Microsoft Copilot crawler (powers Bing AI answers)
+User-agent: Bingbot
+Allow: /
+Disallow: /src/
+Disallow: /.env
+
+# ════════════════════════════════════════════════════════════
+#  AI MODEL TRAINING SCRAPERS — BLOCKED
+#  These bots harvest content for training datasets, not for
+#  answering queries. Block to protect content ownership.
+# ════════════════════════════════════════════════════════════
+
+# OpenAI training bot (separate from ChatGPT-User browsing)
+User-agent: GPTBot
+Disallow: /
+
+# Common Crawl — used for bulk model training datasets
+User-agent: CCBot
+Disallow: /
+
+# Anthropic training crawler (separate from Claude-Web browsing)
+User-agent: anthropic-ai
+Disallow: /
+
+# Cohere training crawler
+User-agent: cohere-ai
+Disallow: /
+
+# Meta AI training
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+# ── Block known vulnerability scanners & exploit bots ──
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: SEMrushBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: SiteAuditBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+User-agent: wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: libwww-perl
+Disallow: /
+
+User-agent: python-requests
+Disallow: /
+
+User-agent: Go-http-client
+Disallow: /
+
+User-agent: Nikto
+Disallow: /
+
+User-agent: sqlmap
+Disallow: /
+
+User-agent: Nessus
+Disallow: /
+
+User-agent: Masscan
+Disallow: /
+
+User-agent: zgrab
+Disallow: /
+
+User-agent: nmap
+Disallow: /
+
+User-agent: ZmEu
+Disallow: /
+
+User-agent: Morfeus
+Disallow: /
+
+User-agent: Havij
+Disallow: /
+
+User-agent: masscan
+Disallow: /
+
+User-agent: dirbuster
+Disallow: /
+
+User-agent: Dirbuster
+Disallow: /
+
+User-agent: wfuzz
+Disallow: /
+
+User-agent: w3af
+Disallow: /
+
+User-agent: burpsuite
+Disallow: /
+
+User-agent: zaproxy
+Disallow: /
+
+User-agent: OpenVAS
+Disallow: /
+
+User-agent: Acunetix
+Disallow: /
+
+User-agent: NetcraftSurveyAgent
+Disallow: /
+
+User-agent: ScanAlert
+Disallow: /
+
+User-agent: Detectify
+Disallow: /
+
+User-agent: HTTrack
+Disallow: /
+
+User-agent: WebCopier
+Disallow: /
+
+User-agent: WebStripper
+Disallow: /
+
+User-agent: SiteSnagger
+Disallow: /
+
+User-agent: BlackWidow
+Disallow: /
+
+User-agent: Zeus
+Disallow: /
+
+User-agent: EmailCollector
+Disallow: /
+
+User-agent: EmailSiphon
+Disallow: /
+
+# ── Allow key search engines explicitly ──
+User-agent: Googlebot
+Allow: /
+Disallow: /src/
+Disallow: /.env
+Disallow: /.git/
+Disallow: /node_modules/
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemap
+Sitemap: https://arkasystems.io/sitemap.xml
