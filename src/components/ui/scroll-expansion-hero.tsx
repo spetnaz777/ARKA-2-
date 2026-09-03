@@ -163,28 +163,8 @@ const ScrollExpandMedia = ({
 
   const firstWord = title ? title.split(" ")[0] : "";
   const restOfTitle = title ? title.split(" ").slice(1).join(" ") : "";
-
-  const Media = ({ className }: { className?: string }) => {
-    const src = mobile && mobileMediaSrc ? mobileMediaSrc : mediaSrc;
-    if (mediaType === "video") {
-      return (
-        <video
-          ref={videoRef}
-          src={src}
-          poster={posterSrc}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          controls={false}
-          disablePictureInPicture
-          className={className}
-        />
-      );
-    }
-    return <img src={src} alt={title || ""} className={className} />;
-  };
+  const resolvedSrc = mobile && mobileMediaSrc ? mobileMediaSrc : mediaSrc;
+  const mediaClass = "w-full h-full object-cover rounded-[4px]";
 
   /* ── Scroll-expansion — same behaviour on every screen ──── */
   const expandW = mobile ? 640 : 1250;
@@ -228,7 +208,23 @@ const ScrollExpandMedia = ({
                 }}
               >
                 <div className="relative w-full h-full">
-                  <Media className="w-full h-full object-cover rounded-[4px]" />
+                  {mediaType === "video" ? (
+                    <video
+                      ref={videoRef}
+                      src={resolvedSrc}
+                      poster={posterSrc}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      disablePictureInPicture
+                      className={mediaClass}
+                    />
+                  ) : (
+                    <img src={resolvedSrc} alt={title || ""} className={mediaClass} />
+                  )}
                   <div className="absolute inset-0 bg-black/45 rounded-[4px] pointer-events-none" />
                   <motion.div
                     className="absolute inset-0 bg-black rounded-[4px] pointer-events-none"
