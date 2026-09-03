@@ -267,7 +267,7 @@ function Header({
       className={`fixed top-0 inset-x-0 z-40 transition-colors duration-200 ${
         scrolled
           ? "bg-black/95 border-b border-[#262629]"
-          : "bg-transparent border-b border-transparent"
+          : "bg-gradient-to-b from-black/85 via-black/40 to-transparent border-b border-transparent"
       }`}
     >
       <div className="wrap flex items-center justify-between h-[64px]">
@@ -712,27 +712,29 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             screens get black edge-fade rather than an over-zoomed crop */}
         <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[2200px] overflow-hidden pointer-events-none">
           <img
-            src="/deep-black-hero.jpg"
-            srcSet="/deep-black-hero-1280.jpg 1440w, /deep-black-hero.jpg 2400w"
-            sizes="100vw"
+            src="/landing-hero.jpg"
             alt=""
             aria-hidden="true"
             className="hero-drift absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(1.12) contrast(1.04) saturate(1.03)" }}
+            style={{ filter: "brightness(0.68) contrast(1.06) saturate(0.95)" }}
           />
         </div>
+        {/* flat safety tint so copy stays legible over any image */}
+        <div className="absolute inset-0 pointer-events-none bg-black/25" />
+        {/* left column stays dark where the headline + buttons sit */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.22) 74%, rgba(0,0,0,0.4) 100%)",
+              "linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.72) 44%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.6) 100%)",
           }}
         />
+        {/* darken top (behind the nav) and bottom (bright foreground) */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 64%, rgba(0,0,0,0.75) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.14) 18%, rgba(0,0,0,0) 46%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.92) 100%)",
           }}
         />
         <div className="hero-sweep" />
@@ -984,8 +986,6 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
         mediaSrc="/services-hero.mp4"
         mobileMediaSrc="/services-hero-mobile.mp4"
         posterSrc="/services-hero-poster.jpg"
-        bgImageSrc="/deep-black-hero.jpg"
-        bgImageSrcMobile="/deep-black-hero-1280.jpg"
         title="What We Build"
         date="ARKA · Services"
         scrollToExpand="Scroll to explore"
