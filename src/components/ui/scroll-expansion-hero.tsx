@@ -14,7 +14,8 @@ interface ScrollExpandMediaProps {
   /** Lighter media used on touch devices (smaller video / image). */
   mobileMediaSrc?: string;
   posterSrc?: string;
-  bgImageSrc: string;
+  /** Optional full-bleed backdrop. Omit for a clean black stage. */
+  bgImageSrc?: string;
   /** Smaller background used on narrow screens. */
   bgImageSrcMobile?: string;
   title?: string;
@@ -186,13 +187,25 @@ const ScrollExpandMedia = ({
             animate={{ opacity: 1 - scrollProgress }}
             transition={{ duration: 0.1 }}
           >
-            <img
-              src={mobile && bgImageSrcMobile ? bgImageSrcMobile : bgImageSrc}
-              alt=""
-              aria-hidden="true"
-              className="h-full w-full max-w-[2200px] object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-black/40" />
+            {bgImageSrc ? (
+              <>
+                <img
+                  src={mobile && bgImageSrcMobile ? bgImageSrcMobile : bgImageSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-full w-full max-w-[2200px] object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+              </>
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(80% 55% at 50% 42%, #101014 0%, #060608 45%, #000 100%)",
+                }}
+              />
+            )}
           </motion.div>
 
           <div className="container mx-auto flex flex-col items-center justify-start relative z-10">

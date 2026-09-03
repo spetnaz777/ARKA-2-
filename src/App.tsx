@@ -419,7 +419,7 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
         </div>
         <h1 className="brand text-xl md:text-2xl">ARKA</h1>
         <p className="u-label text-[8px] text-[#8a8a92] mt-3 mb-8">
-          Systems Operator
+          The sky is our limit
         </p>
 
         {/* blurred glass panel */}
@@ -484,9 +484,12 @@ function Footer({ go }: { go: (t: Tab) => void }) {
             <Logo className="w-7 h-7 text-white" />
             <span className="brand text-[14px]">ARKA</span>
           </div>
+          <p className="u-label text-[8px] text-[#6b6b72] mt-3">
+            The sky is our limit.
+          </p>
           <p className="body-dim text-[12px] mt-4 max-w-[200px]">
-            Digital infrastructure for companies that move fast. AI automation,
-            web, and internal tools — built by one operator.
+            AI automation, web, and internal tools — built from scratch around
+            your business, by one operator.
           </p>
         </div>
         <div>
@@ -788,7 +791,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </p>
 
           <div
-            className="rise mt-10 md:mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-md md:max-w-3xl"
+            className="rise mt-10 md:mt-16 hidden md:grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-md md:max-w-3xl"
             style={{ animationDelay: "0.62s" }}
           >
             {[
@@ -916,8 +919,11 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             ))}
           </div>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.n} className="card flex flex-col">
+            {TESTIMONIALS.map((t, i) => (
+              <div
+                key={t.n}
+                className={`card flex-col ${i > 0 ? "hidden md:flex" : "flex"}`}
+              >
                 <p className="text-[13px] text-[#cfcfd6] leading-relaxed flex-1">
                   "{t.q}"
                 </p>
@@ -942,9 +948,14 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
       <section className="border-t border-[#262629]">
         <div className="wrap py-16 md:py-28">
           <SectionHead label="Before you ask" title="Straight answers." />
-          <div className="mt-12 border-t border-[#262629]">
-            {FAQ.slice(0, 3).map((f) => (
-              <div key={f.q} className="py-6 border-b border-[#262629]">
+          <div className="mt-8 md:mt-12 border-t border-[#262629]">
+            {FAQ.slice(0, 3).map((f, i) => (
+              <div
+                key={f.q}
+                className={`py-6 border-b border-[#262629] ${
+                  i > 1 ? "hidden md:block" : ""
+                }`}
+              >
                 <h3 className="u-head text-[14px]">{f.q}</h3>
                 <p className="body-dim text-[13px] mt-2.5 max-w-2xl">{f.a}</p>
               </div>
@@ -973,8 +984,6 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
         mediaSrc="/services-hero.mp4"
         mobileMediaSrc="/services-hero-mobile.mp4"
         posterSrc="/services-hero-poster.jpg"
-        bgImageSrc="/img-space.jpg"
-        bgImageSrcMobile="/img-space-1280.jpg"
         title="What We Build"
         date="ARKA · Services"
         scrollToExpand="Scroll to explore"
@@ -1068,13 +1077,68 @@ function WorkPage({ go }: { go: (t: Tab) => void }) {
   );
 }
 
+const WEB3FORMS_KEY =
+  (import.meta.env?.VITE_WEB3FORMS_KEY as string | undefined) ?? "";
+const CONTACT_EMAIL = "hello@arkalegion.com";
+
 function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   const field =
     "w-full bg-black border border-[#262629] focus:border-[#545457] rounded-[4px] px-4 py-3 text-[14px] text-[#f0f0fa] placeholder:text-[#4a4a50] outline-none transition-colors";
+
+  const submit = async () => {
+    if (!name || !email || sending) return;
+    setError("");
+
+    // No form service configured yet → open the visitor's mail client.
+    if (!WEB3FORMS_KEY) {
+      const body = encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\n\n${message || "(no message)"}`,
+      );
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+        "New enquiry from " + name,
+      )}&body=${body}`;
+      setSent(true);
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `New ARKA enquiry — ${name}`,
+          from_name: "ARKA website",
+          name,
+          email,
+          message: message || "(no message)",
+          botcheck: "",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setSent(true);
+      } else {
+        setError(
+          data.message || "Something went wrong. Email us directly instead.",
+        );
+      }
+    } catch {
+      setError("Couldn't send — check your connection or email us directly.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <>
@@ -1128,14 +1192,22 @@ function ContactPage() {
                   </div>
                   <div className="pt-1">
                     <LiquidMetalButton
-                      label="Request a Call"
-                      disabled={!name || !email}
-                      onClick={() => {
-                        if (!name || !email) return;
-                        setSent(true);
-                      }}
+                      label={sending ? "Sending…" : "Request a Call"}
+                      disabled={!name || !email || sending}
+                      onClick={submit}
                     />
                   </div>
+                  {error && (
+                    <p className="text-[12px] text-[#e0a0a0]">
+                      {error}{" "}
+                      <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="underline hover:text-[#f0f0fa]"
+                      >
+                        {CONTACT_EMAIL}
+                      </a>
+                    </p>
+                  )}
                   <p className="u-label text-[8px] text-[#4a4a50]">
                     We respond within 24 hours. No commitment.
                   </p>

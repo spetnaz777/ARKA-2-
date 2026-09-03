@@ -400,6 +400,11 @@ body {
   .accent {
     letter-spacing: 0.08em;
   }
+  /* drop decorative layers on phones — lighter, calmer, cheaper */
+  .hero-grain,
+  .hero-sweep {
+    display: none;
+  }
 }
 
 @media (pointer: coarse) {
