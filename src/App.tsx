@@ -126,6 +126,7 @@ const CASES = [
     title: "Commercial Real Estate — Lead Pipeline",
     service: "AI Automation",
     timeline: "8 days to live",
+    img: "/img-monolith.jpg",
     desc: "Replaced manual follow-up with a multi-step AI sequence across email, SMS, and CRM. Response times went from days to under 4 minutes. 400+ leads a month, handled autonomously.",
   },
   {
@@ -133,6 +134,7 @@ const CASES = [
     title: "B2B SaaS — Marketing Site Rebuild",
     service: "Web Design & Development",
     timeline: "7 days to live",
+    img: "/img-corridor.jpg",
     desc: "Full rebuild — mobile-first, sub-1s load, structured around a single funnel. Replaced a bloated agency site with a lean architecture that converts.",
   },
   {
@@ -140,6 +142,7 @@ const CASES = [
     title: "E-Commerce Brand — Outbound Engine",
     service: "AI Lead Generation",
     timeline: "10 days to live",
+    img: "/rocket-hangar.jpg",
     desc: "AI-powered outbound targeting wholesale and retail buyers. Auto-qualifies prospects, personalises outreach at scale, routes hot leads into the sales calendar.",
   },
   {
@@ -147,6 +150,7 @@ const CASES = [
     title: "Operations & Sales — Workflow Automation",
     service: "Marketing Automation",
     timeline: "6 days to live",
+    img: "/img-concrete.jpg",
     desc: "Mapped 15 recurring manual tasks, then built flows that sync data between tools, trigger follow-ups on deal-stage changes, and generate weekly reports untouched by a human.",
   },
 ];
@@ -650,12 +654,12 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
         <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[2200px] overflow-hidden pointer-events-none">
           <img
             src="/deep-black-hero.jpg"
-            srcSet="/deep-black-hero-1280.jpg 1280w, /deep-black-hero.jpg 2400w"
+            srcSet="/deep-black-hero-1280.jpg 1440w, /deep-black-hero.jpg 2400w"
             sizes="100vw"
             alt=""
             aria-hidden="true"
             className="hero-drift absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(1.16) contrast(1.06)" }}
+            style={{ filter: "brightness(1.12) contrast(1.04) saturate(1.03)" }}
           />
         </div>
         <div
@@ -907,7 +911,21 @@ function WorkPage({ go }: { go: (t: Tab) => void }) {
       <section className="wrap py-14 md:py-28">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {CASES.map((c) => (
-            <div key={c.title} className="card flex flex-col">
+            <div
+              key={c.title}
+              className="card card--hover flex flex-col overflow-hidden"
+            >
+              <div className="-mx-6 -mt-6 mb-5 relative aspect-[16/9] overflow-hidden border-b border-[#262629]">
+                <img
+                  src={c.img}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  style={{ filter: "grayscale(0.35) brightness(0.82) contrast(1.05)" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050506] via-transparent to-transparent" />
+              </div>
               <div className="flex items-center justify-between">
                 <span className="u-label text-[8.5px] text-[#545457]">
                   {c.service}

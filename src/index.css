@@ -201,10 +201,10 @@ body {
 /* ── Hero atmosphere ────────────────────────────────────── */
 @keyframes hero-drift {
   0% {
-    transform: scale(1.06) translate3d(0, 0, 0);
+    transform: scale(1.02) translate3d(0, 0, 0);
   }
   100% {
-    transform: scale(1.16) translate3d(-1.5%, -2%, 0);
+    transform: scale(1.07) translate3d(-1.2%, -1.6%, 0);
   }
 }
 .hero-drift {
