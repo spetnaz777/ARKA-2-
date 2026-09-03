@@ -729,7 +729,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
       {/* HERO */}
-      <section className="cinematic-edges relative border-b border-[#262629] overflow-hidden">
+      <section className="cinematic-edges relative border-b border-[#262629] overflow-hidden flex items-center md:min-h-[90vh]">
         {/* moving image backdrop — capped width, centred, so ultra-wide
             screens get black edge-fade rather than an over-zoomed crop */}
         <div
@@ -754,29 +754,37 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
               }
             }}
             className="hero-drift absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(1.04) contrast(1.03) saturate(0.98)" }}
+            style={{ filter: "brightness(1.08) contrast(1.07) saturate(1)" }}
           />
         </div>
-        {/* left column kept a touch darker where the headline + buttons sit */}
+        {/* top fade — the headline sits on near-solid black, image stays clean below */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.34) 40%, rgba(0,0,0,0.05) 68%, rgba(0,0,0,0.18) 100%)",
+              "linear-gradient(180deg, #000 0%, rgba(0,0,0,0.9) 19%, rgba(0,0,0,0.42) 37%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0) 66%)",
           }}
         />
-        {/* light scrim behind the nav and under the stat grid */}
+        {/* bottom fade — seats the stat grid and blends into the next section */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.08) 16%, rgba(0,0,0,0) 44%, rgba(0,0,0,0.32) 80%, rgba(0,0,0,0.6) 100%)",
+              "linear-gradient(0deg, #000 0%, rgba(0,0,0,0.55) 13%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0) 46%)",
+          }}
+        />
+        {/* faint left feather so the sub-copy / buttons keep contrast */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,0.44) 0%, rgba(0,0,0,0.12) 32%, rgba(0,0,0,0) 56%)",
           }}
         />
         <div className="hero-sweep" />
         <div className="hero-grain" />
 
-        <div className="relative wrap pt-24 pb-12 md:pt-36 md:pb-24 w-full">
+        <div className="relative wrap pt-24 pb-12 md:pt-28 md:pb-20 w-full">
           <p className="rise eyebrow" style={{ animationDelay: "0.05s" }}>
             ARKA · Systems Operator
           </p>
@@ -786,6 +794,8 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             style={{
               fontSize: "clamp(1.8rem, 8.5vw, 5rem)",
               lineHeight: 1.06,
+              textShadow:
+                "0 2px 34px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.65)",
             }}
           >
             <span className="headline-reveal">
@@ -801,8 +811,11 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </h1>
 
           <p
-            className="rise mt-5 md:mt-7 text-[14px] md:text-[16px] text-[#c4c4cc] max-w-md md:max-w-xl leading-relaxed"
-            style={{ animationDelay: "0.38s" }}
+            className="rise mt-5 md:mt-7 text-[14px] md:text-[16px] text-[#d2d2d8] max-w-md md:max-w-xl leading-relaxed"
+            style={{
+              animationDelay: "0.38s",
+              textShadow: "0 1px 18px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.7)",
+            }}
           >
             We build the AI systems that run your lead follow-up, outreach, and
             back-office work — live in under two weeks, month-to-month, no
