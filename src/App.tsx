@@ -285,7 +285,6 @@ function Header({
           ))}
           <LiquidMetalButton
             label="Start a Project"
-            width={156}
             onClick={() => go("quote")}
           />
         </nav>
@@ -355,7 +354,6 @@ function MobileMenu({
             <div className="mt-6">
               <LiquidMetalButton
                 label="Start a Project"
-                width={170}
                 onClick={() => {
                   go("quote");
                   close();
@@ -1001,7 +999,6 @@ function ContactPage() {
                   <div className="pt-1">
                     <LiquidMetalButton
                       label="Request a Call"
-                      width={170}
                       disabled={!name || !email}
                       onClick={() => {
                         if (!name || !email) return;

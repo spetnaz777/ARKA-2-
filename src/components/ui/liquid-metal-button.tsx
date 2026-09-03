@@ -12,6 +12,28 @@ interface LiquidMetalButtonProps {
   disabled?: boolean;
 }
 
+const LABEL_FONT_PX = 10;
+const LABEL_TRACKING_EM = 0.13;
+const LABEL_SIDE_PAD = 26; // px of breathing room on each side
+
+/** Measure the rendered label so the pill is always wide enough for it. */
+function pillWidth(label: string, override?: number): number {
+  if (override != null) return override;
+  let text = label.length * LABEL_FONT_PX * 1.05; // rough fallback
+  try {
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (ctx) {
+      ctx.font = `${LABEL_FONT_PX}px "Michroma", sans-serif`;
+      text =
+        ctx.measureText(label.toUpperCase()).width +
+        LABEL_TRACKING_EM * LABEL_FONT_PX * Math.max(0, label.length - 1);
+    }
+  } catch {
+    /* SSR / no canvas */
+  }
+  return Math.max(120, Math.ceil(text + LABEL_SIDE_PAD * 2));
+}
+
 /** Static metallic pill — only used when the visitor has asked for
  *  reduced motion. Phones get the real WebGL shader like desktop. */
 function StaticMetalButton({
@@ -21,10 +43,7 @@ function StaticMetalButton({
   width,
   disabled,
 }: Required<Omit<LiquidMetalButtonProps, "width">> & { width?: number }) {
-  const w =
-    viewMode === "icon"
-      ? 46
-      : (width ?? Math.max(158, Math.round(label.length * 9) + 66));
+  const w = viewMode === "icon" ? 46 : pillWidth(label, width);
   return (
     <button
       type="button"
@@ -97,8 +116,7 @@ export function LiquidMetalButton({
         shaderHeight: 46,
       };
     }
-    const w =
-      width ?? Math.max(158, Math.round(label.length * 9) + 66);
+    const w = pillWidth(label, width);
     return {
       width: w,
       height: 46,
