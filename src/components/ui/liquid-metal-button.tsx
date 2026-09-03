@@ -12,8 +12,8 @@ interface LiquidMetalButtonProps {
   disabled?: boolean;
 }
 
-/** Static metallic pill — used on touch / reduced-motion where a live
- *  WebGL shader per button would waste battery and jank scrolling. */
+/** Static metallic pill — only used when the visitor has asked for
+ *  reduced motion. Phones get the real WebGL shader like desktop. */
 function StaticMetalButton({
   label,
   onClick,
@@ -69,10 +69,7 @@ export function LiquidMetalButton({
   const [useShader] = useState(() => {
     if (typeof window === "undefined") return true;
     try {
-      return !(
-        window.matchMedia("(pointer: coarse)").matches ||
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      );
+      return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     } catch {
       return true;
     }

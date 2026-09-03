@@ -401,39 +401,74 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
   return (
     <motion.div
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center px-6"
+      exit={{ opacity: 0, scale: 1.02 }}
+      transition={{ duration: 0.55, ease: EASE }}
+      className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center px-6 overflow-hidden"
     >
-      <div className="w-full max-w-sm flex flex-col items-center text-center">
-        <Logo className="w-14 h-14 text-white mb-6" />
-        <h1 className="u-head text-lg tracking-[0.3em]">ARKA</h1>
-        <p className="u-label text-[8px] text-[#545457] mt-3 mb-8">
-          Systems Operator
+      {/* faint backdrop for depth */}
+      <img
+        src="/deep-black-hero-1280.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover opacity-25"
+      />
+      <div className="absolute inset-0 bg-black/60" />
+
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center">
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-white/10 rounded-full blur-2xl scale-125 pointer-events-none" />
+          <Logo className="relative w-16 h-16 md:w-20 md:h-20 text-white" />
+        </div>
+        <h1 className="u-head text-lg md:text-xl tracking-[0.32em] text-white">
+          ARKA GATEWAY
+        </h1>
+        <p className="u-label text-[8px] text-[#8a8a92] mt-3 mb-8">
+          autonomous edge console
         </p>
-        <div className="w-full border border-[#262629] p-6 flex flex-col items-center gap-4">
+
+        {/* blurred glass panel */}
+        <div
+          className="w-full rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-xl p-6 md:p-7 flex flex-col items-center gap-4 relative overflow-hidden"
+          style={{
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.22), 0 24px 60px rgba(0,0,0,0.5)",
+          }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.10), transparent 55%)",
+            }}
+          />
           {!loading ? (
             <>
-              <p className="text-[12px] body-dim">
-                Establish a secured session to continue.
+              <p className="relative text-[12px] leading-relaxed text-white/65">
+                Establish a secured session with the central routing cluster.
               </p>
-              <Btn variant="primary" onClick={start}>
-                Enter
-              </Btn>
+              <button
+                onClick={start}
+                className="relative w-full py-3.5 rounded-full bg-[#f0f0fa] text-black font-michroma text-[10px] tracking-[0.16em] uppercase hover:bg-white transition-colors"
+              >
+                Initialise Secure Entry
+              </button>
             </>
           ) : (
-            <div className="w-full h-px bg-[#262629] overflow-hidden">
-              <motion.div
-                className="h-full w-full bg-[#f0f0fa] origin-left"
-                animate={{ scaleX: progress / 100 }}
-                transition={{ duration: 0.25 }}
-              />
+            <div className="relative w-full py-2">
+              <div className="w-full h-px bg-white/20 overflow-hidden">
+                <motion.div
+                  className="h-full w-full bg-white origin-left"
+                  animate={{ scaleX: progress / 100 }}
+                  transition={{ duration: 0.25 }}
+                />
+              </div>
             </div>
           )}
         </div>
+
         <button
           onClick={onEnter}
-          className="mt-4 u-label text-[9px] text-[#4a4a50] hover:text-[#9a9aa2] transition-colors"
+          className="relative mt-4 u-label text-[9px] text-[#5a5a60] hover:text-[#9a9aa2] transition-colors"
         >
           Skip &rarr;
         </button>
