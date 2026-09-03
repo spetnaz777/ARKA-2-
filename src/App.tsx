@@ -732,13 +732,29 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
       <section className="cinematic-edges relative border-b border-[#262629] overflow-hidden">
         {/* moving image backdrop — capped width, centred, so ultra-wide
             screens get black edge-fade rather than an over-zoomed crop */}
-        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[2200px] overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[2200px] overflow-hidden pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(120% 85% at 50% 28%, #15161b 0%, #0a0a0d 46%, #000 100%)",
+          }}
+        >
           <img
             src="/landing-hero.jpg"
             alt=""
             aria-hidden="true"
+            onError={(e) => {
+              // no custom hero image dropped in yet — fall back to the
+              // corridor shot so the hero is never a flat empty black box
+              const img = e.currentTarget;
+              if (img.src.endsWith("/deep-black-hero.jpg")) {
+                img.style.display = "none";
+              } else {
+                img.src = "/deep-black-hero.jpg";
+              }
+            }}
             className="hero-drift absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(0.68) contrast(1.06) saturate(0.95)" }}
+            style={{ filter: "brightness(0.82) contrast(1.05) saturate(0.97)" }}
           />
         </div>
         {/* flat safety tint so copy stays legible over any image */}
