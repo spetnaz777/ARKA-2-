@@ -1089,9 +1089,12 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("overview");
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // sessionStorage, not localStorage — the gateway re-appears every time
+  // the tab is closed and the site is opened fresh (it stays dismissed
+  // across reloads / in-tab navigation within the same session).
   const [entered, setEntered] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("arka_portal_entered") === "true";
+      return sessionStorage.getItem("arka_portal_entered") === "true";
     } catch {
       return false;
     }
@@ -1128,7 +1131,7 @@ export default function App() {
   const enter = () => {
     setEntered(true);
     try {
-      localStorage.setItem("arka_portal_entered", "true");
+      sessionStorage.setItem("arka_portal_entered", "true");
     } catch {
       /* ignore */
     }
@@ -1136,7 +1139,7 @@ export default function App() {
   const exitSession = () => {
     setEntered(false);
     try {
-      localStorage.setItem("arka_portal_entered", "false");
+      sessionStorage.removeItem("arka_portal_entered");
     } catch {
       /* ignore */
     }
