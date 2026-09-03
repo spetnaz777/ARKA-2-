@@ -267,13 +267,13 @@ const ScrollExpandMedia = ({
                 }`}
               >
                 <motion.h2
-                  className="u-head text-4xl md:text-5xl lg:text-6xl transition-none"
+                  className="u-head text-[26px] sm:text-4xl md:text-5xl lg:text-6xl transition-none"
                   style={{ transform: `translateX(-${textTranslateX}vw)` }}
                 >
                   {firstWord}
                 </motion.h2>
                 <motion.h2
-                  className="u-head accent text-4xl md:text-5xl lg:text-6xl text-center transition-none"
+                  className="u-head accent text-[26px] sm:text-4xl md:text-5xl lg:text-6xl text-center transition-none"
                   style={{ transform: `translateX(${textTranslateX}vw)` }}
                 >
                   {restOfTitle}
@@ -282,7 +282,7 @@ const ScrollExpandMedia = ({
             </div>
 
             <motion.section
-              className="flex flex-col w-full px-6 md:px-16 py-10 lg:py-20"
+              className="flex flex-col w-full py-10 lg:py-20"
               initial={{ opacity: 0 }}
               animate={{ opacity: showContent ? 1 : 0 }}
               transition={{ duration: 0.7 }}

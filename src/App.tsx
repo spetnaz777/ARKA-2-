@@ -236,12 +236,16 @@ function SectionHead({
     <div className="max-w-2xl">
       <p className="eyebrow">{label}</p>
       <h2
-        className="u-head mt-4"
-        style={{ fontSize: "clamp(1.6rem, 3.2vw, 2.5rem)" }}
+        className="u-head mt-3.5 md:mt-4"
+        style={{ fontSize: "clamp(1.4rem, 6vw, 2.5rem)" }}
       >
         {title}
       </h2>
-      {intro && <p className="body-dim mt-4 text-[14px] max-w-xl">{intro}</p>}
+      {intro && (
+        <p className="body-dim mt-4 text-[13px] md:text-[14px] max-w-xl">
+          {intro}
+        </p>
+      )}
     </div>
   );
 }
@@ -272,7 +276,7 @@ function Header({
           className="flex items-center gap-3 cursor-pointer"
         >
           <Logo className="w-8 h-8 text-white" />
-          <span className="u-head text-[15px] tracking-[0.2em]">ARKA</span>
+          <span className="brand text-[15px]">ARKA</span>
         </button>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -293,22 +297,14 @@ function Header({
           />
         </nav>
 
-        <div className="md:hidden flex items-center gap-3">
-          <button
-            onClick={() => go("quote")}
-            className="tap u-label text-[9px] text-[#f0f0fa] border border-[#3a3a3f] rounded-full px-3.5"
-          >
-            Start
-          </button>
-          <button
-            onClick={openMenu}
-            className="tap flex items-center gap-2 text-[#9a9aa2] pl-1"
-            aria-label="Open menu"
-          >
-            <span className="u-label text-[10px]">Menu</span>
-            <Menu className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={openMenu}
+          className="md:hidden tap flex items-center gap-2 text-[#9a9aa2] pr-1"
+          aria-label="Open menu"
+        >
+          <span className="u-label text-[10px]">Menu</span>
+          <Menu className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );
@@ -421,9 +417,7 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
           <div className="absolute inset-0 bg-white/10 rounded-full blur-2xl scale-125 pointer-events-none" />
           <Logo className="relative w-16 h-16 md:w-20 md:h-20 text-white" />
         </div>
-        <h1 className="u-head text-lg md:text-xl tracking-[0.32em] text-white">
-          ARKA
-        </h1>
+        <h1 className="brand text-xl md:text-2xl">ARKA</h1>
         <p className="u-label text-[8px] text-[#8a8a92] mt-3 mb-8">
           Systems Operator
         </p>
@@ -488,7 +482,7 @@ function Footer({ go }: { go: (t: Tab) => void }) {
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-3">
             <Logo className="w-7 h-7 text-white" />
-            <span className="u-head text-[14px] tracking-[0.2em]">ARKA</span>
+            <span className="brand text-[14px]">ARKA</span>
           </div>
           <p className="body-dim text-[12px] mt-4 max-w-[200px]">
             Digital infrastructure for companies that move fast. AI automation,
@@ -614,7 +608,7 @@ function ServiceGrid({
   detailed?: boolean;
 }) {
   return (
-    <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="mt-8 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {SERVICES.map((s) => (
         <div key={s.n} className="card card--hover flex flex-col">
           <span className="u-label text-[10px] text-[#545457]">{s.n}</span>
@@ -641,7 +635,7 @@ function CTABand({ go }: { go: (t: Tab) => void }) {
           <div className="max-w-lg">
             <h2
               className="u-head"
-              style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.6rem)" }}
+              style={{ fontSize: "clamp(1.5rem, 6vw, 2.6rem)" }}
             >
               Book a free call. Leave with a plan.
             </h2>
@@ -686,11 +680,11 @@ function PageHero({
   const head = words.slice(0, -1).join(" ");
   const last = words[words.length - 1];
   return (
-    <section className="wrap pt-28 pb-14 md:pt-36 md:pb-20 border-b border-[#262629]">
+    <section className="wrap pt-24 pb-12 md:pt-36 md:pb-20 border-b border-[#262629]">
       <p className="eyebrow">{label}</p>
       <h1
         className="u-head mt-5"
-        style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
+        style={{ fontSize: "clamp(1.85rem, 7vw, 3.6rem)" }}
       >
         {head ? (
           <>
@@ -741,16 +735,16 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
         <div className="hero-sweep" />
         <div className="hero-grain" />
 
-        <div className="relative wrap pt-28 pb-16 md:pt-36 md:pb-24 w-full">
+        <div className="relative wrap pt-24 pb-12 md:pt-36 md:pb-24 w-full">
           <p className="rise eyebrow" style={{ animationDelay: "0.05s" }}>
             ARKA · Systems Operator
           </p>
 
           <h1
-            className="u-head mt-5 max-w-4xl"
+            className="u-head mt-4 md:mt-5 max-w-4xl"
             style={{
-              fontSize: "clamp(2.05rem, 7.5vw, 5rem)",
-              lineHeight: 1.04,
+              fontSize: "clamp(1.8rem, 8.5vw, 5rem)",
+              lineHeight: 1.06,
             }}
           >
             <span className="headline-reveal">
@@ -766,7 +760,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </h1>
 
           <p
-            className="rise mt-7 text-[15px] md:text-[16px] text-[#c4c4cc] max-w-xl leading-relaxed"
+            className="rise mt-5 md:mt-7 text-[14px] md:text-[16px] text-[#c4c4cc] max-w-md md:max-w-xl leading-relaxed"
             style={{ animationDelay: "0.38s" }}
           >
             We build the AI systems that run your lead follow-up, outreach, and
@@ -775,7 +769,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </p>
 
           <div
-            className="rise mt-9 flex flex-wrap items-center gap-4"
+            className="rise mt-7 md:mt-9 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4"
             style={{ animationDelay: "0.48s" }}
           >
             <LiquidMetalButton
@@ -787,14 +781,14 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             </Btn>
           </div>
           <p
-            className="rise mt-4 u-label text-[8px] text-[#6b6b72]"
+            className="rise mt-3.5 u-label text-[8px] leading-relaxed text-[#6b6b72] max-w-[280px] md:max-w-none"
             style={{ animationDelay: "0.54s" }}
           >
             Free · 30 minutes · no pitch — you keep the plan either way
           </p>
 
           <div
-            className="rise mt-14 md:mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-3xl"
+            className="rise mt-10 md:mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-md md:max-w-3xl"
             style={{ animationDelay: "0.62s" }}
           >
             {[
@@ -805,10 +799,10 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             ].map(([v, l]) => (
               <div
                 key={l}
-                className="border-b border-r border-[#262629] px-4 py-5 md:px-5 md:py-6"
+                className="border-b border-r border-[#262629] px-3.5 py-4 md:px-5 md:py-6"
               >
-                <div className="u-head text-[18px] md:text-[20px]">{v}</div>
-                <div className="u-label text-[8px] md:text-[8.5px] text-[#545457] mt-1.5">
+                <div className="u-head text-[15px] md:text-[20px]">{v}</div>
+                <div className="u-label text-[7.5px] md:text-[8.5px] text-[#545457] mt-1.5 leading-snug">
                   {l}
                 </div>
               </div>
@@ -864,7 +858,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
               </>
             }
           />
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-8 md:mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {WHY.map((w) => (
               <div key={w.t} className="card">
                 <h3 className="u-head text-[14px]">{w.t}</h3>
@@ -882,7 +876,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             label="How it works"
             title="From first call to live system in under two weeks."
           />
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-8 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4">
             {PROCESS.map((p) => (
               <div key={p.n} className="card">
                 <div className="flex items-baseline justify-between">
@@ -903,7 +897,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
       <section className="border-t border-[#262629]">
         <div className="wrap py-16 md:py-32">
           <SectionHead label="Results" title="What clients get." />
-          <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 border-t border-l border-[#262629]">
+          <div className="mt-8 md:mt-14 grid grid-cols-2 lg:grid-cols-4 border-t border-l border-[#262629]">
             {STATS.map((s) => (
               <div
                 key={s.l}

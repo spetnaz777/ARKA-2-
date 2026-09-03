@@ -92,6 +92,15 @@ body {
   color: var(--star);
 }
 
+/* ARKA wordmark — the original display face */
+.brand {
+  font-family: "Anurati", "Exo", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--star);
+}
+
 /* Anurati accent — thin, wide, caps-only. Only for 1–2 words in a title. */
 .accent {
   font-family: "Anurati", "Exo", sans-serif;
@@ -375,11 +384,21 @@ body {
     font-size: 16px !important;
   }
   .card {
-    padding: 20px;
+    padding: 18px;
   }
   .wrap {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .u-head {
+    letter-spacing: 0.012em;
+    line-height: 1.08;
+  }
+  .eyebrow {
+    letter-spacing: 0.2em;
+  }
+  .accent {
+    letter-spacing: 0.08em;
   }
 }
 
