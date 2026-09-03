@@ -9,6 +9,7 @@ interface LiquidMetalButtonProps {
   viewMode?: "text" | "icon";
   /** Fixed pixel width for text mode. Defaults to a width sized to the label. */
   width?: number;
+  disabled?: boolean;
 }
 
 export function LiquidMetalButton({
@@ -16,6 +17,7 @@ export function LiquidMetalButton({
   onClick,
   viewMode = "text",
   width,
+  disabled = false,
 }: LiquidMetalButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -123,6 +125,7 @@ export function LiquidMetalButton({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) return;
     if (shaderMount.current?.setSpeed) {
       shaderMount.current.setSpeed(2.4);
       setTimeout(() => {
@@ -145,7 +148,14 @@ export function LiquidMetalButton({
   };
 
   return (
-    <div className="relative inline-block align-middle">
+    <div
+      className="relative inline-block align-middle"
+      style={{
+        opacity: disabled ? 0.4 : 1,
+        pointerEvents: disabled ? "none" : "auto",
+        transition: "opacity 0.2s ease",
+      }}
+    >
       <div style={{ perspective: "1000px", perspectiveOrigin: "50% 50%" }}>
         <div
           style={{

@@ -281,9 +281,11 @@ function Header({
               {n.label}
             </button>
           ))}
-          <Btn size="sm" onClick={() => go("quote")}>
-            Start a Project
-          </Btn>
+          <LiquidMetalButton
+            label="Start a Project"
+            width={156}
+            onClick={() => go("quote")}
+          />
         </nav>
 
         <button
@@ -341,14 +343,14 @@ function MobileMenu({
               </button>
             ))}
             <div className="mt-6">
-              <Btn
+              <LiquidMetalButton
+                label="Start a Project"
+                width={170}
                 onClick={() => {
                   go("quote");
                   close();
                 }}
-              >
-                Start a Project
-              </Btn>
+              />
             </div>
           </nav>
           <div className="wrap py-6 border-t border-[#262629] flex items-center justify-between">
@@ -600,18 +602,27 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
       {/* HERO */}
       <section className="relative border-b border-[#262629] overflow-hidden">
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.16]"
+          className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage: "url(/deep-black-hero.jpg)",
             backgroundSize: "cover",
             backgroundPosition: "center",
+            filter: "brightness(1.15) contrast(1.05)",
+          }}
+        />
+        {/* legibility scrim — keeps the left text readable while the image stays visible */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.35) 72%, rgba(0,0,0,0.5) 100%)",
           }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,0.05), transparent 70%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.55) 100%)",
           }}
         />
         <div className="relative wrap pt-40 pb-24">
@@ -762,14 +773,33 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
 function ServicesPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <PageHero
-        label="ARKA · Services"
-        title="What we build."
-        intro="Six core capabilities, one operator. Every system built from scratch around your business — not adapted from a generic playbook."
-      />
-      <section className="wrap py-20 md:py-28">
-        <ServiceGrid go={go} detailed />
-      </section>
+      <ScrollExpandMedia
+        mediaType="video"
+        mediaSrc="/services-hero.mp4"
+        posterSrc="/services-hero-poster.jpg"
+        bgImageSrc="/img-space.jpg"
+        title="What We Build"
+        date="ARKA · Services"
+        scrollToExpand="Scroll to explore"
+        textBlend
+      >
+        <div className="wrap">
+          <div className="max-w-2xl">
+            <p className="eyebrow">Full service list</p>
+            <h2
+              className="u-head mt-4"
+              style={{ fontSize: "clamp(1.6rem, 3.2vw, 2.5rem)" }}
+            >
+              Six ways we put your business on autopilot.
+            </h2>
+            <p className="body-dim mt-4 text-[14px] max-w-xl">
+              Every system built from scratch around your business — not adapted
+              from a generic playbook.
+            </p>
+          </div>
+          <ServiceGrid go={go} detailed />
+        </div>
+      </ScrollExpandMedia>
 
       <section className="border-t border-[#262629]">
         <div className="wrap py-20 md:py-28">
@@ -798,58 +828,38 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
   );
 }
 
-function WorkCases() {
-  return (
-    <div className="wrap">
-      <div className="max-w-2xl">
-        <p className="eyebrow">Case Studies</p>
-        <h2 className="u-head mt-4" style={{ fontSize: "clamp(1.6rem, 3.2vw, 2.5rem)" }}>
-          Real systems. Real outcomes.
-        </h2>
-        <p className="body-dim mt-4 text-[14px] max-w-xl">
-          Built for businesses that need to scale without adding headcount.
-        </p>
-      </div>
-      <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {CASES.map((c) => (
-          <div key={c.title} className="card flex flex-col">
-            <div className="flex items-center justify-between">
-              <span className="u-label text-[8.5px] text-[#545457]">
-                {c.service}
-              </span>
-              <span className="u-label text-[8.5px] text-[#545457]">
-                {c.timeline}
-              </span>
-            </div>
-            <h3
-              className="u-head mt-5"
-              style={{ fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)" }}
-            >
-              {c.result}
-            </h3>
-            <p className="u-label text-[9px] text-[#6b6b72] mt-2">{c.title}</p>
-            <p className="body-dim text-[13px] mt-4 flex-1">{c.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function WorkPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <ScrollExpandMedia
-        mediaType="image"
-        mediaSrc="/img-monolith.jpg"
-        bgImageSrc="/img-space.jpg"
-        title="Proven Results"
-        date="ARKA · Work"
-        scrollToExpand="Scroll to explore"
-        textBlend
-      >
-        <WorkCases />
-      </ScrollExpandMedia>
+      <PageHero
+        label="ARKA · Work"
+        title="Proven results."
+        intro="Real systems, real outcomes — built for businesses that need to scale without adding headcount."
+      />
+      <section className="wrap py-20 md:py-28">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {CASES.map((c) => (
+            <div key={c.title} className="card flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="u-label text-[8.5px] text-[#545457]">
+                  {c.service}
+                </span>
+                <span className="u-label text-[8.5px] text-[#545457]">
+                  {c.timeline}
+                </span>
+              </div>
+              <h3
+                className="u-head mt-5"
+                style={{ fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)" }}
+              >
+                {c.result}
+              </h3>
+              <p className="u-label text-[9px] text-[#6b6b72] mt-2">{c.title}</p>
+              <p className="body-dim text-[13px] mt-4 flex-1">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
       <CTABand go={go} />
     </>
   );
@@ -914,17 +924,15 @@ function ContactPage() {
                     />
                   </div>
                   <div className="pt-1">
-                    <Btn
-                      variant="primary"
-                      type="submit"
+                    <LiquidMetalButton
+                      label="Request a Call"
+                      width={170}
                       disabled={!name || !email}
                       onClick={() => {
                         if (!name || !email) return;
                         setSent(true);
                       }}
-                    >
-                      Request a Call <ArrowRight className="w-3.5 h-3.5" />
-                    </Btn>
+                    />
                   </div>
                   <p className="u-label text-[8px] text-[#4a4a50]">
                     We respond within 24 hours. No commitment.

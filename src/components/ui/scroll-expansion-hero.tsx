@@ -193,16 +193,42 @@ const ScrollExpandMedia = ({
                 }}
               >
                 <div className="relative w-full h-full">
-                  <img
-                    src={mediaSrc}
-                    alt={title || ""}
-                    className="w-full h-full object-cover rounded-[4px]"
-                  />
+                  {mediaType === "video" ? (
+                    <video
+                      src={mediaSrc}
+                      poster={posterSrc}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      disablePictureInPicture
+                      className="w-full h-full object-cover rounded-[4px]"
+                    />
+                  ) : (
+                    <img
+                      src={mediaSrc}
+                      alt={title || ""}
+                      className="w-full h-full object-cover rounded-[4px]"
+                    />
+                  )}
+                  {/* base darkener — always on */}
+                  <div className="absolute inset-0 bg-black/45 rounded-[4px] pointer-events-none" />
+                  {/* extra darkener — fades as it expands */}
                   <motion.div
-                    className="absolute inset-0 bg-black/45 rounded-[4px]"
-                    initial={{ opacity: 0.7 }}
-                    animate={{ opacity: 0.7 - scrollProgress * 0.3 }}
+                    className="absolute inset-0 bg-black rounded-[4px] pointer-events-none"
+                    initial={{ opacity: 0.35 }}
+                    animate={{ opacity: 0.35 - scrollProgress * 0.15 }}
                     transition={{ duration: 0.2 }}
+                  />
+                  {/* vignette for text legibility */}
+                  <div
+                    className="absolute inset-0 rounded-[4px] pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(70% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)",
+                    }}
                   />
                 </div>
 
