@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X, Check } from "lucide-react";
 import { Logo } from "./components/Logo";
 
 /* ============================================================
-   ARKA — SpaceX-language build.
-   Every section = one moderate ALL-CAPS headline + 2-3 lines
-   + one ghost button, full viewport. Photo sections alternate
-   with clean solid black. No eyebrows, numbers, stats, grids.
+   ARKA — conventional agency landing page, styled with the
+   SpaceX design system (void black, star white, industrial
+   uppercase type, 1px ghost buttons, hairline borders).
    ============================================================ */
 
 type Tab = "overview" | "solutions" | "lab" | "quote";
@@ -19,126 +18,223 @@ const NAV: { id: Tab; label: string }[] = [
   { id: "quote", label: "Contact" },
 ];
 
-const EASE = [0.16, 1, 0.3, 1] as const;
+const SERVICES = [
+  {
+    n: "01",
+    name: "AI Automation",
+    desc: "End-to-end systems that handle lead follow-up, scheduling, CRM syncing, and repetitive workflows — around the clock, without a team.",
+  },
+  {
+    n: "02",
+    name: "AI Lead Generation",
+    desc: "Systems that find, qualify, and nurture high-intent leads on autopilot. More pipeline, less manual outreach.",
+  },
+  {
+    n: "03",
+    name: "Web Design & Development",
+    desc: "Custom sites built to convert — fast, mobile-first, structured for results. AI-enhanced design and build.",
+  },
+  {
+    n: "04",
+    name: "AI Application Development",
+    desc: "Custom AI apps, internal tools, and dashboards built specifically for your business workflows and data.",
+  },
+  {
+    n: "05",
+    name: "AI Chatbots & Assistants",
+    desc: "Conversational AI on your site, CRM, or internal tools — trained on your business to answer, qualify, and book.",
+  },
+  {
+    n: "06",
+    name: "Marketing Automation",
+    desc: "AI-driven email sequences, retargeting flows, and campaign logic that run without manual input and scale with revenue.",
+  },
+];
 
-// ─── Ghost button ─────────────────────────────────────────
-function GhostButton({
+const WHY = [
+  {
+    t: "No templates",
+    d: "Every system is built from scratch around your workflows, your CRM, and your customers.",
+  },
+  {
+    t: "Solo operator",
+    d: "You work directly with the person building your system. No account managers, no handoffs.",
+  },
+  {
+    t: "Results first",
+    d: "We don't charge retainers until the system is live and performing. If it doesn't work, you don't pay.",
+  },
+  {
+    t: "You own it",
+    d: "The code, the workflows, the integrations — all transferred to you. No lock-in, month-to-month.",
+  },
+];
+
+const PROCESS = [
+  {
+    n: "01",
+    t: "Discovery Call",
+    time: "30 min",
+    d: "We map your workflows, find the highest-ROI automation opportunities, and scope the build. No upsell.",
+  },
+  {
+    n: "02",
+    t: "Custom Build",
+    time: "5–10 days",
+    d: "We build the system end to end — automation flows, AI integrations, CRM connections, testing. Daily updates.",
+  },
+  {
+    n: "03",
+    t: "Deploy & Monitor",
+    time: "Ongoing",
+    d: "The system goes live. We monitor, iterate, and handle issues. Most clients see ROI within 30 days.",
+  },
+];
+
+const STATS = [
+  { v: "40–60%", l: "Less manual ops work" },
+  { v: "30 days", l: "Average time to first ROI" },
+  { v: "99.9%", l: "Uptime SLA on all pipelines" },
+  { v: "2–5×", l: "Lead pipeline increase" },
+];
+
+const TESTIMONIALS = [
+  {
+    q: "ARKA automated our entire follow-up sequence. Response times dropped from days to under 4 minutes. We closed 3× more deals in the first month.",
+    n: "Marcus T.",
+    r: "Founder, Commercial Real Estate Group",
+  },
+  {
+    q: "The website ARKA built converts at 6.8%. Our previous agency delivered 0.4%. It took 7 days to ship.",
+    n: "Sarah K.",
+    r: "CMO, B2B SaaS Platform",
+  },
+  {
+    q: "We eliminated 15 manual tasks daily across sales and ops. My team now spends 100% of their time on growth work.",
+    n: "Jason R.",
+    r: "Operations Director, E-Commerce Brand",
+  },
+];
+
+const CASES = [
+  {
+    result: "3× more closed deals in 30 days",
+    title: "Commercial Real Estate — Lead Pipeline",
+    service: "AI Automation",
+    timeline: "8 days to live",
+    desc: "Replaced manual follow-up with a multi-step AI sequence across email, SMS, and CRM. Response times went from days to under 4 minutes. 400+ leads a month, handled autonomously.",
+  },
+  {
+    result: "0.4% → 6.8% conversion rate",
+    title: "B2B SaaS — Marketing Site Rebuild",
+    service: "Web Design & Development",
+    timeline: "7 days to live",
+    desc: "Full rebuild — mobile-first, sub-1s load, structured around a single funnel. Replaced a bloated agency site with a lean architecture that converts.",
+  },
+  {
+    result: "2.4× more booked calls per week",
+    title: "E-Commerce Brand — Outbound Engine",
+    service: "AI Lead Generation",
+    timeline: "10 days to live",
+    desc: "AI-powered outbound targeting wholesale and retail buyers. Auto-qualifies prospects, personalises outreach at scale, routes hot leads into the sales calendar.",
+  },
+  {
+    result: "15 manual tasks eliminated daily",
+    title: "Operations & Sales — Workflow Automation",
+    service: "Marketing Automation",
+    timeline: "6 days to live",
+    desc: "Mapped 15 recurring manual tasks, then built flows that sync data between tools, trigger follow-ups on deal-stage changes, and generate weekly reports untouched by a human.",
+  },
+];
+
+const INTEGRATIONS = [
+  "HubSpot",
+  "Salesforce",
+  "Stripe",
+  "Shopify",
+  "Gmail",
+  "Slack",
+  "Notion",
+  "Airtable",
+  "Zapier",
+  "Make",
+  "OpenAI",
+  "Anthropic",
+];
+
+const FAQ = [
+  {
+    q: "How fast can you actually deliver?",
+    a: "Most systems go live in 5–10 business days from signed contract. Complex multi-integration builds can take up to 2 weeks. You get daily progress updates throughout.",
+  },
+  {
+    q: "Do I need technical knowledge to work with you?",
+    a: "No. You explain what you need in plain terms — the bottlenecks, the manual work, the goals. We handle everything technical.",
+  },
+  {
+    q: "What happens if the system breaks after delivery?",
+    a: "Active retainer clients get priority support with guaranteed response times. Issues are resolved, not handed off.",
+  },
+  {
+    q: "Can I cancel at any time?",
+    a: "Yes. Every engagement is month-to-month. No lock-in, no penalty clauses.",
+  },
+  {
+    q: "Who owns the systems you build?",
+    a: "You do. The code, workflows, and integrations are all transferred to you. ARKA doesn't retain IP on client-specific builds.",
+  },
+];
+
+// ─── Primitives ───────────────────────────────────────────
+function Btn({
   children,
   onClick,
+  variant = "ghost",
   size = "md",
-  filled = false,
   type = "button",
   disabled = false,
-  className = "",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
+  variant?: "ghost" | "primary" | "secondary";
   size?: "md" | "sm";
-  filled?: boolean;
   type?: "button" | "submit";
   disabled?: boolean;
-  className?: string;
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`ghost-btn ${size === "sm" ? "ghost-btn--sm" : ""} ${
-        filled ? "ghost-btn--filled" : ""
-      } ${className}`}
+      className={`btn ${variant === "primary" ? "btn--primary" : ""} ${
+        variant === "secondary" ? "btn--secondary" : ""
+      } ${size === "sm" ? "btn--sm" : ""}`}
     >
       {children}
     </button>
   );
 }
 
-// ─── Section: one full-viewport beat ──────────────────────
-const Section: React.FC<{
-  image?: string;
-  position?: string;
-  align?: "left" | "right";
-  valign?: "center" | "bottom";
-  children: React.ReactNode;
-  id?: string;
-}> = ({
-  image,
-  position = "center",
-  align = "left",
-  valign = "center",
-  children,
-  id,
-}) => {
+function SectionHead({
+  label,
+  title,
+  intro,
+}: {
+  label: string;
+  title: React.ReactNode;
+  intro?: string;
+}) {
   return (
-    <section
-      id={id}
-      className={`relative w-full overflow-hidden bg-black flex ${
-        image
-          ? "min-h-[100svh]"
-          : "py-28 md:py-40 border-t border-white/[0.08]"
-      }`}
-    >
-      {image && (
-        <>
-          <img
-            src={image}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              objectPosition: position,
-              filter: "brightness(1.16) contrast(1.05) saturate(1.02)",
-            }}
-          />
-          {/* soft directional wash behind the text side only */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                align === "left"
-                  ? "linear-gradient(90deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.34) 42%, rgba(0,0,0,0) 78%)"
-                  : "linear-gradient(270deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.34) 42%, rgba(0,0,0,0) 78%)",
-            }}
-          />
-        </>
-      )}
-      <div
-        className={`relative z-10 mx-auto w-full max-w-6xl px-6 md:px-10 flex flex-col ${
-          image
-            ? valign === "bottom"
-              ? "justify-end pb-24"
-              : "justify-center"
-            : ""
-        } ${align === "right" ? "items-end text-right" : "items-start"}`}
+    <div className="max-w-2xl">
+      <p className="eyebrow">{label}</p>
+      <h2
+        className="u-head mt-4"
+        style={{ fontSize: "clamp(1.6rem, 3.2vw, 2.5rem)" }}
       >
-        <div
-          className={`flex flex-col ${
-            align === "right" ? "items-end" : "items-start"
-          } max-w-xl`}
-        >
-          {children}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-function Heading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2
-      className="u-head text-white"
-      style={{ fontSize: "clamp(1.9rem, 4.2vw, 3.3rem)", lineHeight: 1.05 }}
-    >
-      {children}
-    </h2>
-  );
-}
-
-function Copy({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mt-6 text-[14px] leading-[1.75] text-white/72 max-w-md">
-      {children}
-    </p>
+        {title}
+      </h2>
+      {intro && <p className="body-dim mt-4 text-[14px] max-w-xl">{intro}</p>}
+    </div>
   );
 }
 
@@ -156,53 +252,44 @@ function Header({
 }) {
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-300 ${
-        scrolled ? "bg-black/95 border-b border-white/[0.1]" : "bg-transparent"
+      className={`fixed top-0 inset-x-0 z-40 transition-colors duration-200 ${
+        scrolled
+          ? "bg-black/95 border-b border-[#262629]"
+          : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-5 md:px-10 h-[64px] flex items-center justify-between">
+      <div className="wrap flex items-center justify-between h-[64px]">
         <button
           onClick={() => go("overview")}
           className="flex items-center gap-3 cursor-pointer"
         >
-          <Logo className="w-8 h-8 md:w-9 md:h-9 text-white" />
-          <span className="u-head text-[15px] md:text-[16px] tracking-[0.18em] text-white">
-            ARKA
-          </span>
+          <Logo className="w-8 h-8 text-white" />
+          <span className="u-head text-[15px] tracking-[0.2em]">ARKA</span>
         </button>
 
-        <nav className="hidden lg:flex items-center gap-9">
+        <nav className="hidden md:flex items-center gap-8">
           {NAV.map((n) => (
             <button
               key={n.id}
               onClick={() => go(n.id)}
-              className="relative py-1 cursor-pointer"
+              className={`u-label text-[10px] transition-colors ${
+                tab === n.id ? "text-[#f0f0fa]" : "text-[#6b6b72] hover:text-[#f0f0fa]"
+              }`}
             >
-              <span
-                className={`font-michroma text-[10px] tracking-[0.16em] uppercase transition-colors ${
-                  tab === n.id ? "text-white" : "text-white/45 hover:text-white/80"
-                }`}
-              >
-                {n.label}
-              </span>
-              {tab === n.id && (
-                <span className="absolute -bottom-0.5 left-0 right-0 h-px bg-white" />
-              )}
+              {n.label}
             </button>
           ))}
-          <GhostButton size="sm" onClick={() => go("quote")}>
+          <Btn size="sm" onClick={() => go("quote")}>
             Start a Project
-          </GhostButton>
+          </Btn>
         </nav>
 
         <button
           onClick={openMenu}
-          className="lg:hidden flex items-center gap-2 text-white/70 cursor-pointer"
-          aria-label="Open menu"
+          className="md:hidden flex items-center gap-2 text-[#9a9aa2]"
+          aria-label="Menu"
         >
-          <span className="font-michroma text-[10px] tracking-[0.16em] uppercase">
-            Menu
-          </span>
+          <span className="u-label text-[10px]">Menu</span>
           <Menu className="w-4 h-4" />
         </button>
       </div>
@@ -228,55 +315,48 @@ function MobileMenu({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 bg-black flex flex-col"
         >
-          <div className="h-[64px] px-5 flex items-center justify-between border-b border-white/[0.1]">
-            <span className="font-michroma text-[10px] tracking-[0.2em] uppercase text-white/45">
-              Navigation
-            </span>
-            <button onClick={close} aria-label="Close menu" className="text-white/70 p-2">
+          <div className="wrap flex items-center justify-between h-[64px] border-b border-[#262629]">
+            <span className="u-label text-[10px] text-[#6b6b72]">Menu</span>
+            <button onClick={close} aria-label="Close" className="text-[#9a9aa2] p-2">
               <X className="w-5 h-5" />
             </button>
           </div>
-          <nav className="flex-1 flex flex-col justify-center gap-1 px-6">
-            {NAV.map((n, i) => (
-              <motion.button
+          <nav className="flex-1 flex flex-col justify-center gap-2 wrap">
+            {NAV.map((n) => (
+              <button
                 key={n.id}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.06 * i, duration: 0.4, ease: EASE }}
                 onClick={() => {
                   go(n.id);
                   close();
                 }}
-                className="u-head text-left text-white py-3"
-                style={{ fontSize: "clamp(1.9rem, 11vw, 2.75rem)" }}
+                className="u-head text-left py-3"
+                style={{ fontSize: "2rem" }}
               >
                 {n.label}
-              </motion.button>
+              </button>
             ))}
             <div className="mt-6">
-              <GhostButton
+              <Btn
                 onClick={() => {
                   go("quote");
                   close();
                 }}
               >
                 Start a Project
-              </GhostButton>
+              </Btn>
             </div>
           </nav>
-          <div className="px-6 py-6 border-t border-white/[0.1] flex items-center justify-between">
-            <span className="font-michroma text-[9px] tracking-[0.2em] uppercase text-white/25">
-              ARKA · 2026
-            </span>
+          <div className="wrap py-6 border-t border-[#262629] flex items-center justify-between">
+            <span className="u-label text-[9px] text-[#4a4a50]">ARKA · 2026</span>
             <button
               onClick={() => {
                 exitSession();
                 close();
               }}
-              className="font-michroma text-[9px] tracking-[0.16em] uppercase text-white/30 hover:text-white/60 transition-colors"
+              className="u-label text-[9px] text-[#6b6b72] hover:text-[#f0f0fa] transition-colors"
             >
               Exit Session
             </button>
@@ -291,68 +371,55 @@ function MobileMenu({
 const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  const initialise = () => {
+  const start = () => {
     if (loading) return;
     setLoading(true);
-    let cur = 0;
+    let c = 0;
     const t = setInterval(() => {
-      cur += 4;
-      setProgress(cur);
-      if (cur >= 100) {
+      c += 5;
+      setProgress(c);
+      if (c >= 100) {
         clearInterval(t);
-        setTimeout(onEnter, 380);
+        setTimeout(onEnter, 320);
       }
-    }, 85);
+    }, 70);
   };
-
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: EASE }}
-      className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center px-6 overflow-hidden"
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center px-6"
     >
-      <img
-        src="/deep-black-hero.jpg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover opacity-30"
-      />
-      <div className="absolute inset-0 bg-black/70" />
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center">
-        <Logo className="w-16 h-16 md:w-20 md:h-20 text-white mb-6" />
-        <h1 className="u-head text-white text-lg md:text-xl tracking-[0.3em]">
-          ARKA GATEWAY
-        </h1>
-        <p className="font-michroma text-[8px] tracking-[0.28em] uppercase text-white/35 mt-3 mb-8">
-          autonomous edge console
+      <div className="w-full max-w-sm flex flex-col items-center text-center">
+        <Logo className="w-14 h-14 text-white mb-6" />
+        <h1 className="u-head text-lg tracking-[0.3em]">ARKA</h1>
+        <p className="u-label text-[8px] text-[#545457] mt-3 mb-8">
+          Systems Operator
         </p>
-        <div className="w-full border border-white/[0.14] p-6 flex flex-col items-center gap-4">
+        <div className="w-full border border-[#262629] p-6 flex flex-col items-center gap-4">
           {!loading ? (
             <>
-              <p className="text-[12px] leading-relaxed text-white/55">
-                Establish a secured session with the central routing cluster.
+              <p className="text-[12px] body-dim">
+                Establish a secured session to continue.
               </p>
-              <GhostButton filled className="w-full justify-center" onClick={initialise}>
-                Initialise Secure Entry
-              </GhostButton>
+              <Btn variant="primary" onClick={start}>
+                Enter
+              </Btn>
             </>
           ) : (
-            <div className="w-full py-3">
-              <div className="h-px w-full bg-white/15 overflow-hidden">
-                <motion.div
-                  className="h-full w-full bg-white origin-left"
-                  animate={{ scaleX: progress / 100 }}
-                  transition={{ ease: EASE, duration: 0.3 }}
-                />
-              </div>
+            <div className="w-full h-px bg-[#262629] overflow-hidden">
+              <motion.div
+                className="h-full w-full bg-[#f0f0fa] origin-left"
+                animate={{ scaleX: progress / 100 }}
+                transition={{ duration: 0.25 }}
+              />
             </div>
           )}
         </div>
         <button
           onClick={onEnter}
-          className="mt-4 font-michroma text-[9px] tracking-[0.16em] uppercase text-white/30 hover:text-white/60 transition-colors"
+          className="mt-4 u-label text-[9px] text-[#4a4a50] hover:text-[#9a9aa2] transition-colors"
         >
           Skip &rarr;
         </button>
@@ -361,32 +428,165 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
   );
 };
 
-function Footer() {
+// ─── Footer ───────────────────────────────────────────────
+function Footer({ go }: { go: (t: Tab) => void }) {
   return (
-    <footer className="relative z-20 border-t border-white/[0.1] bg-black">
-      <div className="mx-auto max-w-7xl px-6 md:px-10 py-7 flex flex-wrap items-center justify-between gap-4">
-        <span className="font-michroma text-[9px] tracking-[0.2em] uppercase text-white/25">
-          ARKA · Systems Global · 2026
-        </span>
-        <div className="flex items-center gap-5">
-          {[
-            ["LinkedIn", "https://www.linkedin.com/"],
-            ["X", "https://x.com/"],
-            ["Instagram", "https://www.instagram.com/"],
-          ].map(([label, href]) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="font-michroma text-[9px] tracking-[0.16em] uppercase text-white/25 hover:text-white/60 transition-colors"
-            >
-              {label}
-            </a>
-          ))}
+    <footer className="border-t border-[#262629] bg-black">
+      <div className="wrap py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
+        <div className="col-span-2 md:col-span-1">
+          <div className="flex items-center gap-3">
+            <Logo className="w-7 h-7 text-white" />
+            <span className="u-head text-[14px] tracking-[0.2em]">ARKA</span>
+          </div>
+          <p className="body-dim text-[12px] mt-4 max-w-[200px]">
+            Digital infrastructure for companies that move fast. AI automation,
+            web, and internal tools — built by one operator.
+          </p>
+        </div>
+        <div>
+          <p className="u-label text-[9px] text-[#545457] mb-4">Navigate</p>
+          <ul className="flex flex-col gap-2.5">
+            {NAV.map((n) => (
+              <li key={n.id}>
+                <button
+                  onClick={() => go(n.id)}
+                  className="text-[12px] text-[#9a9aa2] hover:text-[#f0f0fa] transition-colors"
+                >
+                  {n.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="u-label text-[9px] text-[#545457] mb-4">Services</p>
+          <ul className="flex flex-col gap-2.5">
+            {SERVICES.slice(0, 5).map((s) => (
+              <li key={s.n}>
+                <button
+                  onClick={() => go("solutions")}
+                  className="text-[12px] text-[#9a9aa2] hover:text-[#f0f0fa] transition-colors text-left"
+                >
+                  {s.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="u-label text-[9px] text-[#545457] mb-4">Contact</p>
+          <ul className="flex flex-col gap-2.5 text-[12px] text-[#9a9aa2]">
+            <li>hello@arka.systems</li>
+            <li>
+              <button
+                onClick={() => go("quote")}
+                className="hover:text-[#f0f0fa] transition-colors"
+              >
+                Book a strategy call
+              </button>
+            </li>
+            <li className="flex gap-4 pt-2">
+              {["LinkedIn", "X"].map((s) => (
+                <a
+                  key={s}
+                  href="#"
+                  className="u-label text-[9px] text-[#6b6b72] hover:text-[#f0f0fa] transition-colors"
+                >
+                  {s}
+                </a>
+              ))}
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="border-t border-[#262629]">
+        <div className="wrap py-5 flex flex-wrap items-center justify-between gap-3">
+          <span className="u-label text-[9px] text-[#4a4a50]">
+            © 2026 ARKA Systems
+          </span>
+          <span className="u-label text-[9px] text-[#4a4a50]">
+            United States &amp; Canada
+          </span>
         </div>
       </div>
     </footer>
+  );
+}
+
+// ─── Reusable blocks ──────────────────────────────────────
+function ServiceGrid({
+  go,
+  detailed = false,
+}: {
+  go: (t: Tab) => void;
+  detailed?: boolean;
+}) {
+  return (
+    <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {SERVICES.map((s) => (
+        <div key={s.n} className="card card--hover flex flex-col">
+          <span className="u-label text-[10px] text-[#545457]">{s.n}</span>
+          <h3 className="u-head text-[16px] mt-4">{s.name}</h3>
+          <p className="body-dim text-[13px] mt-3 flex-1">{s.desc}</p>
+          <button
+            onClick={() => go(detailed ? "quote" : "solutions")}
+            className="u-label text-[9px] text-[#6b6b72] hover:text-[#f0f0fa] transition-colors mt-5 flex items-center gap-2 self-start"
+          >
+            {detailed ? "Start a project" : "Learn more"}
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CTABand({ go }: { go: (t: Tab) => void }) {
+  return (
+    <section className="border-y border-[#262629]">
+      <div className="wrap py-20 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+        <div>
+          <h2
+            className="u-head"
+            style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.6rem)" }}
+          >
+            Start automating. Today.
+          </h2>
+          <p className="body-dim text-[13px] mt-3">
+            Book a free 30-minute call. We map what to automate and what it
+            returns — no commitment.
+          </p>
+        </div>
+        <div className="shrink-0">
+          <Btn variant="primary" onClick={() => go("quote")}>
+            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
+          </Btn>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PageHero({
+  label,
+  title,
+  intro,
+}: {
+  label: string;
+  title: string;
+  intro: string;
+}) {
+  return (
+    <section className="wrap pt-36 pb-20 border-b border-[#262629]">
+      <p className="eyebrow">{label}</p>
+      <h1
+        className="u-head mt-5"
+        style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
+      >
+        {title}
+      </h1>
+      <p className="body-dim mt-5 text-[15px] max-w-xl">{intro}</p>
+    </section>
   );
 }
 
@@ -394,295 +594,239 @@ function Footer() {
 function HomePage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      {/* 1 — HERO (photo, bottom-left, no big headline) */}
-      <Section image="/deep-black-hero.jpg" valign="bottom">
-        <h1 className="u-head text-white text-[22px] md:text-[26px] tracking-[0.14em]">
-          ARKA
-        </h1>
-        <p className="mt-5 text-[14px] leading-[1.75] text-white/72 max-w-sm">
-          We build the digital systems modern companies scale on — automation,
-          AI, and web that doesn't break.
-        </p>
-        <div className="mt-7">
-          <GhostButton onClick={() => go("quote")}>
-            Start a Project <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
-        </div>
-      </Section>
+      {/* HERO */}
+      <section className="relative border-b border-[#262629] overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.16]"
+          style={{
+            backgroundImage: "url(/deep-black-hero.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,0.05), transparent 70%)",
+          }}
+        />
+        <div className="relative wrap pt-40 pb-24">
+          <p className="eyebrow">ARKA · Systems Operator</p>
+          <h1
+            className="u-head mt-6 max-w-4xl"
+            style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", lineHeight: 1.03 }}
+          >
+            Digital infrastructure for companies that move fast.
+          </h1>
+          <p className="mt-7 text-[16px] text-[#b9b9c0] max-w-xl leading-relaxed">
+            AI automation, lead generation, and custom web — built from scratch
+            around your workflows, live in under two weeks.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <Btn variant="primary" onClick={() => go("quote")}>
+              Start a Project <ArrowRight className="w-3.5 h-3.5" />
+            </Btn>
+            <Btn variant="secondary" onClick={() => go("lab")}>
+              See the Work
+            </Btn>
+          </div>
 
-      {/* 2 — WHAT WE DO (black) */}
-      <Section>
-        <Heading>
-          The Systems
-          <br />
-          You Scale On.
-        </Heading>
-        <Copy>
-          AI automation, lead generation, custom web, and internal tools — built
-          from scratch around your workflows, not a template. One senior
-          operator, start to finish.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton onClick={() => go("solutions")}>
-            See Services <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629]">
+            {[
+              ["12+", "Clients delivered"],
+              ["4", "Countries"],
+              ["30 days", "Avg time to ROI"],
+              ["99.9%", "Uptime SLA"],
+            ].map(([v, l]) => (
+              <div
+                key={l}
+                className="border-b border-r border-[#262629] px-5 py-6"
+              >
+                <div className="u-head text-[20px]">{v}</div>
+                <div className="u-label text-[8.5px] text-[#545457] mt-1.5">
+                  {l}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
 
-      {/* 3 — HOW WE WORK (photo, right) */}
-      <Section image="/img-corridor.jpg" align="right" position="60% center">
-        <Heading>Live in Under Two Weeks.</Heading>
-        <Copy>
-          A 30-minute call to scope it. Five to ten days to build it. Then it's
-          live, monitored, and yours. No retainers until the system is working.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton onClick={() => go("quote")}>
-            Start a Project <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
-        </div>
-      </Section>
+      {/* SERVICES */}
+      <section className="wrap py-24 md:py-32">
+        <SectionHead
+          label="What we build"
+          title="Six ways we put your business on autopilot."
+          intro="Every system is designed around your specific business logic — not recycled templates or off-the-shelf tools."
+        />
+        <ServiceGrid go={go} />
+      </section>
 
-      {/* 4 — PROOF (black) */}
-      <Section>
-        <Heading>Results, Not Retainers.</Heading>
-        <Copy>
-          3× more closed deals in 30 days. A site that converts at 6.8% instead
-          of 0.4%. Fifteen manual tasks a day, gone. We don't get paid until the
-          system performs.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton onClick={() => go("lab")}>
-            See the Work <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
+      {/* WHY */}
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-24 md:py-32">
+          <SectionHead
+            label="Why ARKA"
+            title={
+              <>
+                Not an agency.
+                <br />A systems operator.
+              </>
+            }
+          />
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {WHY.map((w) => (
+              <div key={w.t} className="card">
+                <h3 className="u-head text-[14px]">{w.t}</h3>
+                <p className="body-dim text-[12.5px] mt-3">{w.d}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
 
-      {/* 5 — CTA (photo, right) */}
-      <Section image="/img-hall.jpg" align="right" position="70% center">
-        <Heading>Start Automating. Today.</Heading>
-        <Copy>
-          Book a free 30-minute call. We'll map exactly what to automate and what
-          it returns — no commitment.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton filled onClick={() => go("quote")}>
-            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
+      {/* PROCESS */}
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-24 md:py-32">
+          <SectionHead
+            label="How it works"
+            title="From first call to live system in under two weeks."
+          />
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {PROCESS.map((p) => (
+              <div key={p.n} className="card">
+                <div className="flex items-baseline justify-between">
+                  <span className="u-label text-[10px] text-[#545457]">{p.n}</span>
+                  <span className="u-label text-[8.5px] text-[#545457]">
+                    {p.time}
+                  </span>
+                </div>
+                <h3 className="u-head text-[16px] mt-5">{p.t}</h3>
+                <p className="body-dim text-[13px] mt-3">{p.d}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
+
+      {/* RESULTS */}
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-24 md:py-32">
+          <SectionHead label="Results" title="What clients get." />
+          <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 border-t border-l border-[#262629]">
+            {STATS.map((s) => (
+              <div
+                key={s.l}
+                className="border-b border-r border-[#262629] px-6 py-8"
+              >
+                <div
+                  className="u-head"
+                  style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)" }}
+                >
+                  {s.v}
+                </div>
+                <div className="u-label text-[8.5px] text-[#545457] mt-2">
+                  {s.l}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {TESTIMONIALS.map((t) => (
+              <div key={t.n} className="card flex flex-col">
+                <p className="text-[13px] text-[#cfcfd6] leading-relaxed flex-1">
+                  "{t.q}"
+                </p>
+                <div className="mt-5 pt-4 border-t border-[#262629]">
+                  <div className="text-[12px] text-[#f0f0fa]">{t.n}</div>
+                  <div className="u-label text-[8px] text-[#545457] mt-1">
+                    {t.r}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <CTABand go={go} />
     </>
   );
 }
-
-const CAPABILITIES: {
-  name: React.ReactNode;
-  copy: string;
-  image?: string;
-  position?: string;
-  align?: "left" | "right";
-}[] = [
-  {
-    name: (
-      <>
-        AI
-        <br />
-        Automation.
-      </>
-    ),
-    copy: "End-to-end systems that handle lead follow-up, scheduling, CRM syncing, and repetitive workflows — around the clock, without a team.",
-    image: "/img-monolith.jpg",
-    align: "right",
-    position: "60% center",
-  },
-  {
-    name: (
-      <>
-        AI Lead
-        <br />
-        Generation.
-      </>
-    ),
-    copy: "Systems that find, qualify, and nurture high-intent leads on autopilot. More pipeline, less manual outreach.",
-  },
-  {
-    name: (
-      <>
-        Web Design
-        <br />& Development.
-      </>
-    ),
-    copy: "Custom sites built to convert — fast, mobile-first, and structured for results. AI-enhanced design and build.",
-    image: "/img-concrete.jpg",
-    position: "50% 40%",
-  },
-  {
-    name: (
-      <>
-        AI Application
-        <br />
-        Development.
-      </>
-    ),
-    copy: "Custom AI apps, internal tools, and dashboards built specifically for your business workflows and data.",
-  },
-  {
-    name: (
-      <>
-        Chatbots
-        <br />& Assistants.
-      </>
-    ),
-    copy: "Conversational AI deployed on your site, CRM, or internal tools — trained on your business to answer, qualify, and book.",
-    image: "/img-space.jpg",
-    align: "right",
-    position: "40% center",
-  },
-  {
-    name: (
-      <>
-        Marketing
-        <br />
-        Automation.
-      </>
-    ),
-    copy: "AI-driven email sequences, retargeting flows, and campaign logic that run without manual input and scale with revenue.",
-  },
-];
 
 function ServicesPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <Section image="/solutions-bg.jpg" valign="bottom" position="55% center">
-        <Heading>What We Build.</Heading>
-        <Copy>
-          Six capabilities. One operator. Every system designed around your
-          business logic — not recycled templates or off-the-shelf tools.
-        </Copy>
-        <div className="mt-7">
-          <GhostButton onClick={() => go("quote")}>
-            Start a Project <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
-        </div>
-      </Section>
+      <PageHero
+        label="ARKA · Services"
+        title="What we build."
+        intro="Six core capabilities, one operator. Every system built from scratch around your business — not adapted from a generic playbook."
+      />
+      <section className="wrap py-20 md:py-28">
+        <ServiceGrid go={go} detailed />
+      </section>
 
-      {CAPABILITIES.map((c, i) => (
-        <Section
-          key={i}
-          image={c.image}
-          align={c.align}
-          position={c.position}
-        >
-          <Heading>{c.name}</Heading>
-          <Copy>{c.copy}</Copy>
-          <div className="mt-8">
-            <GhostButton onClick={() => go("quote")}>
-              Start a Project <ArrowRight className="w-3.5 h-3.5" />
-            </GhostButton>
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-20 md:py-28">
+          <SectionHead
+            label="Integrations"
+            title="Connects to everything you already use."
+          />
+          <div className="mt-12 flex flex-wrap gap-3">
+            {INTEGRATIONS.map((i) => (
+              <span
+                key={i}
+                className="border border-[#262629] rounded-[4px] px-4 py-2.5 u-label text-[9px] text-[#9a9aa2]"
+              >
+                {i}
+              </span>
+            ))}
+            <span className="px-4 py-2.5 u-label text-[9px] text-[#545457]">
+              + any REST API or webhook
+            </span>
           </div>
-        </Section>
-      ))}
-
-      <Section image="/img-monolith.jpg" align="right" position="65% center">
-        <Heading>Pick a Service. Let's Build.</Heading>
-        <Copy>
-          Tell us the bottleneck. We'll scope the system, quote it, and have it
-          live in under two weeks.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton filled onClick={() => go("quote")}>
-            Start a Project <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
         </div>
-      </Section>
+      </section>
+
+      <CTABand go={go} />
     </>
   );
 }
 
-const CASES: {
-  result: React.ReactNode;
-  copy: string;
-  image?: string;
-  align?: "left" | "right";
-  position?: string;
-}[] = [
-  {
-    result: (
-      <>
-        3× More
-        <br />
-        Closed Deals.
-      </>
-    ),
-    copy: "Commercial real estate lead pipeline. Replaced manual follow-up with a multi-step AI sequence across email, SMS, and CRM. Response times went from days to under 4 minutes. 400+ leads a month, handled autonomously. Live in 8 days.",
-    image: "/img-space.jpg",
-    align: "right",
-    position: "40% center",
-  },
-  {
-    result: (
-      <>
-        0.4% → 6.8%
-        <br />
-        Conversion.
-      </>
-    ),
-    copy: "B2B SaaS marketing site, rebuilt from the ground up — mobile-first, sub-1s load, structured around a single funnel. Replaced a bloated agency site with a lean architecture that actually converts. Live in 7 days.",
-  },
-  {
-    result: (
-      <>
-        15 Tasks
-        <br />
-        A Day, Gone.
-      </>
-    ),
-    copy: "Operations and sales workflow automation. Mapped 15 recurring manual tasks, then built flows that sync data between tools, trigger follow-ups on deal-stage changes, and generate weekly reports — untouched by a human. Live in 6 days.",
-    image: "/img-concrete.jpg",
-    position: "50% 45%",
-  },
-];
-
 function WorkPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <Section image="/img-space.jpg" valign="bottom" position="45% center">
-        <Heading>Proven Results.</Heading>
-        <Copy>
-          Real systems, real outcomes — built for businesses that need to scale
-          without adding headcount.
-        </Copy>
-        <div className="mt-7">
-          <GhostButton onClick={() => go("quote")}>
-            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
+      <PageHero
+        label="ARKA · Work"
+        title="Proven results."
+        intro="Real systems, real outcomes — built for businesses that need to scale without adding headcount."
+      />
+      <section className="wrap py-20 md:py-28">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {CASES.map((c) => (
+            <div key={c.title} className="card flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="u-label text-[8.5px] text-[#545457]">
+                  {c.service}
+                </span>
+                <span className="u-label text-[8.5px] text-[#545457]">
+                  {c.timeline}
+                </span>
+              </div>
+              <h3
+                className="u-head mt-5"
+                style={{ fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)" }}
+              >
+                {c.result}
+              </h3>
+              <p className="u-label text-[9px] text-[#6b6b72] mt-2">{c.title}</p>
+              <p className="body-dim text-[13px] mt-4 flex-1">{c.desc}</p>
+            </div>
+          ))}
         </div>
-      </Section>
-
-      {CASES.map((c, i) => (
-        <Section key={i} image={c.image} align={c.align} position={c.position}>
-          <Heading>{c.result}</Heading>
-          <Copy>{c.copy}</Copy>
-          <div className="mt-8">
-            <GhostButton onClick={() => go("quote")}>
-              Start a Project <ArrowRight className="w-3.5 h-3.5" />
-            </GhostButton>
-          </div>
-        </Section>
-      ))}
-
-      <Section image="/img-corridor.jpg" align="right" position="60% center">
-        <Heading>Your Results Start Here.</Heading>
-        <Copy>
-          A free strategy call, a clear scope, a system live in days. Month-to-
-          month — if it stops working, you walk.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton filled onClick={() => go("quote")}>
-            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
-        </div>
-      </Section>
+      </section>
+      <CTABand go={go} />
     </>
   );
 }
@@ -691,105 +835,145 @@ function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
+  const [sent, setSent] = useState(false);
   const field =
-    "w-full bg-transparent border-b border-white/25 focus:border-white/70 outline-none py-3 text-[15px] text-white placeholder:text-white/25 transition-colors";
+    "w-full bg-black border border-[#262629] focus:border-[#545457] rounded-[4px] px-4 py-3 text-[14px] text-[#f0f0fa] placeholder:text-[#4a4a50] outline-none transition-colors";
 
   return (
     <>
-      <Section image="/img-hall.jpg" valign="bottom" position="70% center">
-        <Heading>Let's Build.</Heading>
-        <Copy>
-          Tell us what you're working on. We'll scope it, quote it, and have it
-          live in under two weeks.
-        </Copy>
-      </Section>
+      <PageHero
+        label="ARKA · Contact"
+        title="Let's build."
+        intro="Tell us what you're working on. We'll scope it, quote it, and have it live in under two weeks."
+      />
+      <section className="wrap py-20 md:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-7">
+            <div className="card">
+              {!sent ? (
+                <div className="flex flex-col gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="u-label text-[9px] text-[#6b6b72]">
+                        Name
+                      </label>
+                      <input
+                        className={field}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Jane Smith"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="u-label text-[9px] text-[#6b6b72]">
+                        Business email
+                      </label>
+                      <input
+                        type="email"
+                        className={field}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="jane@company.com"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="u-label text-[9px] text-[#6b6b72]">
+                      What do you need built?
+                    </label>
+                    <textarea
+                      rows={4}
+                      className={`${field} resize-none`}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="The bottleneck, the manual work, the goal…"
+                    />
+                  </div>
+                  <div className="pt-1">
+                    <Btn
+                      variant="primary"
+                      type="submit"
+                      disabled={!name || !email}
+                      onClick={() => {
+                        if (!name || !email) return;
+                        setSent(true);
+                      }}
+                    >
+                      Request a Call <ArrowRight className="w-3.5 h-3.5" />
+                    </Btn>
+                  </div>
+                  <p className="u-label text-[8px] text-[#4a4a50]">
+                    We respond within 24 hours. No commitment.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 py-6">
+                  <div className="w-10 h-10 rounded-full border border-[#545457] flex items-center justify-center">
+                    <Check className="w-4 h-4 text-[#f0f0fa]" />
+                  </div>
+                  <h3 className="u-head text-[18px]">Request received.</h3>
+                  <p className="body-dim text-[13px] max-w-sm">
+                    We'll reach out to {email} within 24 hours to book your free
+                    strategy call.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSent(false);
+                      setName("");
+                      setEmail("");
+                      setMessage("");
+                    }}
+                    className="u-label text-[9px] text-[#6b6b72] hover:text-[#f0f0fa] transition-colors self-start"
+                  >
+                    Submit another
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
-      <Section id="contact-form">
-        {!submitted ? (
-          <>
-            <Heading>Start the Conversation.</Heading>
-            <div className="mt-10 w-full max-w-md flex flex-col gap-7">
-              <input
-                className={field}
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="email"
-                className={field}
-                placeholder="Business email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <textarea
-                rows={3}
-                className={`${field} resize-none`}
-                placeholder="What are you trying to automate or build?"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <div className="pt-2">
-                <GhostButton
-                  filled
-                  type="submit"
-                  disabled={!name || !email}
-                  onClick={() => {
-                    if (!name || !email) return;
-                    setSubmitted(true);
-                  }}
-                >
-                  Request a Call <ArrowRight className="w-3.5 h-3.5" />
-                </GhostButton>
-              </div>
-              <p className="font-michroma text-[8px] tracking-[0.14em] uppercase text-white/25">
-                We respond within 24 hours. No commitment.
+          <div className="lg:col-span-5 flex flex-col gap-4">
+            <div className="card">
+              <p className="u-label text-[9px] text-[#545457]">Direct</p>
+              <p className="text-[14px] text-[#f0f0fa] mt-3">hello@arka.systems</p>
+              <p className="body-dim text-[12px] mt-2">
+                For detailed briefs or partnership inquiries. Responds within 24
+                hours.
               </p>
             </div>
-          </>
-        ) : (
-          <>
-            <Heading>Request Received.</Heading>
-            <Copy>
-              We'll reach out to {email} within 24 hours to book your free
-              strategy call.
-            </Copy>
-            <button
-              onClick={() => {
-                setSubmitted(false);
-                setName("");
-                setEmail("");
-                setMessage("");
-              }}
-              className="mt-8 font-michroma text-[9px] tracking-[0.16em] uppercase text-white/30 hover:text-white/60 transition-colors"
-            >
-              Submit another
-            </button>
-          </>
-        )}
-      </Section>
-
-      <Section>
-        <Heading>Or Reach Us Directly.</Heading>
-        <Copy>
-          hello@arka.systems — for detailed briefs or partnership inquiries.
-          Otherwise, book the call and we'll map your highest-ROI automation in
-          30 minutes.
-        </Copy>
-        <div className="mt-8">
-          <GhostButton
-            filled
-            onClick={() => {
-              const el = document.getElementById("contact-form");
-              el?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
-            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
-          </GhostButton>
+            <div className="card">
+              <p className="u-label text-[9px] text-[#545457]">What to expect</p>
+              <ul className="mt-4 flex flex-col gap-3">
+                {[
+                  "Confirmation email within 24h",
+                  "30-minute strategy call, no upsell",
+                  "Clear scope and quote after the call",
+                  "System live within 5–10 days",
+                ].map((x) => (
+                  <li key={x} className="flex items-start gap-2.5">
+                    <span className="w-1 h-1 rounded-full bg-[#545457] mt-2 shrink-0" />
+                    <span className="text-[12.5px] text-[#9a9aa2]">{x}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
-      </Section>
+      </section>
+
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-20 md:py-28">
+          <SectionHead label="FAQ" title="Common questions." />
+          <div className="mt-12 border-t border-[#262629]">
+            {FAQ.map((f) => (
+              <div key={f.q} className="py-7 border-b border-[#262629]">
+                <h3 className="u-head text-[14px]">{f.q}</h3>
+                <p className="body-dim text-[13px] mt-2.5 max-w-2xl">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </>
   );
 }
@@ -807,16 +991,16 @@ export default function App() {
     }
   });
 
-  const wasScrolled = useRef(false);
+  const was = useRef(false);
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        const now = window.scrollY > 20;
-        if (now !== wasScrolled.current) {
-          wasScrolled.current = now;
+        const now = window.scrollY > 16;
+        if (now !== was.current) {
+          was.current = now;
           setScrolled(now);
         }
       });
@@ -830,16 +1014,11 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const r1 = requestAnimationFrame(() => window.scrollTo(0, 0));
-    const t = setTimeout(() => window.scrollTo(0, 0), 120);
-    return () => {
-      cancelAnimationFrame(r1);
-      clearTimeout(t);
-    };
+    const r = requestAnimationFrame(() => window.scrollTo(0, 0));
+    return () => cancelAnimationFrame(r);
   }, [tab]);
 
   const go = (t: Tab) => setTab(t);
-
   const enter = () => {
     setEntered(true);
     try {
@@ -848,7 +1027,6 @@ export default function App() {
       /* ignore */
     }
   };
-
   const exitSession = () => {
     setEntered(false);
     try {
@@ -859,7 +1037,7 @@ export default function App() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-black text-white antialiased selection:bg-white selection:text-black">
+    <div className="min-h-screen bg-black text-[#f0f0fa] selection:bg-[#f0f0fa] selection:text-black">
       <AnimatePresence>
         {!entered && <SplashGate key="gate" onEnter={enter} />}
       </AnimatePresence>
@@ -878,13 +1056,13 @@ export default function App() {
             go={go}
             exitSession={exitSession}
           />
-          <main key={tab} className="animate-[fadein_0.4s_ease]">
+          <main key={tab} className="animate-[fadein_0.35s_ease]">
             {tab === "overview" && <HomePage go={go} />}
             {tab === "solutions" && <ServicesPage go={go} />}
             {tab === "lab" && <WorkPage go={go} />}
             {tab === "quote" && <ContactPage />}
           </main>
-          <Footer />
+          <Footer go={go} />
         </>
       )}
     </div>
