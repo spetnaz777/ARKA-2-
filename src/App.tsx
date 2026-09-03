@@ -754,25 +754,23 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
               }
             }}
             className="hero-drift absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "brightness(0.82) contrast(1.05) saturate(0.97)" }}
+            style={{ filter: "brightness(1.04) contrast(1.03) saturate(0.98)" }}
           />
         </div>
-        {/* flat safety tint so copy stays legible over any image */}
-        <div className="absolute inset-0 pointer-events-none bg-black/25" />
-        {/* left column stays dark where the headline + buttons sit */}
+        {/* left column kept a touch darker where the headline + buttons sit */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.72) 44%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.6) 100%)",
+              "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.34) 40%, rgba(0,0,0,0.05) 68%, rgba(0,0,0,0.18) 100%)",
           }}
         />
-        {/* darken top (behind the nav) and bottom (bright foreground) */}
+        {/* light scrim behind the nav and under the stat grid */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.14) 18%, rgba(0,0,0,0) 46%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.92) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.08) 16%, rgba(0,0,0,0) 44%, rgba(0,0,0,0.32) 80%, rgba(0,0,0,0.6) 100%)",
           }}
         />
         <div className="hero-sweep" />
