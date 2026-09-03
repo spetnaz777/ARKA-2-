@@ -418,10 +418,10 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
           <Logo className="relative w-16 h-16 md:w-20 md:h-20 text-white" />
         </div>
         <h1 className="u-head text-lg md:text-xl tracking-[0.32em] text-white">
-          ARKA GATEWAY
+          ARKA
         </h1>
         <p className="u-label text-[8px] text-[#8a8a92] mt-3 mb-8">
-          autonomous edge console
+          Systems Operator
         </p>
 
         {/* blurred glass panel */}
@@ -442,13 +442,14 @@ const SplashGate: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
           {!loading ? (
             <>
               <p className="relative text-[12px] leading-relaxed text-white/65">
-                Establish a secured session with the central routing cluster.
+                Digital systems, built by one operator — live in days, not
+                months.
               </p>
               <button
                 onClick={start}
                 className="relative w-full py-3.5 rounded-full bg-[#f0f0fa] text-black font-michroma text-[10px] tracking-[0.16em] uppercase hover:bg-white transition-colors"
               >
-                Initialise Secure Entry
+                Enter
               </button>
             </>
           ) : (
@@ -523,7 +524,7 @@ function Footer({ go }: { go: (t: Tab) => void }) {
         <div>
           <p className="u-label text-[9px] text-[#545457] mb-4">Contact</p>
           <ul className="flex flex-col gap-2.5 text-[12px] text-[#9a9aa2]">
-            <li>hello@arka.systems</li>
+            <li>hello@arkalegion.com</li>
             <li>
               <button
                 onClick={() => go("quote")}
@@ -675,18 +676,12 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
         <div className="hero-grain" />
 
         <div className="relative wrap pt-28 pb-16 md:pt-36 md:pb-24 w-full">
-          <div
-            className="rise inline-flex items-center gap-2.5 border border-[#262629] rounded-full px-3 py-1.5"
-            style={{ animationDelay: "0.05s" }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#f0f0fa] pulse-dot" />
-            <span className="u-label text-[8.5px] text-[#9a9aa2]">
-              Available for new projects
-            </span>
-          </div>
+          <p className="rise eyebrow" style={{ animationDelay: "0.05s" }}>
+            ARKA · Systems Operator
+          </p>
 
           <h1
-            className="u-head mt-6 max-w-4xl"
+            className="u-head mt-5 max-w-4xl"
             style={{
               fontSize: "clamp(2.05rem, 7.5vw, 5rem)",
               lineHeight: 1.04,
@@ -1039,7 +1034,7 @@ function ContactPage() {
           <div className="lg:col-span-5 flex flex-col gap-4">
             <div className="card">
               <p className="u-label text-[9px] text-[#545457]">Direct</p>
-              <p className="text-[14px] text-[#f0f0fa] mt-3">hello@arka.systems</p>
+              <p className="text-[14px] text-[#f0f0fa] mt-3">hello@arkalegion.com</p>
               <p className="body-dim text-[12px] mt-2">
                 For detailed briefs or partnership inquiries. Responds within 24
                 hours.
