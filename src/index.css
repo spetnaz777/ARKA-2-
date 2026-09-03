@@ -198,11 +198,154 @@ body {
   }
 }
 
+/* ── Hero atmosphere ────────────────────────────────────── */
+@keyframes hero-drift {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.16) translate3d(-1.5%, -2%, 0);
+  }
+}
+.hero-drift {
+  animation: hero-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes hero-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-14deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+  36% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(320%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+.hero-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26%;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(240, 240, 250, 0.07),
+    transparent
+  );
+  animation: hero-sweep 9s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes hero-grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-4%, 3%);
+  }
+  40% {
+    transform: translate(3%, -4%);
+  }
+  60% {
+    transform: translate(-3%, -2%);
+  }
+  80% {
+    transform: translate(2%, 4%);
+  }
+}
+.hero-grain {
+  position: absolute;
+  inset: -80%;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: hero-grain 1.6s steps(4) infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(240, 240, 250, 0.5);
+  }
+  70% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 6px rgba(240, 240, 250, 0);
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.headline-reveal {
+  display: block;
+  overflow: hidden;
+}
+.headline-reveal > span {
+  display: block;
+  transform: translateY(110%);
+  animation: headline-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes headline-in {
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── Touch / mobile ─────────────────────────────────────── */
 @media (max-width: 768px) {
   input,
   textarea,
   select {
     font-size: 16px !important;
+  }
+  .card {
+    padding: 20px;
+  }
+  .wrap {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (pointer: coarse) {
+  .btn {
+    min-height: 46px;
+    padding-block: 14px;
+  }
+  .btn--sm {
+    min-height: 42px;
+  }
+  /* generous tap area for text links / nav */
+  .tap {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -211,6 +354,10 @@ body {
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+  .headline-reveal > span {
+    transform: none;
   }
 }

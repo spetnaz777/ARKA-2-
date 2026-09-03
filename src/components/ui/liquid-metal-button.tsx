@@ -12,6 +12,53 @@ interface LiquidMetalButtonProps {
   disabled?: boolean;
 }
 
+/** Static metallic pill — used on touch / reduced-motion where a live
+ *  WebGL shader per button would waste battery and jank scrolling. */
+function StaticMetalButton({
+  label,
+  onClick,
+  viewMode,
+  width,
+  disabled,
+}: Required<Omit<LiquidMetalButtonProps, "width">> & { width?: number }) {
+  const w =
+    viewMode === "icon"
+      ? 46
+      : (width ?? Math.max(158, Math.round(label.length * 9) + 66));
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      aria-label={label}
+      disabled={disabled}
+      style={{
+        width: w,
+        height: 46,
+        borderRadius: 100,
+        border: "1px solid rgba(255,255,255,0.16)",
+        background:
+          "linear-gradient(150deg, #3a3a40 0%, #17171a 46%, #050506 100%)",
+        color: "#ececf2",
+        fontFamily: "Michroma, sans-serif",
+        fontSize: 10,
+        letterSpacing: "0.13em",
+        textTransform: "uppercase",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.4 : 1,
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -6px 12px rgba(0,0,0,0.5)",
+        WebkitTapHighlightColor: "transparent",
+      }}
+    >
+      {viewMode === "icon" ? <Sparkles size={16} /> : label}
+    </button>
+  );
+}
+
 export function LiquidMetalButton({
   label = "Get Started",
   onClick,
@@ -19,6 +66,18 @@ export function LiquidMetalButton({
   width,
   disabled = false,
 }: LiquidMetalButtonProps) {
+  const [useShader] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return !(
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      );
+    } catch {
+      return true;
+    }
+  });
+
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [ripples, setRipples] = useState<
@@ -54,6 +113,7 @@ export function LiquidMetalButton({
   }, [viewMode, width, label]);
 
   useEffect(() => {
+    if (!useShader) return;
     const styleId = "shader-canvas-style-exploded";
     if (!document.getElementById(styleId)) {
       const style = document.createElement("style");
@@ -111,7 +171,19 @@ export function LiquidMetalButton({
     }
 
     return cleanup;
-  }, [dimensions.shaderWidth, dimensions.shaderHeight]);
+  }, [dimensions.shaderWidth, dimensions.shaderHeight, useShader]);
+
+  if (!useShader) {
+    return (
+      <StaticMetalButton
+        label={label}
+        onClick={onClick ?? (() => {})}
+        viewMode={viewMode}
+        width={width}
+        disabled={disabled}
+      />
+    );
+  }
 
   const handleMouseEnter = () => {
     setIsHovered(true);

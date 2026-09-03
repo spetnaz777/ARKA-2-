@@ -11,8 +11,12 @@ import { motion } from "motion/react";
 interface ScrollExpandMediaProps {
   mediaType?: "video" | "image";
   mediaSrc: string;
+  /** Lighter media used on touch devices (smaller video / image). */
+  mobileMediaSrc?: string;
   posterSrc?: string;
   bgImageSrc: string;
+  /** Smaller background used on narrow screens. */
+  bgImageSrcMobile?: string;
   title?: string;
   date?: string;
   scrollToExpand?: string;
@@ -20,22 +24,33 @@ interface ScrollExpandMediaProps {
   children?: ReactNode;
 }
 
+const isTouch = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
+  } catch {
+    return false;
+  }
+};
+
 const ScrollExpandMedia = ({
   mediaType = "image",
   mediaSrc,
+  mobileMediaSrc,
   posterSrc,
   bgImageSrc,
+  bgImageSrcMobile,
   title,
   date,
   scrollToExpand,
   textBlend,
   children,
 }: ScrollExpandMediaProps) => {
+  const [mobile] = useState(isTouch);
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showContent, setShowContent] = useState<boolean>(false);
   const [mediaFullyExpanded, setMediaFullyExpanded] = useState<boolean>(false);
   const [touchStartY, setTouchStartY] = useState<number>(0);
-  const [isMobileState, setIsMobileState] = useState<boolean>(false);
 
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
@@ -46,15 +61,18 @@ const ScrollExpandMedia = ({
   }, [mediaType, mediaSrc]);
 
   useEffect(() => {
+    // No scroll-hijacking on touch devices — it fights native scroll and
+    // hurts INP. Mobile gets a plain stacked hero instead.
+    if (mobile) return;
+
     const handleWheel = (e: WheelEvent) => {
       if (mediaFullyExpanded && e.deltaY < 0 && window.scrollY <= 5) {
         setMediaFullyExpanded(false);
         e.preventDefault();
       } else if (!mediaFullyExpanded) {
         e.preventDefault();
-        const scrollDelta = e.deltaY * 0.0009;
         const newProgress = Math.min(
-          Math.max(scrollProgress + scrollDelta, 0),
+          Math.max(scrollProgress + e.deltaY * 0.0009, 0),
           1,
         );
         setScrollProgress(newProgress);
@@ -70,21 +88,18 @@ const ScrollExpandMedia = ({
     const handleTouchStart = (e: TouchEvent) => {
       setTouchStartY(e.touches[0].clientY);
     };
-
     const handleTouchMove = (e: TouchEvent) => {
       if (!touchStartY) return;
       const touchY = e.touches[0].clientY;
       const deltaY = touchStartY - touchY;
-
       if (mediaFullyExpanded && deltaY < -20 && window.scrollY <= 5) {
         setMediaFullyExpanded(false);
         e.preventDefault();
       } else if (!mediaFullyExpanded) {
         e.preventDefault();
-        const scrollFactor = deltaY < 0 ? 0.008 : 0.005;
-        const scrollDelta = deltaY * scrollFactor;
+        const factor = deltaY < 0 ? 0.008 : 0.005;
         const newProgress = Math.min(
-          Math.max(scrollProgress + scrollDelta, 0),
+          Math.max(scrollProgress + deltaY * factor, 0),
           1,
         );
         setScrollProgress(newProgress);
@@ -97,15 +112,9 @@ const ScrollExpandMedia = ({
         setTouchStartY(touchY);
       }
     };
-
-    const handleTouchEnd = (): void => {
-      setTouchStartY(0);
-    };
-
-    const handleScroll = (): void => {
-      if (!mediaFullyExpanded) {
-        window.scrollTo(0, 0);
-      }
+    const handleTouchEnd = () => setTouchStartY(0);
+    const handleScroll = () => {
+      if (!mediaFullyExpanded) window.scrollTo(0, 0);
     };
 
     window.addEventListener("wheel", handleWheel as unknown as EventListener, {
@@ -123,12 +132,8 @@ const ScrollExpandMedia = ({
       { passive: false },
     );
     window.addEventListener("touchend", handleTouchEnd as EventListener);
-
     return () => {
-      window.removeEventListener(
-        "wheel",
-        handleWheel as unknown as EventListener,
-      );
+      window.removeEventListener("wheel", handleWheel as unknown as EventListener);
       window.removeEventListener("scroll", handleScroll as EventListener);
       window.removeEventListener(
         "touchstart",
@@ -140,23 +145,79 @@ const ScrollExpandMedia = ({
       );
       window.removeEventListener("touchend", handleTouchEnd as EventListener);
     };
-  }, [scrollProgress, mediaFullyExpanded, touchStartY]);
-
-  useEffect(() => {
-    const checkIfMobile = (): void => {
-      setIsMobileState(window.innerWidth < 768);
-    };
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-    return () => window.removeEventListener("resize", checkIfMobile);
-  }, []);
-
-  const mediaWidth = 300 + scrollProgress * (isMobileState ? 650 : 1250);
-  const mediaHeight = 400 + scrollProgress * (isMobileState ? 200 : 400);
-  const textTranslateX = scrollProgress * (isMobileState ? 180 : 150);
+  }, [scrollProgress, mediaFullyExpanded, touchStartY, mobile]);
 
   const firstWord = title ? title.split(" ")[0] : "";
   const restOfTitle = title ? title.split(" ").slice(1).join(" ") : "";
+
+  const Media = ({ className }: { className?: string }) => {
+    const src = mobile && mobileMediaSrc ? mobileMediaSrc : mediaSrc;
+    if (mediaType === "video") {
+      return (
+        <video
+          src={src}
+          poster={posterSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload={mobile ? "metadata" : "auto"}
+          controls={false}
+          disablePictureInPicture
+          className={className}
+        />
+      );
+    }
+    return <img src={src} alt={title || ""} className={className} />;
+  };
+
+  const Darkeners = () => (
+    <>
+      <div className="absolute inset-0 bg-black/45 rounded-[4px] pointer-events-none" />
+      <div className="absolute inset-0 bg-black/25 rounded-[4px] pointer-events-none" />
+      <div
+        className="absolute inset-0 rounded-[4px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(70% 70% at 50% 50%, transparent 38%, rgba(0,0,0,0.6) 100%)",
+        }}
+      />
+    </>
+  );
+
+  /* ── Mobile: plain stacked hero, no scroll-jack ─────────── */
+  if (mobile) {
+    return (
+      <div ref={sectionRef} className="relative bg-black overflow-hidden">
+        <img
+          src={bgImageSrcMobile || bgImageSrc}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-black/55" />
+        <div className="relative z-10 wrap pt-28 pb-14">
+          <p className="eyebrow">{date}</p>
+          <h1
+            className="u-head mt-4"
+            style={{ fontSize: "clamp(2rem, 9vw, 3rem)", lineHeight: 1.05 }}
+          >
+            {title}
+          </h1>
+          <div className="relative mt-7 rounded-[4px] overflow-hidden aspect-[16/10]">
+            <Media className="w-full h-full object-cover" />
+            <Darkeners />
+          </div>
+          <div className="mt-10">{children}</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Desktop: scroll-expansion ─────────────────────────── */
+  const mediaWidth = 300 + scrollProgress * 1250;
+  const mediaHeight = 400 + scrollProgress * 400;
+  const textTranslateX = scrollProgress * 150;
 
   return (
     <div
@@ -193,36 +254,14 @@ const ScrollExpandMedia = ({
                 }}
               >
                 <div className="relative w-full h-full">
-                  {mediaType === "video" ? (
-                    <video
-                      src={mediaSrc}
-                      poster={posterSrc}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      controls={false}
-                      disablePictureInPicture
-                      className="w-full h-full object-cover rounded-[4px]"
-                    />
-                  ) : (
-                    <img
-                      src={mediaSrc}
-                      alt={title || ""}
-                      className="w-full h-full object-cover rounded-[4px]"
-                    />
-                  )}
-                  {/* base darkener — always on */}
+                  <Media className="w-full h-full object-cover rounded-[4px]" />
                   <div className="absolute inset-0 bg-black/45 rounded-[4px] pointer-events-none" />
-                  {/* extra darkener — fades as it expands */}
                   <motion.div
                     className="absolute inset-0 bg-black rounded-[4px] pointer-events-none"
                     initial={{ opacity: 0.35 }}
                     animate={{ opacity: 0.35 - scrollProgress * 0.15 }}
                     transition={{ duration: 0.2 }}
                   />
-                  {/* vignette for text legibility */}
                   <div
                     className="absolute inset-0 rounded-[4px] pointer-events-none"
                     style={{

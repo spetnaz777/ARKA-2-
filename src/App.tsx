@@ -13,6 +13,8 @@ import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
 
 type Tab = "overview" | "solutions" | "lab" | "quote";
 
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 const NAV: { id: Tab; label: string }[] = [
   { id: "overview", label: "Home" },
   { id: "solutions", label: "Services" },
@@ -288,14 +290,22 @@ function Header({
           />
         </nav>
 
-        <button
-          onClick={openMenu}
-          className="md:hidden flex items-center gap-2 text-[#9a9aa2]"
-          aria-label="Menu"
-        >
-          <span className="u-label text-[10px]">Menu</span>
-          <Menu className="w-4 h-4" />
-        </button>
+        <div className="md:hidden flex items-center gap-3">
+          <button
+            onClick={() => go("quote")}
+            className="tap u-label text-[9px] text-[#f0f0fa] border border-[#3a3a3f] rounded-full px-3.5"
+          >
+            Start
+          </button>
+          <button
+            onClick={openMenu}
+            className="tap flex items-center gap-2 text-[#9a9aa2] pl-1"
+            aria-label="Open menu"
+          >
+            <span className="u-label text-[10px]">Menu</span>
+            <Menu className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -548,7 +558,7 @@ function ServiceGrid({
 function CTABand({ go }: { go: (t: Tab) => void }) {
   return (
     <section className="border-y border-[#262629]">
-      <div className="wrap py-20 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+      <div className="wrap py-14 md:py-20 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
         <div>
           <h2
             className="u-head"
@@ -582,7 +592,7 @@ function PageHero({
   intro: string;
 }) {
   return (
-    <section className="wrap pt-36 pb-20 border-b border-[#262629]">
+    <section className="wrap pt-28 pb-14 md:pt-36 md:pb-20 border-b border-[#262629]">
       <p className="eyebrow">{label}</p>
       <h1
         className="u-head mt-5"
@@ -601,43 +611,75 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
     <>
       {/* HERO */}
       <section className="relative border-b border-[#262629] overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: "url(/deep-black-hero.jpg)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "brightness(1.15) contrast(1.05)",
-          }}
-        />
-        {/* legibility scrim — keeps the left text readable while the image stays visible */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.35) 72%, rgba(0,0,0,0.5) 100%)",
-          }}
-        />
+        {/* moving image backdrop */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img
+            src="/deep-black-hero.jpg"
+            srcSet="/deep-black-hero-1280.jpg 1280w, /deep-black-hero.jpg 2400w"
+            sizes="100vw"
+            alt=""
+            aria-hidden="true"
+            className="hero-drift absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "brightness(1.16) contrast(1.06)" }}
+          />
+        </div>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.55) 100%)",
+              "linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.22) 74%, rgba(0,0,0,0.4) 100%)",
           }}
         />
-        <div className="relative wrap pt-40 pb-24">
-          <p className="eyebrow">ARKA · Systems Operator</p>
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 64%, rgba(0,0,0,0.75) 100%)",
+          }}
+        />
+        <div className="hero-sweep" />
+        <div className="hero-grain" />
+
+        <div className="relative wrap pt-28 pb-16 md:pt-36 md:pb-24 w-full">
+          <div
+            className="rise inline-flex items-center gap-2.5 border border-[#262629] rounded-full px-3 py-1.5"
+            style={{ animationDelay: "0.05s" }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f0f0fa] pulse-dot" />
+            <span className="u-label text-[8.5px] text-[#9a9aa2]">
+              Available for new projects
+            </span>
+          </div>
+
           <h1
             className="u-head mt-6 max-w-4xl"
-            style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", lineHeight: 1.03 }}
+            style={{
+              fontSize: "clamp(2.05rem, 7.5vw, 5rem)",
+              lineHeight: 1.04,
+            }}
           >
-            Digital infrastructure for companies that move fast.
+            <span className="headline-reveal">
+              <span style={{ animationDelay: "0.14s" }}>Digital infrastructure</span>
+            </span>
+            <span className="headline-reveal">
+              <span style={{ animationDelay: "0.24s" }} className="text-[#8a8a92]">
+                for companies that move fast.
+              </span>
+            </span>
           </h1>
-          <p className="mt-7 text-[16px] text-[#b9b9c0] max-w-xl leading-relaxed">
+
+          <p
+            className="rise mt-7 text-[15px] md:text-[16px] text-[#b9b9c0] max-w-xl leading-relaxed"
+            style={{ animationDelay: "0.38s" }}
+          >
             AI automation, lead generation, and custom web — built from scratch
             around your workflows, live in under two weeks.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-5">
+
+          <div
+            className="rise mt-9 flex flex-wrap items-center gap-4"
+            style={{ animationDelay: "0.48s" }}
+          >
             <LiquidMetalButton
               label="Start a Project"
               onClick={() => go("quote")}
@@ -647,7 +689,10 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             </Btn>
           </div>
 
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629]">
+          <div
+            className="rise mt-14 md:mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-3xl"
+            style={{ animationDelay: "0.62s" }}
+          >
             {[
               ["12+", "Clients delivered"],
               ["4", "Countries"],
@@ -656,10 +701,10 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             ].map(([v, l]) => (
               <div
                 key={l}
-                className="border-b border-r border-[#262629] px-5 py-6"
+                className="border-b border-r border-[#262629] px-4 py-5 md:px-5 md:py-6"
               >
-                <div className="u-head text-[20px]">{v}</div>
-                <div className="u-label text-[8.5px] text-[#545457] mt-1.5">
+                <div className="u-head text-[18px] md:text-[20px]">{v}</div>
+                <div className="u-label text-[8px] md:text-[8.5px] text-[#545457] mt-1.5">
                   {l}
                 </div>
               </div>
@@ -669,7 +714,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
       </section>
 
       {/* SERVICES */}
-      <section className="wrap py-24 md:py-32">
+      <section className="wrap py-16 md:py-32">
         <SectionHead
           label="What we build"
           title="Six ways we put your business on autopilot."
@@ -680,7 +725,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
 
       {/* WHY */}
       <section className="border-t border-[#262629]">
-        <div className="wrap py-24 md:py-32">
+        <div className="wrap py-16 md:py-32">
           <SectionHead
             label="Why ARKA"
             title={
@@ -703,7 +748,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
 
       {/* PROCESS */}
       <section className="border-t border-[#262629]">
-        <div className="wrap py-24 md:py-32">
+        <div className="wrap py-16 md:py-32">
           <SectionHead
             label="How it works"
             title="From first call to live system in under two weeks."
@@ -727,7 +772,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
 
       {/* RESULTS */}
       <section className="border-t border-[#262629]">
-        <div className="wrap py-24 md:py-32">
+        <div className="wrap py-16 md:py-32">
           <SectionHead label="Results" title="What clients get." />
           <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 border-t border-l border-[#262629]">
             {STATS.map((s) => (
@@ -776,8 +821,10 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
       <ScrollExpandMedia
         mediaType="video"
         mediaSrc="/services-hero.mp4"
+        mobileMediaSrc="/services-hero-mobile.mp4"
         posterSrc="/services-hero-poster.jpg"
         bgImageSrc="/img-space.jpg"
+        bgImageSrcMobile="/img-space-1280.jpg"
         title="What We Build"
         date="ARKA · Services"
         scrollToExpand="Scroll to explore"
@@ -802,7 +849,7 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
       </ScrollExpandMedia>
 
       <section className="border-t border-[#262629]">
-        <div className="wrap py-20 md:py-28">
+        <div className="wrap py-14 md:py-28">
           <SectionHead
             label="Integrations"
             title="Connects to everything you already use."
@@ -836,7 +883,7 @@ function WorkPage({ go }: { go: (t: Tab) => void }) {
         title="Proven results."
         intro="Real systems, real outcomes — built for businesses that need to scale without adding headcount."
       />
-      <section className="wrap py-20 md:py-28">
+      <section className="wrap py-14 md:py-28">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {CASES.map((c) => (
             <div key={c.title} className="card flex flex-col">
@@ -880,7 +927,7 @@ function ContactPage() {
         title="Let's build."
         intro="Tell us what you're working on. We'll scope it, quote it, and have it live in under two weeks."
       />
-      <section className="wrap py-20 md:py-28">
+      <section className="wrap py-14 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
             <div className="card">
@@ -994,7 +1041,7 @@ function ContactPage() {
       </section>
 
       <section className="border-t border-[#262629]">
-        <div className="wrap py-20 md:py-28">
+        <div className="wrap py-14 md:py-28">
           <SectionHead label="FAQ" title="Common questions." />
           <div className="mt-12 border-t border-[#262629]">
             {FAQ.map((f) => (
