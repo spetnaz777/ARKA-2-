@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Menu, X, Check } from "lucide-react";
 import { Logo } from "./components/Logo";
 import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
-import VideoHero from "./components/ui/video-hero";
+import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
 
 /* ============================================================
    ARKA — conventional agency landing page, styled with the
@@ -818,33 +818,27 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
 function ServicesPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <VideoHero
-        videoSrc="/services-hero.mp4"
-        videoSrcMobile="/services-hero-mobile.mp4"
-        poster="/services-hero-poster.jpg"
-        eyebrow="ARKA · Services"
-        title="What we build."
+      <ScrollExpandMedia
+        mediaType="video"
+        mediaSrc="/services-hero.mp4"
+        mobileMediaSrc="/services-hero-mobile.mp4"
+        posterSrc="/services-hero-poster.jpg"
+        bgImageSrc="/img-space.jpg"
+        bgImageSrcMobile="/img-space-1280.jpg"
+        title="What We Build"
+        date="ARKA · Services"
+        scrollToExpand="Scroll to explore"
+        textBlend
       >
-        <p className="mt-6 text-[15px] md:text-[16px] text-[#c9c9d1] max-w-xl leading-relaxed">
-          Six core capabilities, one operator. Every system built from scratch
-          around your business — not adapted from a generic playbook.
-        </p>
-        <div className="mt-8">
-          <LiquidMetalButton
-            label="Start a Project"
-            onClick={() => go("quote")}
+        <div className="wrap">
+          <SectionHead
+            label="Full service list"
+            title="Six ways we put your business on autopilot."
+            intro="AI-native systems, built from scratch around your business, that plug into the tools you already run."
           />
+          <ServiceGrid go={go} detailed />
         </div>
-      </VideoHero>
-
-      <section className="wrap py-16 md:py-32">
-        <SectionHead
-          label="Full service list"
-          title="Six ways we put your business on autopilot."
-          intro="AI-native systems that plug into the tools you already run."
-        />
-        <ServiceGrid go={go} detailed />
-      </section>
+      </ScrollExpandMedia>
 
       <section className="border-t border-[#262629]">
         <div className="wrap py-14 md:py-28">
