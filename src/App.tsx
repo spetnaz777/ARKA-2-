@@ -645,9 +645,10 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
       {/* HERO */}
-      <section className="relative border-b border-[#262629] overflow-hidden">
-        {/* moving image backdrop */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <section className="cinematic-edges relative border-b border-[#262629] overflow-hidden">
+        {/* moving image backdrop — capped width, centred, so ultra-wide
+            screens get black edge-fade rather than an over-zoomed crop */}
+        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[2200px] overflow-hidden pointer-events-none">
           <img
             src="/deep-black-hero.jpg"
             srcSet="/deep-black-hero-1280.jpg 1280w, /deep-black-hero.jpg 2400w"

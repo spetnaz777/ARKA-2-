@@ -178,10 +178,10 @@ const ScrollExpandMedia = ({
       ref={sectionRef}
       className="transition-colors duration-700 ease-in-out overflow-x-hidden bg-black"
     >
-      <section className="relative flex flex-col items-center justify-start min-h-[100dvh]">
+      <section className="cinematic-edges relative flex flex-col items-center justify-start min-h-[100dvh]">
         <div className="relative w-full flex flex-col items-center min-h-[100dvh]">
           <motion.div
-            className="absolute inset-0 z-0 h-full"
+            className="absolute inset-0 z-0 h-full flex justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 - scrollProgress }}
             transition={{ duration: 0.1 }}
@@ -190,7 +190,7 @@ const ScrollExpandMedia = ({
               src={mobile && bgImageSrcMobile ? bgImageSrcMobile : bgImageSrc}
               alt=""
               aria-hidden="true"
-              className="w-screen h-screen object-cover object-center"
+              className="h-full w-full max-w-[2200px] object-cover object-center"
             />
             <div className="absolute inset-0 bg-black/40" />
           </motion.div>
@@ -202,8 +202,8 @@ const ScrollExpandMedia = ({
                 style={{
                   width: `${mediaWidth}px`,
                   height: `${mediaHeight}px`,
-                  maxWidth: "95vw",
-                  maxHeight: "85vh",
+                  maxWidth: "min(95vw, 1500px)",
+                  maxHeight: "min(85vh, 820px)",
                   boxShadow: "0px 0px 50px rgba(0, 0, 0, 0.35)",
                 }}
               >
