@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Menu, X, Check } from "lucide-react";
 import { Logo } from "./components/Logo";
+import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
+import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
 
 /* ============================================================
    ARKA — conventional agency landing page, styled with the
@@ -558,9 +560,10 @@ function CTABand({ go }: { go: (t: Tab) => void }) {
           </p>
         </div>
         <div className="shrink-0">
-          <Btn variant="primary" onClick={() => go("quote")}>
-            Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
-          </Btn>
+          <LiquidMetalButton
+            label="Book a Free Call"
+            onClick={() => go("quote")}
+          />
         </div>
       </div>
     </section>
@@ -623,10 +626,11 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             AI automation, lead generation, and custom web — built from scratch
             around your workflows, live in under two weeks.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <Btn variant="primary" onClick={() => go("quote")}>
-              Start a Project <ArrowRight className="w-3.5 h-3.5" />
-            </Btn>
+          <div className="mt-9 flex flex-wrap items-center gap-5">
+            <LiquidMetalButton
+              label="Start a Project"
+              onClick={() => go("quote")}
+            />
             <Btn variant="secondary" onClick={() => go("lab")}>
               See the Work
             </Btn>
@@ -794,38 +798,58 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
   );
 }
 
+function WorkCases() {
+  return (
+    <div className="wrap">
+      <div className="max-w-2xl">
+        <p className="eyebrow">Case Studies</p>
+        <h2 className="u-head mt-4" style={{ fontSize: "clamp(1.6rem, 3.2vw, 2.5rem)" }}>
+          Real systems. Real outcomes.
+        </h2>
+        <p className="body-dim mt-4 text-[14px] max-w-xl">
+          Built for businesses that need to scale without adding headcount.
+        </p>
+      </div>
+      <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {CASES.map((c) => (
+          <div key={c.title} className="card flex flex-col">
+            <div className="flex items-center justify-between">
+              <span className="u-label text-[8.5px] text-[#545457]">
+                {c.service}
+              </span>
+              <span className="u-label text-[8.5px] text-[#545457]">
+                {c.timeline}
+              </span>
+            </div>
+            <h3
+              className="u-head mt-5"
+              style={{ fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)" }}
+            >
+              {c.result}
+            </h3>
+            <p className="u-label text-[9px] text-[#6b6b72] mt-2">{c.title}</p>
+            <p className="body-dim text-[13px] mt-4 flex-1">{c.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function WorkPage({ go }: { go: (t: Tab) => void }) {
   return (
     <>
-      <PageHero
-        label="ARKA · Work"
-        title="Proven results."
-        intro="Real systems, real outcomes — built for businesses that need to scale without adding headcount."
-      />
-      <section className="wrap py-20 md:py-28">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {CASES.map((c) => (
-            <div key={c.title} className="card flex flex-col">
-              <div className="flex items-center justify-between">
-                <span className="u-label text-[8.5px] text-[#545457]">
-                  {c.service}
-                </span>
-                <span className="u-label text-[8.5px] text-[#545457]">
-                  {c.timeline}
-                </span>
-              </div>
-              <h3
-                className="u-head mt-5"
-                style={{ fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)" }}
-              >
-                {c.result}
-              </h3>
-              <p className="u-label text-[9px] text-[#6b6b72] mt-2">{c.title}</p>
-              <p className="body-dim text-[13px] mt-4 flex-1">{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ScrollExpandMedia
+        mediaType="image"
+        mediaSrc="/img-monolith.jpg"
+        bgImageSrc="/img-space.jpg"
+        title="Proven Results"
+        date="ARKA · Work"
+        scrollToExpand="Scroll to explore"
+        textBlend
+      >
+        <WorkCases />
+      </ScrollExpandMedia>
       <CTABand go={go} />
     </>
   );
