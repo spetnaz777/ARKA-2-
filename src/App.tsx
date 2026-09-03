@@ -22,6 +22,28 @@ const NAV: { id: Tab; label: string }[] = [
   { id: "quote", label: "Contact" },
 ];
 
+// Per-view title + description. No router here, so we update these on the
+// client when the tab changes — keeps the browser tab, bookmarks, and
+// social unfurls accurate as visitors move between views.
+const TAB_META: Record<Tab, { title: string; desc: string }> = {
+  overview: {
+    title: "ARKA — AI Automation Agency for Fast-Moving Companies",
+    desc: "A solo-operator agency building AI automation, AI lead generation, and web systems for US & Canada companies — live in 5–10 days, month-to-month, no lock-in.",
+  },
+  solutions: {
+    title: "Services — AI Automation, Lead Generation & Web Systems | ARKA",
+    desc: "Six ways ARKA puts your business on autopilot: AI automation, AI lead generation, web design & development, AI apps, AI chatbots, and marketing automation.",
+  },
+  lab: {
+    title: "Client Work & Results | ARKA",
+    desc: "Real systems ARKA has shipped for commercial real estate, B2B SaaS, e-commerce, and professional services teams — with the numbers they moved.",
+  },
+  quote: {
+    title: "Book a Free Call | ARKA",
+    desc: "Book a free 30-minute call. Leave with a plan for the highest-ROI automation in your business — no pitch, you keep the plan either way.",
+  },
+};
+
 const SERVICES = [
   {
     n: "01",
@@ -837,7 +859,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
         <SectionHead
           label="What we build"
           title="Six ways we put your business on autopilot."
-          intro="Every system is designed around your specific business logic — not recycled templates or off-the-shelf tools."
+          intro="Hire ARKA as your AI automation agency and get one senior operator instead of a team — every system designed around your specific business logic, not recycled templates or off-the-shelf tools."
         />
         <ServiceGrid go={go} />
         <div className="mt-10">
@@ -1327,6 +1349,21 @@ export default function App() {
     window.scrollTo(0, 0);
     const r = requestAnimationFrame(() => window.scrollTo(0, 0));
     return () => cancelAnimationFrame(r);
+  }, [tab]);
+
+  // keep <title> + meta description in sync with the active view
+  useEffect(() => {
+    const m = TAB_META[tab];
+    document.title = m.title;
+    const set = (sel: string, val: string) => {
+      const el = document.head.querySelector<HTMLMetaElement>(sel);
+      if (el) el.content = val;
+    };
+    set('meta[name="description"]', m.desc);
+    set('meta[property="og:title"]', m.title);
+    set('meta[property="og:description"]', m.desc);
+    set('meta[name="twitter:title"]', m.title);
+    set('meta[name="twitter:description"]', m.desc);
   }, [tab]);
 
   const go = (t: Tab) => setTab(t);

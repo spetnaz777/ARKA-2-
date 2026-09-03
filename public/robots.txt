@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════
-#  ARKA Systems — robots.txt
-#  https://arkasystems.io
+#  ARKA — robots.txt
+#  https://www.arkalegion.com
 #
 #  © 2026 ARKA Systems. All rights reserved.
 #  All content on this website is the exclusive intellectual
@@ -116,8 +116,23 @@ User-agent: Omgilibot
 Disallow: /
 
 # ── Block known vulnerability scanners & exploit bots ──
+# SEO research crawlers — ALLOWED so ARKA's own Ahrefs / Semrush
+# site audits and competitor gap analysis can run. Flip these to
+# Disallow only if you want to hide the backlink profile.
 User-agent: AhrefsBot
-Disallow: /
+Allow: /
+
+User-agent: SemrushBot
+Allow: /
+
+User-agent: SEMrushBot
+Allow: /
+
+User-agent: DataForSeoBot
+Allow: /
+
+User-agent: SiteAuditBot
+Allow: /
 
 User-agent: MJ12bot
 Disallow: /
@@ -125,22 +140,10 @@ Disallow: /
 User-agent: DotBot
 Disallow: /
 
-User-agent: SemrushBot
-Disallow: /
-
-User-agent: SEMrushBot
-Disallow: /
-
 User-agent: BLEXBot
 Disallow: /
 
 User-agent: MegaIndex
-Disallow: /
-
-User-agent: DataForSeoBot
-Disallow: /
-
-User-agent: SiteAuditBot
 Disallow: /
 
 User-agent: Bytespider
@@ -272,4 +275,4 @@ User-agent: DuckDuckBot
 Allow: /
 
 # Sitemap
-Sitemap: https://arkasystems.io/sitemap.xml
+Sitemap: https://www.arkalegion.com/sitemap.xml
