@@ -22,6 +22,15 @@
   font-display: swap;
 }
 
+/* display accent — used for 1–2 words inside a main title only */
+@font-face {
+  font-family: "Anurati";
+  src: url("/fonts/Anurati-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-sans: "Exo", system-ui, sans-serif;
   --font-michroma: "Michroma", sans-serif;
@@ -81,6 +90,21 @@ body {
   letter-spacing: 0.02em;
   line-height: 1.06;
   color: var(--star);
+}
+
+/* Anurati accent — thin, wide, caps-only. Only for 1–2 words in a title. */
+.accent {
+  font-family: "Anurati", "Exo", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  font-size: 0.86em;
+  padding-inline-start: 0.14em;
+}
+@media (min-width: 768px) {
+  .accent {
+    letter-spacing: 0.16em;
+    font-size: 0.9em;
+  }
 }
 
 .u-label {

@@ -77,9 +77,9 @@ const WHY = [
 const PROCESS = [
   {
     n: "01",
-    t: "Discovery Call",
+    t: "Free Strategy Call",
     time: "30 min",
-    d: "We map your workflows, find the highest-ROI automation opportunities, and scope the build. No upsell.",
+    d: "We map your workflows, find the highest-ROI automation, and scope the build. No pitch — you leave with a plan even if we don't work together.",
   },
   {
     n: "02",
@@ -565,6 +565,46 @@ function Footer({ go }: { go: (t: Tab) => void }) {
   );
 }
 
+// ─── Persistent conversion CTA ────────────────────────────
+function StickyCTA({
+  go,
+  show,
+}: {
+  go: (t: Tab) => void;
+  show: boolean;
+}) {
+  return (
+    <>
+      {/* mobile: bottom bar */}
+      <div
+        className={`md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-[#262629] bg-black/95 backdrop-blur px-4 py-3 transition-transform duration-300 ${
+          show ? "translate-y-0" : "translate-y-full"
+        }`}
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <button
+          onClick={() => go("quote")}
+          className="btn btn--primary w-full justify-center"
+        >
+          Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* desktop: floating pill */}
+      <button
+        onClick={() => go("quote")}
+        className={`hidden md:flex btn btn--primary fixed bottom-6 right-6 z-40 shadow-[0_10px_40px_rgba(0,0,0,0.6)] transition-all duration-300 ${
+          show
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-3 pointer-events-none"
+        }`}
+      >
+        Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+    </>
+  );
+}
+
 // ─── Reusable blocks ──────────────────────────────────────
 function ServiceGrid({
   go,
@@ -595,25 +635,38 @@ function ServiceGrid({
 
 function CTABand({ go }: { go: (t: Tab) => void }) {
   return (
-    <section className="border-y border-[#262629]">
-      <div className="wrap py-14 md:py-20 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-        <div>
-          <h2
-            className="u-head"
-            style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.6rem)" }}
-          >
-            Start automating. Today.
-          </h2>
-          <p className="body-dim text-[13px] mt-3">
-            Book a free 30-minute call. We map what to automate and what it
-            returns — no commitment.
-          </p>
-        </div>
-        <div className="shrink-0">
-          <LiquidMetalButton
-            label="Book a Free Call"
-            onClick={() => go("quote")}
-          />
+    <section className="border-y border-[#262629] bg-[#050506]">
+      <div className="wrap py-14 md:py-20">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+          <div className="max-w-lg">
+            <h2
+              className="u-head"
+              style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.6rem)" }}
+            >
+              Book a free call. Leave with a plan.
+            </h2>
+            <ul className="mt-5 flex flex-col gap-2.5">
+              {[
+                "A map of your highest-ROI automation",
+                "A fixed scope and a go-live date",
+                "Yours to keep — even if we don't work together",
+              ].map((x) => (
+                <li key={x} className="flex items-start gap-2.5">
+                  <Check className="w-3.5 h-3.5 text-[#f0f0fa] mt-0.5 shrink-0" />
+                  <span className="text-[13px] text-[#c4c4cc]">{x}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="shrink-0 flex flex-col items-start gap-3">
+            <LiquidMetalButton
+              label="Book a Free Call"
+              onClick={() => go("quote")}
+            />
+            <span className="u-label text-[8px] text-[#6b6b72]">
+              Free · 30 min · reply within 24h
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -629,6 +682,9 @@ function PageHero({
   title: string;
   intro: string;
 }) {
+  const words = title.trim().split(" ");
+  const head = words.slice(0, -1).join(" ");
+  const last = words[words.length - 1];
   return (
     <section className="wrap pt-28 pb-14 md:pt-36 md:pb-20 border-b border-[#262629]">
       <p className="eyebrow">{label}</p>
@@ -636,7 +692,13 @@ function PageHero({
         className="u-head mt-5"
         style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
       >
-        {title}
+        {head ? (
+          <>
+            {head} <span className="accent">{last}</span>
+          </>
+        ) : (
+          <span className="accent">{last}</span>
+        )}
       </h1>
       <p className="body-dim mt-5 text-[15px] max-w-xl">{intro}</p>
     </section>
@@ -692,7 +754,9 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             }}
           >
             <span className="headline-reveal">
-              <span style={{ animationDelay: "0.14s" }}>Digital infrastructure</span>
+              <span style={{ animationDelay: "0.14s" }}>
+                <span className="accent">Digital</span> infrastructure
+              </span>
             </span>
             <span className="headline-reveal">
               <span style={{ animationDelay: "0.24s" }} className="text-[#8a8a92]">
@@ -702,11 +766,12 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </h1>
 
           <p
-            className="rise mt-7 text-[15px] md:text-[16px] text-[#b9b9c0] max-w-xl leading-relaxed"
+            className="rise mt-7 text-[15px] md:text-[16px] text-[#c4c4cc] max-w-xl leading-relaxed"
             style={{ animationDelay: "0.38s" }}
           >
-            AI automation, lead generation, and custom web — built from scratch
-            around your workflows, live in under two weeks.
+            We build the AI systems that run your lead follow-up, outreach, and
+            back-office work — live in under two weeks, month-to-month, no
+            lock-in.
           </p>
 
           <div
@@ -714,13 +779,19 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             style={{ animationDelay: "0.48s" }}
           >
             <LiquidMetalButton
-              label="Start a Project"
+              label="Book a Free Call"
               onClick={() => go("quote")}
             />
             <Btn variant="secondary" onClick={() => go("lab")}>
-              See the Work
+              See Client Results
             </Btn>
           </div>
+          <p
+            className="rise mt-4 u-label text-[8px] text-[#6b6b72]"
+            style={{ animationDelay: "0.54s" }}
+          >
+            Free · 30 minutes · no pitch — you keep the plan either way
+          </p>
 
           <div
             className="rise mt-14 md:mt-16 grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#262629] max-w-3xl"
@@ -746,6 +817,22 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
         </div>
       </section>
 
+      {/* PROOF STRIP */}
+      <section className="border-b border-[#262629] bg-[#050506]">
+        <div className="wrap py-10 md:py-12 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+          <p className="text-[15px] md:text-[17px] text-[#e4e4ea] leading-relaxed flex-1">
+            "The website ARKA built converts at 6.8%. Our previous agency
+            delivered 0.4%. It shipped in 7 days."
+          </p>
+          <div className="shrink-0">
+            <div className="text-[12px] text-[#f0f0fa]">Sarah K.</div>
+            <div className="u-label text-[8px] text-[#545457] mt-1">
+              CMO, B2B SaaS Platform
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SERVICES */}
       <section className="wrap py-16 md:py-32">
         <SectionHead
@@ -754,6 +841,15 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           intro="Every system is designed around your specific business logic — not recycled templates or off-the-shelf tools."
         />
         <ServiceGrid go={go} />
+        <div className="mt-10">
+          <button
+            onClick={() => go("quote")}
+            className="u-label text-[9px] text-[#9a9aa2] hover:text-[#f0f0fa] transition-colors inline-flex items-center gap-2"
+          >
+            Not sure which you need? Book a free call
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
       </section>
 
       {/* WHY */}
@@ -840,6 +936,33 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
               </div>
             ))}
           </div>
+          <div className="mt-8">
+            <Btn variant="secondary" onClick={() => go("quote")}>
+              Book a Free Call <ArrowRight className="w-3.5 h-3.5" />
+            </Btn>
+          </div>
+        </div>
+      </section>
+
+      {/* OBJECTIONS */}
+      <section className="border-t border-[#262629]">
+        <div className="wrap py-16 md:py-28">
+          <SectionHead label="Before you ask" title="Straight answers." />
+          <div className="mt-12 border-t border-[#262629]">
+            {FAQ.slice(0, 3).map((f) => (
+              <div key={f.q} className="py-6 border-b border-[#262629]">
+                <h3 className="u-head text-[14px]">{f.q}</h3>
+                <p className="body-dim text-[13px] mt-2.5 max-w-2xl">{f.a}</p>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => go("quote")}
+            className="mt-8 u-label text-[9px] text-[#9a9aa2] hover:text-[#f0f0fa] transition-colors inline-flex items-center gap-2"
+          >
+            More questions? Ask on the call
+            <ArrowRight className="w-3 h-3" />
+          </button>
         </div>
       </section>
 
@@ -1181,8 +1304,10 @@ export default function App() {
             {tab === "solutions" && <ServicesPage go={go} />}
             {tab === "lab" && <WorkPage go={go} />}
             {tab === "quote" && <ContactPage />}
+            {tab !== "quote" && <div className="h-16 md:hidden" aria-hidden />}
           </main>
           <Footer go={go} />
+          <StickyCTA go={go} show={scrolled && tab !== "quote"} />
         </>
       )}
     </div>
