@@ -35,6 +35,7 @@ import {
 import { Logo } from "./components/Logo";
 import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
 import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
+import { MarqueeLogoScroller } from "./components/ui/marquee-logo-scroller";
 import Lenis from "lenis";
 
 /* ============================================================
@@ -239,6 +240,25 @@ const INTEGRATIONS = [
   "Make",
   "OpenAI",
   "Anthropic",
+];
+
+// brands with real marks, for the home-page stack marquee
+const STACK_LOGOS = [
+  { name: "HubSpot" },
+  { name: "Stripe" },
+  { name: "Shopify" },
+  { name: "Zapier" },
+  { name: "Make" },
+  { name: "n8n" },
+  { name: "Airtable" },
+  { name: "Notion" },
+  { name: "Anthropic" },
+  { name: "Gmail" },
+  { name: "Google Sheets" },
+  { name: "Google Calendar" },
+  { name: "Calendly" },
+  { name: "WhatsApp" },
+  { name: "Vercel" },
 ];
 
 const FAQ = [
@@ -951,6 +971,14 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </div>
         </div>
       </section>
+
+      {/* STACK MARQUEE */}
+      <MarqueeLogoScroller
+        title="Plugs into the tools you already run."
+        description="Your CRM, your inbox, your calendar, your billing — ARKA builds on the stack you have instead of forcing a new one."
+        logos={STACK_LOGOS}
+        speed="normal"
+      />
 
       {/* SERVICES */}
       <section className="wrap py-16 md:py-32">
