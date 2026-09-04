@@ -1464,12 +1464,15 @@ export default function App() {
     ).matches;
     if (reduce || tab === "solutions") return;
 
+    // lerp (not duration/easing) — a continuous heavy glide that never
+    // reads as discrete per-notch steps. Lower lerp = smoother + slower.
     const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.06,
       smoothWheel: true,
-      wheelMultiplier: 0.9,
-      touchMultiplier: 1.5,
+      wheelMultiplier: 0.8,
+      syncTouch: true,
+      syncTouchLerp: 0.075,
+      touchMultiplier: 1.2,
     });
     lenisRef.current = lenis;
 

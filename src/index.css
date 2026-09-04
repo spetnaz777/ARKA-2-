@@ -315,6 +315,9 @@ body {
   }
 }
 .hero-grain {
+  /* full-viewport steps() + mix-blend-mode repaint — hitches the scroll
+     on desktop. Removed; .hero-sweep alone carries the atmosphere. */
+  display: none;
   position: absolute;
   inset: 0;
   pointer-events: none;
