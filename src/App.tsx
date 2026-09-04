@@ -381,29 +381,30 @@ function Header({
   openMenu: () => void;
 }) {
   return (
-    <header
-      className={`fixed top-0 inset-x-0 z-40 transition-colors duration-200 ${
-        scrolled
-          ? "bg-black/95 border-b border-[#262629]"
-          : "bg-transparent border-b border-transparent"
-      }`}
-    >
-      <div className="wrap flex items-center justify-between h-[64px]">
+    <header className="fixed inset-x-0 top-3 md:top-4 z-40 flex justify-center px-3 pointer-events-none">
+      <div
+        className={`glass-nav pointer-events-auto flex items-center h-[50px] md:h-[54px] pl-4 pr-2.5 md:pl-6 md:pr-3 gap-3 md:gap-7 max-w-[calc(100vw-24px)] transition-[background,box-shadow] duration-300 ${
+          scrolled ? "glass-nav--solid" : ""
+        }`}
+      >
         <button
           onClick={() => go("overview")}
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-2.5 cursor-pointer shrink-0"
         >
-          <Logo className="w-8 h-8 text-white" />
-          <span className="brand text-[15px]">ARKA</span>
+          <Logo className="w-6 h-6 md:w-7 md:h-7 text-white" />
+          <span className="brand text-[13px] md:text-[14px]">ARKA</span>
         </button>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-7">
+          <span className="w-px h-4 bg-white/15" aria-hidden="true" />
           {NAV.map((n) => (
             <button
               key={n.id}
               onClick={() => go(n.id)}
               className={`u-label text-[10px] transition-colors ${
-                tab === n.id ? "text-[#f0f0fa]" : "text-[#6b6b72] hover:text-[#f0f0fa]"
+                tab === n.id
+                  ? "text-[#f0f0fa]"
+                  : "text-[#9a9aa2] hover:text-[#f0f0fa]"
               }`}
             >
               {n.label}
@@ -417,7 +418,7 @@ function Header({
 
         <button
           onClick={openMenu}
-          className="md:hidden tap flex items-center gap-2 text-[#9a9aa2] pr-1"
+          className="md:hidden tap flex items-center gap-2 text-[#c4c4cc] pl-1"
           aria-label="Open menu"
         >
           <span className="u-label text-[10px]">Menu</span>
