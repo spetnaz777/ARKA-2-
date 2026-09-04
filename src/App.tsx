@@ -1454,15 +1454,17 @@ export default function App() {
     };
   }, []);
 
-  // Smooth inertia scrolling — the whole page glides instead of stepping.
-  // Skipped on the Services view (it drives its own wheel-based expansion)
-  // and when the visitor asked for reduced motion.
+  // Smooth inertia scrolling on pointer devices. Touch devices keep their
+  // native momentum scroll — it's already buttery and syncTouch only adds
+  // lag on iOS. Also skipped on the Services view (own wheel-based
+  // expansion) and under reduced-motion.
   const lenisRef = useRef<Lenis | null>(null);
   useEffect(() => {
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    if (reduce || tab === "solutions") return;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (reduce || coarse || tab === "solutions") return;
 
     // lerp (not duration/easing) — a continuous heavy glide that never
     // reads as discrete per-notch steps. Lower lerp = smoother + slower.
@@ -1470,9 +1472,6 @@ export default function App() {
       lerp: 0.06,
       smoothWheel: true,
       wheelMultiplier: 0.8,
-      syncTouch: true,
-      syncTouchLerp: 0.075,
-      touchMultiplier: 1.2,
     });
     lenisRef.current = lenis;
 
