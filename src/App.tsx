@@ -1,6 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Menu, X, Check } from "lucide-react";
+import {
+  ArrowRight,
+  Menu,
+  X,
+  Check,
+  Workflow,
+  Magnet,
+  Code2,
+  Blocks,
+  MessagesSquare,
+  Send,
+  PenTool,
+  UserRound,
+  TrendingUp,
+  KeyRound,
+  PhoneCall,
+  Wrench,
+  Activity,
+  Plug2,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  siHubspot,
+  siStripe,
+  siShopify,
+  siGmail,
+  siNotion,
+  siAirtable,
+  siZapier,
+  siMake,
+  siAnthropic,
+} from "simple-icons";
 import { Logo } from "./components/Logo";
 import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
 import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
@@ -77,43 +108,60 @@ const SERVICES = [
   },
 ];
 
-const WHY = [
+// service name -> icon, shared by the service grid and the case-study tags
+const SERVICE_ICON: Record<string, LucideIcon> = {
+  "AI Automation": Workflow,
+  "AI Lead Generation": Magnet,
+  "Web Design & Development": Code2,
+  "AI Application Development": Blocks,
+  "AI Chatbots & Assistants": MessagesSquare,
+  "Marketing Automation": Send,
+};
+
+const WHY: { t: string; d: string; icon: LucideIcon }[] = [
   {
     t: "No templates",
     d: "Every system is built from scratch around your workflows, your CRM, and your customers.",
+    icon: PenTool,
   },
   {
     t: "Solo operator",
     d: "You work directly with the person building your system. No account managers, no handoffs.",
+    icon: UserRound,
   },
   {
     t: "Results first",
     d: "We don't charge retainers until the system is live and performing. If it doesn't work, you don't pay.",
+    icon: TrendingUp,
   },
   {
     t: "You own it",
     d: "The code, the workflows, the integrations — all transferred to you. No lock-in, month-to-month.",
+    icon: KeyRound,
   },
 ];
 
-const PROCESS = [
+const PROCESS: { n: string; t: string; time: string; d: string; icon: LucideIcon }[] = [
   {
     n: "01",
     t: "Free Strategy Call",
     time: "30 min",
     d: "We map your workflows, find the highest-ROI automation, and scope the build. No pitch — you leave with a plan even if we don't work together.",
+    icon: PhoneCall,
   },
   {
     n: "02",
     t: "Custom Build",
     time: "5–10 days",
     d: "We build the system end to end — automation flows, AI integrations, CRM connections, testing. Daily updates.",
+    icon: Wrench,
   },
   {
     n: "03",
     t: "Deploy & Monitor",
     time: "Ongoing",
     d: "The system goes live. We monitor, iterate, and handle issues. Most clients see ROI within 30 days.",
+    icon: Activity,
   },
 ];
 
@@ -214,6 +262,53 @@ const FAQ = [
     a: "You do. The code, workflows, and integrations are all transferred to you. ARKA doesn't retain IP on client-specific builds.",
   },
 ];
+
+// ─── Icons ────────────────────────────────────────────────
+// Real brand marks where they exist (simple-icons); a neutral plug for the
+// few that don't ship one (Salesforce, Slack, OpenAI were pulled upstream).
+const BRAND_MARKS: Record<string, { path: string } | undefined> = {
+  HubSpot: siHubspot,
+  Stripe: siStripe,
+  Shopify: siShopify,
+  Gmail: siGmail,
+  Notion: siNotion,
+  Airtable: siAirtable,
+  Zapier: siZapier,
+  Make: siMake,
+  Anthropic: siAnthropic,
+};
+
+function BrandMark({
+  name,
+  className = "w-3.5 h-3.5",
+}: {
+  name: string;
+  className?: string;
+}) {
+  const b = BRAND_MARKS[name];
+  if (!b) return <Plug2 className={className} strokeWidth={1.5} aria-hidden="true" />;
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d={b.path} />
+    </svg>
+  );
+}
+
+function ServiceIcon({
+  name,
+  className = "w-3 h-3",
+}: {
+  name: string;
+  className?: string;
+}) {
+  const I = SERVICE_ICON[name];
+  return I ? <I className={className} strokeWidth={1.5} aria-hidden="true" /> : null;
+}
 
 // ─── Primitives ───────────────────────────────────────────
 function Btn({
@@ -636,7 +731,10 @@ function ServiceGrid({
     <div className="mt-8 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {SERVICES.map((s) => (
         <div key={s.n} className="card card--hover flex flex-col">
-          <span className="u-label text-[10px] text-[#545457]">{s.n}</span>
+          <div className="flex items-center justify-between">
+            <ServiceIcon name={s.name} className="w-5 h-5 text-[#c4c4cc]" />
+            <span className="u-label text-[10px] text-[#545457]">{s.n}</span>
+          </div>
           <h3 className="u-head text-[16px] mt-4">{s.name}</h3>
           <p className="body-dim text-[13px] mt-3 flex-1">{s.desc}</p>
           <button
@@ -794,7 +892,7 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           </p>
 
           <div
-            className="rise mt-7 md:mt-9 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4"
+            className="rise mt-7 md:mt-9 flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4"
             style={{ animationDelay: "0.48s" }}
           >
             <LiquidMetalButton
@@ -886,7 +984,12 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
           <div className="mt-8 md:mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {WHY.map((w) => (
               <div key={w.t} className="card">
-                <h3 className="u-head text-[14px]">{w.t}</h3>
+                <w.icon
+                  className="w-5 h-5 text-[#c4c4cc]"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <h3 className="u-head text-[14px] mt-4">{w.t}</h3>
                 <p className="body-dim text-[12.5px] mt-3">{w.d}</p>
               </div>
             ))}
@@ -910,7 +1013,12 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
                     {p.time}
                   </span>
                 </div>
-                <h3 className="u-head text-[16px] mt-5">{p.t}</h3>
+                <p.icon
+                  className="w-5 h-5 text-[#c4c4cc] mt-5"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <h3 className="u-head text-[16px] mt-4">{p.t}</h3>
                 <p className="body-dim text-[13px] mt-3">{p.d}</p>
               </div>
             ))}
@@ -1031,8 +1139,9 @@ function ServicesPage({ go }: { go: (t: Tab) => void }) {
             {INTEGRATIONS.map((i) => (
               <span
                 key={i}
-                className="border border-[#262629] rounded-[4px] px-4 py-2.5 u-label text-[9px] text-[#9a9aa2]"
+                className="border border-[#262629] rounded-[4px] px-4 py-2.5 u-label text-[9px] text-[#9a9aa2] flex items-center gap-2"
               >
+                <BrandMark name={i} className="w-3.5 h-3.5 shrink-0" />
                 {i}
               </span>
             ))}
@@ -1075,7 +1184,8 @@ function WorkPage({ go }: { go: (t: Tab) => void }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050506] via-transparent to-transparent" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="u-label text-[8.5px] text-[#545457]">
+                <span className="u-label text-[8.5px] text-[#545457] flex items-center gap-1.5">
+                  <ServiceIcon name={c.service} className="w-3 h-3" />
                   {c.service}
                 </span>
                 <span className="u-label text-[8.5px] text-[#545457]">
