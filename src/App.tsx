@@ -61,7 +61,7 @@ const NAV: { id: Tab; label: string }[] = [
 const TAB_META: Record<Tab, { title: string; desc: string }> = {
   overview: {
     title: "ARKA — AI Automation Agency for Fast-Moving Companies",
-    desc: "A solo-operator agency building AI automation, AI lead generation, and web systems for US & Canada companies — live in 5–10 days, month-to-month, no lock-in.",
+    desc: "A Toronto (GTA)-based AI automation agency serving clients worldwide — AI automation, AI lead generation, and web systems live in 5–10 days, month-to-month, no lock-in.",
   },
   solutions: {
     title: "Services — AI Automation, Lead Generation & Web Systems | ARKA",
@@ -182,8 +182,8 @@ const TESTIMONIALS = [
   },
   {
     q: "The website ARKA built converts at 6.8%. Our previous agency delivered 0.4%. It took 7 days to ship.",
-    n: "Sarah K.",
-    r: "CMO, B2B SaaS Platform",
+    n: "Royal Caspian Cleaning",
+    r: "Luxury Cleaning & Detailing, GTA",
   },
   {
     q: "We eliminated 15 manual tasks daily across sales and ops. My team now spends 100% of their time on growth work.",
@@ -281,6 +281,10 @@ const FAQ = [
   {
     q: "Who owns the systems you build?",
     a: "You do. The code, workflows, and integrations are all transferred to you. ARKA doesn't retain IP on client-specific builds.",
+  },
+  {
+    q: "Where is ARKA based? Do you work outside Canada?",
+    a: "ARKA is based in the Greater Toronto Area (GTA) — but the work is remote-first and clients are worldwide. Time zone and location are never a blocker.",
   },
 ];
 
@@ -630,6 +634,9 @@ function Footer({ go }: { go: (t: Tab) => void }) {
             AI automation, web, and internal tools — built from scratch around
             your business, by one operator.
           </p>
+          <p className="u-label text-[8px] text-[#545457] mt-4">
+            Based in the GTA · Serving clients worldwide
+          </p>
         </div>
         <div>
           <p className="u-label text-[9px] text-[#545457] mb-4">Navigate</p>
@@ -964,9 +971,9 @@ function HomePage({ go }: { go: (t: Tab) => void }) {
             delivered 0.4%. It shipped in 7 days."
           </p>
           <div className="shrink-0">
-            <div className="text-[12px] text-[#f0f0fa]">Sarah K.</div>
+            <div className="text-[12px] text-[#f0f0fa]">Royal Caspian Cleaning</div>
             <div className="u-label text-[8px] text-[#545457] mt-1">
-              CMO, B2B SaaS Platform
+              Luxury Cleaning & Detailing, GTA
             </div>
           </div>
         </div>
@@ -1407,6 +1414,15 @@ function ContactPage() {
               <p className="body-dim text-[12px] mt-2">
                 For detailed briefs or partnership inquiries. Responds within 24
                 hours.
+              </p>
+            </div>
+            <div className="card">
+              <p className="u-label text-[9px] text-[#545457]">Based</p>
+              <p className="text-[14px] text-[#f0f0fa] mt-3">
+                Greater Toronto Area, Canada
+              </p>
+              <p className="body-dim text-[12px] mt-2">
+                Remote-first — clients worldwide, every time zone.
               </p>
             </div>
             <div className="card">
