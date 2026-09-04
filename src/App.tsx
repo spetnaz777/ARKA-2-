@@ -35,6 +35,7 @@ import {
 import { Logo } from "./components/Logo";
 import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
 import ScrollExpandMedia from "./components/ui/scroll-expansion-hero";
+import Lenis from "lenis";
 
 /* ============================================================
    ARKA — conventional agency landing page, styled with the
@@ -1453,9 +1454,49 @@ export default function App() {
     };
   }, []);
 
+  // Smooth inertia scrolling — the whole page glides instead of stepping.
+  // Skipped on the Services view (it drives its own wheel-based expansion)
+  // and when the visitor asked for reduced motion.
+  const lenisRef = useRef<Lenis | null>(null);
   useEffect(() => {
-    window.scrollTo(0, 0);
-    const r = requestAnimationFrame(() => window.scrollTo(0, 0));
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reduce || tab === "solutions") return;
+
+    const lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.5,
+    });
+    lenisRef.current = lenis;
+
+    let raf = 0;
+    const loop = (time: number) => {
+      lenis.raf(time);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      lenis.destroy();
+      lenisRef.current = null;
+    };
+  }, [tab]);
+
+  useEffect(() => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+    const r = requestAnimationFrame(() => {
+      if (lenisRef.current) lenisRef.current.scrollTo(0, { immediate: true });
+      else window.scrollTo(0, 0);
+    });
     return () => cancelAnimationFrame(r);
   }, [tab]);
 
