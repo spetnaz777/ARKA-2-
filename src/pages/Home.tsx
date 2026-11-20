@@ -64,8 +64,10 @@ function Hero() {
         </div>
         <div className="hero__terrain">
           <picture>
+            <source media="(max-width: 700px)" srcSet="/media/terrain-480.avif" type="image/avif" />
+            <source media="(max-width: 700px)" srcSet="/media/terrain-480.webp" type="image/webp" />
             <source srcSet="/media/terrain-840.avif" type="image/avif" />
-            <img src="/media/terrain-840.webp" alt="" width={840} height={740} decoding="async" />
+            <img src="/media/terrain-840.webp" alt="" width={840} height={740} decoding="async" fetchPriority="high" />
           </picture>
         </div>
         <div className="hero__sphere">
@@ -85,7 +87,7 @@ function Hero() {
       <div className="container hero__content">
         <SectionLabel n="01" label="ARKA" className="hero__label" />
         <h1 id="hero-h" className="h-hero">
-          <span className="h-hero__line">AI, Software &amp;</span>
+          <span className="h-hero__line">AI, Software &amp;</span>{" "}
           <em className="h-hero__line">Digital Growth.</em>
         </h1>
         <p className="hero__copy">

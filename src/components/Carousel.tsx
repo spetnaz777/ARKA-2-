@@ -60,7 +60,7 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
       >
         <div className="work-panel chamfer chamfer--raised" style={{ ["--cut" as string]: "22px" }}>
           {projects.map((p, k) => (
-            <article
+            <div
               key={p.slug}
               className={`slide ${k === i ? "is-active" : ""}`}
               role="group"
@@ -80,7 +80,7 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
                   </Link>
                 </p>
               </div>
-            </article>
+            </div>
           ))}
           <Hatch className="work-panel__hatch" n={10} w={46} h={12} fade={false} />
         </div>

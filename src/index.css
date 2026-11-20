@@ -734,3 +734,6 @@ main h1:focus { outline: none; }
   .pulse { display: none; }
   .frame:not(.is-measured) { opacity: 1; }
 }
+
+/* about: let the orbital arc and traces sit over the terrain panel, as in the reference */
+.sec--about > .frame { z-index: 3; }

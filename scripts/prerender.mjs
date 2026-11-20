@@ -8,7 +8,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 const ssr = await import(pathToFileURL(path.join(root, "dist-ssr", "entry-server.js")).href);
-const template = fs.readFileSync(path.join(dist, "index.html"), "utf8");
+// Inline the single stylesheet: removes the render-blocking request (small file).
+let template = fs.readFileSync(path.join(dist, "index.html"), "utf8");
+template = template.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/, (m, href) => {
+  const css = fs.readFileSync(path.join(dist, href), "utf8");
+  return css.length < 60000 ? `<style>${css}</style>` : m;
+});
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const json = (o) => JSON.stringify(o).replace(/</g, "\\u003c");
