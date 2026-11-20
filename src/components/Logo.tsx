@@ -1,24 +1,32 @@
-import React from "react";
+import React, { useId } from "react";
 
 interface LogoProps {
   className?: string;
+  /** Accessible name; omit when the mark sits next to visible "ARKA" text. */
+  title?: string;
 }
 
-export const Logo: React.FC<LogoProps> = ({ className = "w-8 h-8" }) => {
+/* Original ARKA mark (geometry unchanged). Colour comes from `currentColor`,
+   so the white-theme site renders it in ink via the parent's text colour. */
+export const Logo: React.FC<LogoProps> = ({ className = "w-8 h-8", title }) => {
+  const clipId = `logoCircleClip-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
-    <div className={`relative ${className} flex items-center justify-center`}>
+    <span
+      className={`relative ${className} inline-flex items-center justify-center`}
+      {...(title ? { role: "img", "aria-label": title } : { "aria-hidden": true })}
+    >
       {/* Subtle brand glow behind logo */}
-      <div className="absolute inset-0 bg-white/5 rounded-full blur-xl pointer-events-none" />
+      <span className="absolute inset-0 bg-white/5 rounded-full blur-xl pointer-events-none" />
 
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full text-white transition-all duration-500 hover:scale-105"
+        className="w-full h-full transition-all duration-500"
       >
         <defs>
           {/* Clip path for vertical rays so they terminate mathematically at the inner circle border */}
-          <clipPath id="logoCircleClip">
+          <clipPath id={clipId}>
             <circle cx="50" cy="50" r="44" />
           </clipPath>
         </defs>
@@ -34,7 +42,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "w-8 h-8" }) => {
         />
 
         {/* Clipped Internal Elements */}
-        <g clipPath="url(#logoCircleClip)">
+        <g clipPath={`url(#${clipId})`}>
           {/* Fine vertical connection/acceleration lines */}
           {[
             41.0, 42.5, 44.0, 45.5, 47.0, 48.5, 50.0, 51.5, 53.0, 54.5, 56.0, 57.5, 59.0
@@ -83,7 +91,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "w-8 h-8" }) => {
           />
         </g>
       </svg>
-    </div>
+    </span>
   );
 };
 

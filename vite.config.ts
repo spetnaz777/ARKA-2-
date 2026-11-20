@@ -1,27 +1,40 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig} from 'vite';
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import fs from "node:fs";
+import path from "node:path";
+import { defineConfig, type Plugin } from "vite";
 
-export default defineConfig(() => {
+/* `vite preview` normally falls back to index.html for every path. Make it
+   behave like the Vercel deployment instead: serve each prerendered
+   <route>/index.html, and the real 404.html (with a 404 status) otherwise. */
+function vercelLikePreview(): Plugin {
   return {
-    plugins: [react(), tailwindcss()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-    server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
-      headers: {
-        'X-Frame-Options': 'DENY',
-        'X-Content-Type-Options': 'nosniff',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()',
-        'X-XSS-Protection': '1; mode=block',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; media-src 'self' https://d8j0ntlcm91z4.cloudfront.net blob:; connect-src 'self' https://api.web3forms.com; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';",
-      },
+    name: "arka-vercel-like-preview",
+    configurePreviewServer(server) {
+      const dist = path.resolve(__dirname, "dist");
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url ?? "/").split("?")[0];
+        if (path.extname(url)) return next();
+        const clean = url.replace(/\/+$/, "") || "/";
+        const file = path.join(dist, clean, "index.html");
+        if (fs.existsSync(file)) {
+          req.url = (clean === "/" ? "" : clean) + "/index.html";
+          return next();
+        }
+        if (fs.existsSync(path.join(dist, clean + ".html"))) {
+          req.url = clean + ".html"; // cleanUrls, e.g. /blog/<slug>
+          return next();
+        }
+        if (url.startsWith("/api/")) return next();
+        res.statusCode = 404;
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.end(fs.readFileSync(path.join(dist, "404.html")));
+      });
     },
   };
-});
+}
+
+export default defineConfig(({ isSsrBuild }) => ({
+  plugins: [react(), tailwindcss(), vercelLikePreview()],
+  build: { target: "es2020", cssCodeSplit: false, copyPublicDir: !isSsrBuild },
+}));

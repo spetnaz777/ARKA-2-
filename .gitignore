@@ -9,3 +9,4 @@ coverage/
 .vercel
 
 public/landing-bg.mp4
+dist-ssr/
