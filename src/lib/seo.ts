@@ -74,10 +74,6 @@ export const ROUTES: Meta[] = [
         inLanguage: "en",
       },
     ],
-    preload: [
-      { href: "/media/terrain-480.avif", type: "image/avif", media: "(max-width: 700px)" },
-      { href: "/media/moon-1600.avif", type: "image/avif", media: "(min-width: 1100px)" },
-    ],
     sitemap: { priority: "1.0", changefreq: "monthly" },
   },
   {

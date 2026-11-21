@@ -31,7 +31,7 @@
   font-family: "Anurati";
   src: url("/fonts/anurati-arka.woff2") format("woff2"), url("/fonts/Anurati-Regular.otf") format("opentype");
   font-weight: 400;
-  font-display: block;
+  font-display: swap;
 }
 
 :root {
@@ -56,6 +56,7 @@
   :root { --pad: 24px; --header-h: 96px; }
 }
 
+@layer base {
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: 90px; }
 body {
@@ -75,6 +76,7 @@ button { font: inherit; color: inherit; }
 p { margin: 0; }
 h1, h2, h3 { margin: 0; font-weight: 400; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
+}
 ::selection { background: var(--ink); color: #fff; }
 
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
@@ -729,6 +731,23 @@ main h1:focus { outline: none; }
   .label { gap: 10px; }
   .hero__ctas .btn { width: 100%; }
 }
+
+
+/* ── ARKA entry gate (kept from the previous live site) ────── */
+@font-face { font-family: "Michroma"; src: url("/fonts/michroma-latin.woff2") format("woff2"), url("/fonts/Michroma-Regular.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "Exo"; src: url("/fonts/exo-latin.woff2") format("woff2"), url("/fonts/Exo-VariableFont_wght.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+html.gate-done .arka-gate { display: none; }
+html.gate-open, html.gate-open body { overflow: hidden; }
+.arka-gate { color: #f0f0fa; font-family: "Exo", system-ui, sans-serif; opacity: 1; transform: none; transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.arka-gate.is-leaving { opacity: 0; transform: scale(1.02); pointer-events: none; }
+.gate-brand { font-family: "Anurati", "Exo", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.22em; color: #f0f0fa; }
+.gate-label, .gate-enter { font-family: "Michroma", sans-serif; text-transform: uppercase; letter-spacing: 0.12em; }
+.gate-enter { letter-spacing: 0.16em; cursor: pointer; border: 0; }
+.gate-enter:focus-visible, .arka-gate button:focus-visible { outline: 2px solid #f0f0fa; outline-offset: 3px; }
+.arka-gate button { background-color: transparent; border: 0; cursor: pointer; }
+.arka-gate .gate-enter { background-color: #f0f0fa; color: #000; }
+.arka-gate .gate-enter:hover { background-color: #fff; }
+.gate-bar { transition: transform 0.25s linear; }
 
 /* ── Reduced motion: everything visible, nothing animates ── */
 @media (prefers-reduced-motion: reduce) {
