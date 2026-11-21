@@ -1,6 +1,15 @@
 import React, { useCallback, useRef, useState } from "react";
 import type { Project } from "../content/site";
-import { ContourPattern, Hatch, Icon } from "./graphics";
+import { ContourPattern, Hatch, HudBrackets, Icon, Readout } from "./graphics";
+import { PaleImage, type PaleName } from "./media";
+
+const SLIDE_IMG: Record<string, PaleName> = {
+  "royal-caspian": "img-hall",
+  "healexa-clinic": "img-concrete",
+  "mehri-noshad": "img-monolith",
+  "six-side-marketing": "img-space",
+  "noctavius-aviation": "rocket-hangar",
+};
 import { Link } from "../lib/router";
 
 /* Featured-work carousel: real ARKA client builds only.
@@ -8,8 +17,17 @@ import { Link } from "../lib/router";
    polite live region announcing the current slide. */
 export function Carousel({ projects, intro }: { projects: Project[]; intro?: React.ReactNode }) {
   const [i, setI] = useState(0);
+  const [seen, setSeen] = useState<Set<number>>(() => new Set([0]));
   const n = projects.length;
-  const go = useCallback((d: number) => setI((v) => (v + d + n) % n), [n]);
+  const go = useCallback(
+    (d: number) =>
+      setI((v) => {
+        const next = (v + d + n) % n;
+        setSeen((s) => (s.has(next) ? s : new Set(s).add(next)));
+        return next;
+      }),
+    [n],
+  );
   const startX = useRef<number | null>(null);
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -69,6 +87,7 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
               aria-hidden={k !== i}
               inert={k !== i ? true : undefined}
             >
+              {seen.has(k) && <PaleImage name={SLIDE_IMG[p.slug] ?? "img-hall"} className="slide__img" sizes="(max-width: 700px) 100vw, 620px" />}
               <ContourPattern variant={p.wave} className="slide__wave" />
               <div className="slide__body">
                 <span className="chip">{p.category}</span>
@@ -85,9 +104,11 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
           <Hatch className="work-panel__hatch" n={10} w={46} h={12} fade={false} />
         </div>
         <span className="work-panel__bracket" aria-hidden="true" />
+        <HudBrackets inset={-9} size={12} className="hide-tablet" />
       </div>
 
       <div className="carousel__markers" aria-hidden="true">
+        <Readout className="carousel__idx">IDX {pad(i + 1)}/{pad(n)} · {projects[i].category}</Readout>
         <span>{pad(i + 1)}</span>
         <span className="carousel__track">
           <span className="carousel__fill" style={{ width: `${((i + 1) / n) * 100}%` }} />

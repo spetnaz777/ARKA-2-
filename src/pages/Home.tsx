@@ -1,6 +1,17 @@
 import { PROCESS, PROJECTS, SERVICES, STUDIO_FACTS } from "../content/site";
 import { Button, HatchMark, Reveal, SectionLabel, ServiceCard } from "../components/ui";
-import { Barcode, CircuitFrame, DotMatrix, Hatch, Place, SignalNode } from "../components/graphics";
+import { Barcode, CircuitFrame, CornerMarks, Crosshair, DotMatrix, Hatch, Place, Readout, SignalNode, TickRuler } from "../components/graphics";
+import { LazyVideo, PaleImage } from "../components/media";
+
+/* Section index on the continuous left rail: SYS.0n */
+export function RailIndex({ n }: { n: string }) {
+  return (
+    <Place at="l40,t0" className="hide-tablet rail-index">
+      <span className="rail-index__node" />
+      <Readout>SYS.{n}</Readout>
+    </Place>
+  );
+}
 import { ContactBanner } from "../components/layout";
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
@@ -15,18 +26,19 @@ function Hero() {
           traces: [
             { pts: "c-470,t60 c-400,t60 c-352,t108 c+232,t108 c+280,t60 c+330,t60 c+390,t0" },
             { pts: "l0,t180 l44,t136 c-330,t136", tone: "faint" },
-            { pts: "l40,t150 l40,t650", tone: "faint" },
+            { pts: "l40,t150 l40,b0", tone: "faint" },
             { pts: "l58,t270 l58,t600", tone: "faint" },
             { pts: "l0,t612 l48,t660 c-262,t660 c-214,t612 c+130,t612", pulse: true },
             { pts: "c-382,t604 c-318,t604", tone: "thick" },
             { pts: "c-14,t620 c-14,t378 c+124,t240 c+268,t240", tone: "faint" },
             { pts: "c+330,t168 c+330,b0", tone: "faint" },
-            { pts: "c+355,t134 c+355,b0", tone: "ink", pulse: true },
+            { pts: "c+355,t134 c+355,b0", tone: "ink", pulse: "signal" },
             { pts: "c+355,t136 c+355,t196", tone: "thick" },
             { pts: "c+252,t486 c+355,t486" },
             { pts: "c+32,t218 c+32,t346", tone: "faint" },
             { pts: "c+355,b-8 c+540,b-8 c+620,b-88 r0,b-88" },
-            { pts: "r-36,t0 r-36,t530", tone: "faint" },
+            { pts: "r-36,t0 r-36,b0", tone: "faint" },
+            { pts: "c-330,t136 c-300,t136", tone: "ink" },
           ],
           arcs: [{ c: "c+355,b0", r: 362, from: 180, to: 270, tone: "ink" }],
           nodes: [
@@ -54,6 +66,8 @@ function Hero() {
       />
 
       <div className="hero__art" aria-hidden="true">
+        <div className="hero__grid" />
+        <PaleImage name="deep-black-hero" className="hero__horizon" sizes="(max-width: 700px) 100vw, 900px" />
         <div className="hero__moon">
           <picture>
             <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
@@ -82,6 +96,11 @@ function Hero() {
         <Hatch className="hero__hatch" n={7} w={34} h={18} fade={false} />
         <DotMatrix className="hero__dots2" cols={5} rows={4} gap={13} />
         <Hatch className="hero__hatch-left" n={8} w={44} h={10} fade={false} />
+        <div className="hero__reticle"><CornerMarks offset={0} /></div>
+        <Readout className="hero__coord">N 43.65° / W 79.38°</Readout>
+        <Readout className="hero__sys">SYS.01 — ORBIT</Readout>
+        <TickRuler className="hero__ruler" length={150} vertical />
+        <TickRuler className="hero__ruler2" length={180} />
       </div>
 
       <div className="container hero__content">
@@ -115,6 +134,7 @@ function Services() {
         desktop={{
           traces: [
             { pts: "l40,t0 l40,b0", tone: "faint" },
+            { pts: "r-36,t0 r-36,b0", tone: "faint" },
             { pts: "c-332,t46 c-332,t236 c-286,t282 c+64,t282" },
             { pts: "c+96,t282 c+252,t282 c+282,t252 c+600,t252 c+620,t232", pulse: true },
             { pts: "c-110,t30 c+150,t30 c+168,t12 c+420,t12", tone: "faint" },
@@ -123,6 +143,9 @@ function Services() {
         }}
         mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
       />
+      <RailIndex n="02" />
+      <Place at="c+300,t288" className="hide-tablet"><TickRuler length={200} /></Place>
+      <Place at="c-338,t40" className="hide-tablet"><Crosshair /></Place>
       <div className="container sec__grid">
         <Reveal className="sec__intro">
           <SectionLabel n="02" label="Services" />
@@ -148,6 +171,7 @@ function FeaturedWork() {
         desktop={{
           traces: [
             { pts: "l40,t0 l40,b0", tone: "faint" },
+            { pts: "r-36,t0 r-36,b0", tone: "faint" },
             { pts: "R-40,t14 R+30,t14 R+46,t30", tone: "thick" },
             { pts: "c-306,t150 c-306,t228", tone: "ink" },
             { pts: "c-306,t228 c-290,t244 c-120,t244", tone: "faint" },
@@ -155,6 +179,7 @@ function FeaturedWork() {
         }}
         mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
       />
+      <RailIndex n="03" />
       <div className="container">
         <Carousel
           projects={PROJECTS}
@@ -185,8 +210,9 @@ function AboutStudio() {
             { pts: "c-52,t60 c-52,t420" },
             { pts: "c-52,t130 c-52,t176", tone: "thick" },
             { pts: "c-52,t300 c-110,t300", tone: "faint" },
-            { pts: "R-60,t120 R+40,t120 R+100,t60 r0,t60", tone: "faint" },
+            { pts: "R-60,t120 R+40,t120 R+100,t60 r-36,t60", tone: "faint" },
             { pts: "l40,t0 l40,b0", tone: "faint" },
+            { pts: "r-36,t0 r-36,b0", tone: "faint" },
           ],
           arcs: [{ c: "c-270,t380", r: 240, from: 196, to: 352, tone: "ink" }],
           nodes: [
@@ -199,15 +225,17 @@ function AboutStudio() {
         }}
         mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
       />
-      <Place at="L-58,t40" className="hide-tablet"><DotMatrix cols={6} rows={4} gap={11} /></Place>
+      <RailIndex n="04" />
       <Place at="c-140,t80" className="hide-tablet"><Barcode n={7} gap={6} h={48} /></Place>
       <Place at="R-20,t250" className="hide-tablet"><DotMatrix cols={5} rows={5} gap={12} className="faint" /></Place>
       <div className="container about">
-        <div className="about__media">
-          <picture>
-            <source srcSet="/media/terrain-840.avif" type="image/avif" />
-            <img src="/media/terrain-840.webp" alt="" width={840} height={740} loading="lazy" decoding="async" />
-          </picture>
+        <div className="about__frame">
+          <div className="about__media">
+            <LazyVideo name="terrain-loop" className="about__video" />
+            <div className="about__scan" aria-hidden="true" />
+          </div>
+          <CornerMarks offset={-7} />
+          <Readout className="about__cap">FIG.04 — TERRAIN · GTA 43.65°N</Readout>
         </div>
         <Reveal className="about__text">
           <SectionLabel n="04" label="About" />
@@ -233,9 +261,10 @@ function AboutStudio() {
 }
 
 /* ── 05 Process ──────────────────────────────────────────── */
-export function ProcessTimeline({ steps = PROCESS, tail = false }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean }) {
+export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean; ruler?: boolean }) {
   return (
     <ol className="timeline">
+      {ruler && <span className="timeline__ruler hide-tablet" aria-hidden="true" />}
       {tail && (
         <svg className="timeline__tail hide-tablet" aria-hidden="true" viewBox="0 0 92 52" fill="none">
           <path d="M0 50.5 H22 L71 1.5 H88" className="tr tr--line" />
@@ -261,6 +290,7 @@ function Process() {
         desktop={{
           traces: [
             { pts: "l40,t0 l40,b0", tone: "faint" },
+            { pts: "r-36,t0 r-36,b0", tone: "faint" },
             { pts: "L-56,t22 L-56,t150", tone: "faint" },
           ],
           nodes: [
@@ -271,6 +301,7 @@ function Process() {
         }}
         mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
       />
+      <RailIndex n="05" />
       <Place at="R+10,t70" className="hide-tablet"><DotMatrix cols={4} rows={4} gap={12} className="faint" /></Place>
       <div className="container sec__grid">
         <Reveal className="sec__intro">
@@ -279,7 +310,7 @@ function Process() {
           <p className="sec__lead">A clear, focused workflow from idea to growth.</p>
         </Reveal>
         <Reveal className="sec__body">
-          <ProcessTimeline tail />
+          <ProcessTimeline tail ruler />
         </Reveal>
       </div>
     </section>

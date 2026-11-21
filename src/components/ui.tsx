@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "../lib/router";
 import { Logo } from "./Logo";
-import { Hatch, Icon } from "./graphics";
+import { EdgeTrace, Hatch, Icon } from "./graphics";
 import type { Service } from "../content/site";
 
 /* Live-site brand treatment: original mark + "ARKA" set in Anurati. */
@@ -96,6 +96,8 @@ export function ServiceCard({ s, index = 0 }: { s: Service; index?: number }) {
         </span>
         <span className="svc-card__title">{s.short}</span>
         <span className="svc-card__desc">{s.card}</span>
+        <span className="svc-card__idx" aria-hidden="true">SYS.{s.n}</span>
+        <EdgeTrace />
       </Link>
     </Reveal>
   );

@@ -30,7 +30,7 @@ Copy `.env.example` and set in Vercel: `RESEND_API_KEY`, `CONTACT_TO`, `CONTACT_
 ## Brand assets & imagery
 
 - Logo: original mark (`public/arka-logo.svg`, `src/components/Logo.tsx`) + "ARKA" set in Anurati — the live site's treatment. `public/fonts/anurati-arka.woff2` is a glyph subset of the existing `Anurati-Regular.otf`.
-- Fonts: Instrument Sans (OFL) for text, Geist Mono (OFL) for labels, self-hosted woff2.
+- Fonts — see "Typography" below.
 - Moon / small sphere: `public/media/moon-*.{avif,webp}`, `sphere-260.webp` — procedurally generated, no external imagery (`python3 scripts/assets/generate-moon.py out.png 1600`).
 - Terrain: `public/media/terrain-*.{avif,webp}` — derived from the existing `public/services-hero-poster.jpg` (`scripts/assets/derive-terrain.py`).
 - Contour waves, orbital arcs and circuitry are SVG drawn in code.
@@ -38,3 +38,39 @@ Copy `.env.example` and set in Vercel: `RESEND_API_KEY`, `CONTACT_TO`, `CONTACT_
 ## Legal
 
 `/privacy` and `/terms` are drafts and are labelled as such on the page. They need review before being relied on.
+
+## Typography
+
+| Role | Face | Settings |
+|---|---|---|
+| Display (h1/h2, banner, slide & card titles, stats) | **Saira** (OFL) | `font-stretch: 112%` (semi-expanded), weight 300, tracking −0.02…−0.028em; true italic for the accent ("Digital Growth.") |
+| Body, UI, buttons | **Saira** | normal width (100%), weight 400; sub-heads at 106% / 550 |
+| Labels, indices, coordinates, nav micro-text | **Geist Mono** (OFL) | 10.5–12px, uppercase, +0.09–0.14em |
+| Wordmark only | Anurati (existing) | live-site treatment |
+
+Why: specimens of Saira, Chakra Petch, Sora, Space Grotesk and Michroma/Exo were set on the real hero, a service card and a body paragraph (`redesign-qa/fonts/`). Saira's width axis gives a wide, engineered display voice that reads as futuristic without the gimmick of Michroma or the squared terminals of Chakra Petch, keeps a true italic for the accent (Sora/Space Grotesk have none), and the same family at normal width is clean and highly readable for body copy — one file family, one voice.
+
+Delivery: `public/fonts/saira-latin.woff2` (variable wght 300–650 × wdth 100–112, latin subset, 36 KB, preloaded) and `saira-italic-latin.woff2` (wght 300–400 at wdth 112, 18 KB), produced with fontTools `instancer` + `pyftsubset` from the upstream variable font. A metric-adjusted Arial fallback (`Saira Fallback`) keeps the swap shift-free.
+
+## Signature linework
+
+Continuous left/right rails run through every section (header → footer) with `SYS.0n` indices; 45° frames, signal nodes, one signal-red pulse per view (hero spine), mono readouts (`N 43.65° / W 79.38°`), tick rulers, registration crosshairs, HUD corner brackets and a faint grid/scanline texture. All decorative SVG/HTML is `aria-hidden`, `pointer-events: none`, never crosses text, and is static under `prefers-reduced-motion`.
+
+## Existing media in the design
+
+Re-graded derivatives (grayscale, raised exposure) of the site's own assets in `public/media/`:
+
+| Asset | Used in |
+|---|---|
+| `deep-black-hero.jpg` → `pale-deep-black-hero-*` | home hero depth (horizon band), Work page hero |
+| `img-hall.jpg` (= section-bg / solutions-bg) | Royal Caspian slide/card, Technology Consulting hero |
+| `img-concrete.jpg` | Healexa slide/card, Services overview hero |
+| `img-monolith.jpg` | Mehri Noshad slide/card, Digital Marketing hero, About page hero |
+| `img-space.jpg` | Six Side slide/card, AI Solutions hero |
+| `img-corridor.jpg` | Web Development hero |
+| `rocket-hangar.jpg` | Noctavius Aviation slide/card |
+| `services-hero-mobile.mp4` → `terrain-loop.{webm,mp4}` | home About panel (muted loop) |
+| `landing-bg.mp4` → `horizon-loop.{webm,mp4}` | contact banner (muted loop) |
+| `deep-black-hero-1280.jpg` → `gate-*` | entry gate backdrop |
+
+Videos are muted, `preload="none"`, start only on screen, pause off screen, and stay on their poster under reduced motion or Save-Data. Regenerate with the ffmpeg/ImageMagick commands in `scripts/assets/README.md`.

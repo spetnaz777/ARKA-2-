@@ -12,7 +12,7 @@ const ssr = await import(pathToFileURL(path.join(root, "dist-ssr", "entry-server
 let template = fs.readFileSync(path.join(dist, "index.html"), "utf8");
 template = template.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/, (m, href) => {
   const css = fs.readFileSync(path.join(dist, href), "utf8");
-  return css.length < 60000 ? `<style>${css}</style>` : m;
+  return css.length < 90000 ? `<style>${css}</style>` : m;
 });
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

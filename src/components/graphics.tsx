@@ -103,7 +103,7 @@ export type Trace = {
   pts: string;
   tone?: "line" | "faint" | "ink" | "thick" | "white";
   draw?: boolean;
-  pulse?: boolean;
+  pulse?: boolean | "signal";
   delay?: number;
 };
 export type Node = {
@@ -220,8 +220,8 @@ export function CircuitFrame({
         .map((t, i) => (
           <span
             key={`p${i}`}
-            className="pulse"
-            style={{ offsetPath: `path("${t.d}")`, animationDelay: `${i * 2.7}s` }}
+            className={`pulse ${t.pulse === "signal" ? "pulse--signal" : ""}`}
+            style={{ offsetPath: `path("${t.d}")`, animationDelay: `${1.4 + i * 2.7}s` }}
           />
         ))}
     </div>
@@ -516,4 +516,72 @@ export function Icon({ name, size = 26 }: { name: "chip" | "code" | "bars" | "la
         </svg>
       );
   }
+}
+
+/* ── HUD micro-detail ──────────────────────────────────────── */
+/* Coordinate / index readout in mono, e.g. "N 43.65° / W 79.38°". */
+export function Readout({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`readout ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+/* Tick ruler: minor ticks every `step`, major every `major` ticks. */
+export function TickRuler({ length = 160, step = 8, major = 5, vertical = false, className = "" }: { length?: number; step?: number; major?: number; vertical?: boolean; className?: string }) {
+  const n = Math.floor(length / step);
+  const w = vertical ? 10 : length;
+  const h = vertical ? length : 10;
+  return (
+    <svg aria-hidden="true" className={`ruler ${className}`} width={w} height={h} fill="none">
+      {vertical ? <line x1={0.5} y1={0} x2={0.5} y2={length} /> : <line x1={0} y1={0.5} x2={length} y2={0.5} />}
+      {Array.from({ length: n + 1 }, (_, i) => {
+        const L = i % major === 0 ? 7 : 3.5;
+        const p = i * step + 0.5;
+        return vertical ? <line key={i} x1={0} y1={p} x2={L} y2={p} /> : <line key={i} x1={p} y1={0} x2={p} y2={L} />;
+      })}
+    </svg>
+  );
+}
+
+/* Registration crosshair. */
+export function Crosshair({ size = 13, className = "" }: { size?: number; className?: string }) {
+  const c = size / 2;
+  return (
+    <svg aria-hidden="true" className={`crosshair ${className}`} width={size} height={size} fill="none">
+      <line x1={c} y1={0} x2={c} y2={size} />
+      <line x1={0} y1={c} x2={size} y2={c} />
+    </svg>
+  );
+}
+
+/* Hairline HUD corner brackets around a positioned parent. */
+export function HudBrackets({ inset = -10, size = 14, className = "" }: { inset?: number; size?: number; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`hud ${className}`} style={{ inset: `${inset}px`, ["--b" as string]: `${size}px` }}>
+      <span /><span /><span /><span />
+    </span>
+  );
+}
+
+/* Crosshairs on all four corners of a positioned parent. */
+export function CornerMarks({ offset = -16 }: { offset?: number }) {
+  return (
+    <span aria-hidden="true" className="cmarks" style={{ inset: `${offset}px` }}>
+      <Crosshair /><Crosshair /><Crosshair /><Crosshair />
+    </span>
+  );
+}
+
+/* Edge-trace hover highlight for chamfered links. */
+export function EdgeTrace() {
+  return (
+    <span aria-hidden="true" className="edge">
+      <span className="edge__t" />
+      <span className="edge__r" />
+      <span className="edge__b" />
+      <span className="edge__l" />
+    </span>
+  );
 }

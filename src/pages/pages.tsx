@@ -1,7 +1,37 @@
 import React from "react";
 import { PRINCIPLES, PROJECTS, SERVICES, SITE, STUDIO_FACTS, projectBySlug, serviceBySlug } from "../content/site";
 import { Button, FAQ, PageIntro, Reveal, SectionLabel, ServiceCard } from "../components/ui";
-import { ChamferedPanel, CircuitFrame, ContourPattern, DotMatrix, Icon, TechnicalDivider } from "../components/graphics";
+import { ChamferedPanel, CircuitFrame, ContourPattern, CornerMarks, DotMatrix, EdgeTrace, Icon, Readout, TechnicalDivider } from "../components/graphics";
+import { PaleImage, type PaleName } from "../components/media";
+
+const PROJECT_IMG: Record<string, PaleName> = {
+  "royal-caspian": "img-hall",
+  "healexa-clinic": "img-concrete",
+  "mehri-noshad": "img-monolith",
+  "six-side-marketing": "img-space",
+  "noctavius-aviation": "rocket-hangar",
+};
+const SERVICE_IMG: Record<string, PaleName> = {
+  ai: "img-space",
+  web: "img-corridor",
+  marketing: "img-monolith",
+  consulting: "img-hall",
+};
+
+/* Framed asset panel: existing imagery in a chamfered frame with registration marks. */
+function AssetPanel({ name, caption, children, eager = false }: { name: PaleName; caption: string; children?: React.ReactNode; eager?: boolean }) {
+  return (
+    <div className="asset-panel">
+      <div className="asset-panel__clip">
+        <PaleImage name={name} eager={eager} sizes="(max-width: 1099px) 100vw, 520px" />
+        <div className="asset-panel__scan" aria-hidden="true" />
+        {children}
+      </div>
+      <CornerMarks offset={-8} />
+      <Readout className="asset-panel__cap">{caption}</Readout>
+    </div>
+  );
+}
 import { ContactBanner } from "../components/layout";
 import { ServiceGraphic } from "../components/ServiceGraphic";
 import { ContactForm } from "../components/ContactForm";
@@ -17,7 +47,8 @@ function PageHeroFrame() {
           { pts: "c-470,t60 c-400,t60 c-352,t108 c+232,t108 c+280,t60 c+330,t60 c+390,t0" },
           { pts: "l40,t150 l40,b0", tone: "faint" },
           { pts: "l0,b-40 l40,b0 c-200,b0 c-160,b-40 c+300,b-40 c+340,b0 r0,b0", pulse: true },
-          { pts: "r-36,t0 r-36,b-60", tone: "faint" },
+          { pts: "r-36,t0 r-36,b0", tone: "faint" },
+          { pts: "c+355,t134 c+355,t196", tone: "thick" },
         ],
         nodes: [{ at: "c-470,t60" }, { at: "c+80,t108", kind: "pair" }, { at: "l40,t150", kind: "chain", n: 4 }],
       }}
@@ -59,7 +90,9 @@ export function ServicesOverview() {
         <PageHeroFrame />
         <div className="container page-hero__grid">
           <PageIntro n="02" label="Services" title="Four disciplines," italic="one growth system." intro="AI solutions, web and software development, digital marketing and technology consulting — designed to connect, so every part of your business works with the others." />
-          <ServiceGraphic kind="ai" />
+          <AssetPanel name="img-concrete" caption="FIG.02 — SYSTEMS · 4 MODULES" eager>
+            <ServiceGraphic kind="consulting" />
+          </AssetPanel>
         </div>
       </section>
       <section className="sec">
@@ -118,7 +151,9 @@ export function ServicePage({ slug }: { slug: string }) {
               </div>
             </PageIntro>
           </div>
-          <ServiceGraphic kind={s.graphic} />
+          <AssetPanel name={SERVICE_IMG[s.graphic]} caption={`FIG.${s.n} — ${s.short.toUpperCase()}`} eager>
+            <ServiceGraphic kind={s.graphic} />
+          </AssetPanel>
         </div>
       </section>
 
@@ -225,7 +260,9 @@ export function ServicePage({ slug }: { slug: string }) {
 export function ProjectCard({ p }: { p: (typeof PROJECTS)[number] }) {
   return (
     <Link to={`/work/${p.slug}`} className="proj-card chamfer chamfer--raised" style={{ ["--cut" as string]: "18px" }}>
+      <PaleImage name={PROJECT_IMG[p.slug] ?? "img-hall"} className="proj-card__img" />
       <ContourPattern variant={p.wave} className="proj-card__wave" />
+      <EdgeTrace />
       <span className="chip">{p.category}</span>
       <span className="proj-card__title">{p.name}</span>
       <span className="proj-card__desc">{p.summary}</span>
@@ -243,7 +280,10 @@ export function Work() {
       <section className="page-hero">
         <PageHeroFrame />
         <div className="container">
-          <PageIntro n="03" label="Work" title="Selected" italic="Work." intro="Websites and digital platforms ARKA has designed and built for real businesses across Toronto, the GTA and Ontario. We don’t publish client performance figures without their approval." />
+          <div className="page-hero__grid">
+            <PageIntro n="03" label="Work" title="Selected" italic="Work." intro="Websites and digital platforms ARKA has designed and built for real businesses across Toronto, the GTA and Ontario. We don’t publish client performance figures without their approval." />
+            <AssetPanel name="deep-black-hero" caption="FIG.03 — INDEX · 05 BUILDS" eager />
+          </div>
         </div>
       </section>
       <section className="sec">
@@ -276,6 +316,7 @@ export function CaseStudy({ slug }: { slug: string }) {
       <section className="sec">
         <div className="container">
           <ChamferedPanel className="case-visual" cut={24}>
+            <PaleImage name={PROJECT_IMG[p.slug] ?? "img-hall"} className="case-visual__img" sizes="100vw" />
             <ContourPattern variant={p.wave} lines={44} className="case-visual__wave" />
             <span className="chip">{p.category}</span>
             <a className="case-visual__link" href={p.url} target="_blank" rel="noopener noreferrer">
@@ -333,12 +374,7 @@ export function About() {
         <PageHeroFrame />
         <div className="container page-hero__grid">
           <PageIntro n="04" label="About" title="The ARKA" italic="Studio." intro="A modern technology company at the intersection of AI, software, design and growth. We turn ideas into intelligent products and scalable digital systems." />
-          <div className="about-hero__media" aria-hidden="true">
-            <picture>
-              <source srcSet="/media/terrain-840.avif" type="image/avif" />
-              <img src="/media/terrain-840.webp" alt="" width={840} height={740} decoding="async" />
-            </picture>
-          </div>
+          <AssetPanel name="img-monolith" caption="FIG.04 — STUDIO · 43.65°N 79.38°W" eager />
         </div>
       </section>
 
