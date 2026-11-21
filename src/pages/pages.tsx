@@ -1,7 +1,7 @@
 import React from "react";
 import { PRINCIPLES, PROJECTS, SERVICES, SITE, STUDIO_FACTS, projectBySlug, serviceBySlug } from "../content/site";
 import { Button, FAQ, PageIntro, Reveal, SectionLabel, ServiceCard } from "../components/ui";
-import { ChamferedPanel, CircuitFrame, ContourPattern, CornerMarks, DotMatrix, EdgeTrace, Icon, Readout, TechnicalDivider } from "../components/graphics";
+import { ChamferedPanel, CircuitFrame, ContourPattern, DotMatrix, EdgeTrace, Icon, Readout, TechnicalDivider } from "../components/graphics";
 import { PaleImage, type PaleName } from "../components/media";
 
 const PROJECT_IMG: Record<string, PaleName> = {
@@ -24,10 +24,8 @@ function AssetPanel({ name, caption, children, eager = false }: { name: PaleName
     <div className="asset-panel">
       <div className="asset-panel__clip">
         <PaleImage name={name} eager={eager} sizes="(max-width: 1099px) 100vw, 520px" />
-        <div className="asset-panel__scan" aria-hidden="true" />
         {children}
       </div>
-      <CornerMarks offset={-8} />
       <Readout className="asset-panel__cap">{caption}</Readout>
     </div>
   );
@@ -45,12 +43,10 @@ function PageHeroFrame() {
       desktop={{
         traces: [
           { pts: "c-470,t60 c-400,t60 c-352,t108 c+232,t108 c+280,t60 c+330,t60 c+390,t0" },
-          { pts: "l40,t150 l40,b0", tone: "faint" },
           { pts: "l0,b-40 l40,b0 c-200,b0 c-160,b-40 c+300,b-40 c+340,b0 r0,b0", pulse: true },
-          { pts: "r-36,t0 r-36,b0", tone: "faint" },
           { pts: "c+355,t134 c+355,t196", tone: "thick" },
         ],
-        nodes: [{ at: "c-470,t60" }, { at: "c+80,t108", kind: "pair" }, { at: "l40,t150", kind: "chain", n: 4 }],
+        nodes: [{ at: "c-470,t60" }, { at: "c+80,t108", kind: "pair" }],
       }}
       mobile={{ traces: [{ pts: "l12,t96 l12,b0", tone: "faint" }, { pts: "l0,b-1 r0,b-1", tone: "faint" }] }}
     />

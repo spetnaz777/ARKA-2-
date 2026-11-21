@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import type { Project } from "../content/site";
-import { ContourPattern, Hatch, HudBrackets, Icon, Readout } from "./graphics";
+import { ContourPattern, Hatch, Icon, Readout } from "./graphics";
 import { PaleImage, type PaleName } from "./media";
 
 const SLIDE_IMG: Record<string, PaleName> = {
@@ -104,7 +104,6 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
           <Hatch className="work-panel__hatch" n={10} w={46} h={12} fade={false} />
         </div>
         <span className="work-panel__bracket" aria-hidden="true" />
-        <HudBrackets inset={-9} size={12} className="hide-tablet" />
       </div>
 
       <div className="carousel__markers" aria-hidden="true">

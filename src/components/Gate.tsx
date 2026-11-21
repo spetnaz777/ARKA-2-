@@ -24,6 +24,7 @@ export function Gate() {
       /* storage blocked: show the gate */
     }
     if (done || document.documentElement.classList.contains("gate-done")) {
+      document.documentElement.classList.remove("intro-pending");
       setState("gone");
       return;
     }
@@ -39,7 +40,7 @@ export function Gate() {
       /* ignore */
     }
     setState("leaving");
-    document.documentElement.classList.remove("gate-open");
+    document.documentElement.classList.remove("gate-open", "intro-pending");
     const site = document.querySelector<HTMLElement>(".site");
     if (site) site.inert = false;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

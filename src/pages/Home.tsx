@@ -1,80 +1,70 @@
+import { useEffect, useRef, type ReactNode } from "react";
 import { PROCESS, PROJECTS, SERVICES, STUDIO_FACTS } from "../content/site";
-import { Button, HatchMark, Reveal, SectionLabel, ServiceCard } from "../components/ui";
-import { Barcode, CircuitFrame, CornerMarks, Crosshair, DotMatrix, Hatch, Place, Readout, SignalNode, TickRuler } from "../components/graphics";
-import { LazyVideo, PaleImage } from "../components/media";
-
-/* Section index on the continuous left rail: SYS.0n */
-export function RailIndex({ n }: { n: string }) {
-  return (
-    <Place at="l40,t0" className="hide-tablet rail-index">
-      <span className="rail-index__node" />
-      <Readout>SYS.{n}</Readout>
-    </Place>
-  );
-}
+import { Button, Reveal, SectionLabel, ServiceCard } from "../components/ui";
+import { CircuitFrame, Readout, SignalNode } from "../components/graphics";
 import { ContactBanner } from "../components/layout";
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
+import { LazyVideo } from "../components/media";
+import { ScrollCircuit, useHeroParallax } from "../components/fx";
+
+/* Anchor for the scroll-drawn circuit. */
+function Node({ children }: { children: ReactNode }) {
+  return <div data-circuit-node="">{children}</div>;
+}
 
 /* ── 01 Hero ─────────────────────────────────────────────── */
 function Hero() {
+  const ref = useRef<HTMLElement>(null);
+  useHeroParallax(ref);
+  // the intro (lines construct → headline unmasks, ~1.4s) is skippable:
+  // any key, click or wheel during it jumps straight to the end state
+  useEffect(() => {
+    const html = document.documentElement;
+    const skip = () => html.classList.add("intro-skip");
+    const t = window.setTimeout(() => off(), 2600);
+    const off = () => {
+      window.removeEventListener("keydown", skip);
+      window.removeEventListener("pointerdown", skip);
+      window.removeEventListener("wheel", skip);
+    };
+    window.addEventListener("keydown", skip, { once: true });
+    window.addEventListener("pointerdown", skip, { once: true });
+    window.addEventListener("wheel", skip, { once: true, passive: true });
+    return () => {
+      window.clearTimeout(t);
+      off();
+    };
+  }, []);
   return (
-    <section className="hero" aria-labelledby="hero-h">
+    <section ref={ref} className="hero" aria-labelledby="hero-h">
       <CircuitFrame
         className="hero__frame"
         desktop={{
           traces: [
             { pts: "c-470,t60 c-400,t60 c-352,t108 c+232,t108 c+280,t60 c+330,t60 c+390,t0" },
-            { pts: "l0,t180 l44,t136 c-330,t136", tone: "faint" },
-            { pts: "l40,t150 l40,b0", tone: "faint" },
-            { pts: "l58,t270 l58,t600", tone: "faint" },
-            { pts: "l0,t612 l48,t660 c-262,t660 c-214,t612 c+130,t612", pulse: true },
-            { pts: "c-382,t604 c-318,t604", tone: "thick" },
-            { pts: "c-14,t620 c-14,t378 c+124,t240 c+268,t240", tone: "faint" },
-            { pts: "c+330,t168 c+330,b0", tone: "faint" },
+            { pts: "l0,b-68 l48,b-20 c-262,b-20 c-214,b-68 c+130,b-68", tone: "faint" },
             { pts: "c+355,t134 c+355,b0", tone: "ink", pulse: "signal" },
             { pts: "c+355,t136 c+355,t196", tone: "thick" },
-            { pts: "c+252,t486 c+355,t486" },
-            { pts: "c+32,t218 c+32,t346", tone: "faint" },
-            { pts: "c+355,b-8 c+540,b-8 c+620,b-88 r0,b-88" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "c-330,t136 c-300,t136", tone: "ink" },
+            { pts: "c+355,b-8 c+540,b-8 c+620,b-88 r0,b-88", tone: "faint" },
           ],
           arcs: [{ c: "c+355,b0", r: 362, from: 180, to: 270, tone: "ink" }],
-          nodes: [
-            { at: "c-470,t60" },
-            { at: "c+80,t108", kind: "pair" },
-            { at: "l40,t138", kind: "chain", n: 4 },
-            { at: "l58,t270" },
-            { at: "c-314,t604", kind: "dot" },
-            { at: "c+355,t360", kind: "dot" },
-            { at: "c+290,t486" },
-            { at: "c+330,t486" },
-            { at: "c+32,t218" },
-            { at: "c+32,t282", kind: "dot" },
-            { at: "c+32,t346" },
-            { at: "r-36,t300", kind: "chain", n: 6 },
-          ],
+          nodes: [{ at: "c-470,t60" }, { at: "c+80,t108", kind: "pair" }, { at: "c+355,t360", kind: "dot" }],
         }}
-        mobile={{
-          traces: [
-            { pts: "l12,t96 l12,b-40", tone: "faint" },
-            { pts: "l0,b-24 l24,b0 r-120,b0 r-96,b-24 r0,b-24", tone: "line" },
-          ],
-          nodes: [{ at: "l12,t96" }],
-        }}
+        mobile={{ traces: [{ pts: "l0,b-24 l24,b0 r-120,b0 r-96,b-24 r0,b-24", tone: "faint" }] }}
       />
 
       <div className="hero__art" aria-hidden="true">
-        <div className="hero__grid" />
-        <PaleImage name="deep-black-hero" className="hero__horizon" sizes="(max-width: 700px) 100vw, 900px" />
         <div className="hero__moon">
-          <picture>
-            <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
-            <source media="(max-width: 700px)" srcSet="/media/moon-900.webp" type="image/webp" />
-            <source srcSet="/media/moon-1600.avif" type="image/avif" />
-            <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
-          </picture>
+          <div className="hero__moon-inner">
+            <picture>
+              <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
+              <source media="(max-width: 700px)" srcSet="/media/moon-900.webp" type="image/webp" />
+              <source srcSet="/media/moon-1600.avif" type="image/avif" />
+              <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
+            </picture>
+            <span className="hero__light" />
+          </div>
         </div>
         <div className="hero__terrain">
           <picture>
@@ -84,30 +74,24 @@ function Hero() {
             <img src="/media/terrain-840.webp" alt="" width={840} height={740} decoding="async" fetchPriority="high" />
           </picture>
         </div>
-        <div className="hero__sphere">
-          <img src="/media/sphere-260.webp" alt="" width={260} height={260} decoding="async" />
+        <div className="hero__orbit">
+          <div className="hero__sphere">
+            <img src="/media/sphere-260.webp" alt="" width={260} height={260} decoding="async" />
+          </div>
         </div>
         <svg className="hero__arc-m" viewBox="0 0 400 400" fill="none">
           <path d="M10 400 A 390 390 0 0 1 400 10" className="tr tr--ink" />
         </svg>
-        <DotMatrix className="hero__dots1" cols={5} rows={4} gap={14} />
-        <Barcode className="hero__barcode" n={7} gap={7} h={86} />
-        <span className="hero__bars"><span /><span /><span /><span /></span>
-        <Hatch className="hero__hatch" n={7} w={34} h={18} fade={false} />
-        <DotMatrix className="hero__dots2" cols={5} rows={4} gap={13} />
-        <Hatch className="hero__hatch-left" n={8} w={44} h={10} fade={false} />
-        <div className="hero__reticle"><CornerMarks offset={0} /></div>
         <Readout className="hero__coord">N 43.65° / W 79.38°</Readout>
-        <Readout className="hero__sys">SYS.01 — ORBIT</Readout>
-        <TickRuler className="hero__ruler" length={150} vertical />
-        <TickRuler className="hero__ruler2" length={180} />
       </div>
 
       <div className="container hero__content">
-        <SectionLabel n="01" label="ARKA" className="hero__label" />
+        <Node>
+          <SectionLabel n="01" label="ARKA" className="hero__label" />
+        </Node>
         <h1 id="hero-h" className="h-hero">
-          <span className="h-hero__line">AI, Software &amp;</span>{" "}
-          <em className="h-hero__line">Digital Growth.</em>
+          <span className="h-hero__line"><span className="h-hero__in">AI, Software &amp;</span></span>{" "}
+          <span className="h-hero__line"><em className="h-hero__in">Digital Growth.</em></span>
         </h1>
         <p className="hero__copy">
           We build intelligent systems, modern websites, and marketing ecosystems that drive real growth.
@@ -133,25 +117,17 @@ function Services() {
       <CircuitFrame
         desktop={{
           traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "c-332,t46 c-332,t236 c-286,t282 c+64,t282" },
-            { pts: "c+96,t282 c+252,t282 c+282,t252 c+600,t252 c+620,t232", pulse: true },
-            { pts: "c-110,t30 c+150,t30 c+168,t12 c+420,t12", tone: "faint" },
+            { pts: "c-332,t96 c-332,b-96 c-286,b-50 c+64,b-50", tone: "faint" },
+            { pts: "c+96,b-50 c+600,b-50 c+620,b-70", tone: "faint" },
           ],
-          nodes: [{ at: "c-332,t46" }, { at: "c+80,t282", kind: "pair" }],
+          nodes: [{ at: "c-332,t96" }, { at: "c+80,b-50", kind: "pair" }],
         }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
       />
-      <RailIndex n="02" />
-      <Place at="c+300,t288" className="hide-tablet"><TickRuler length={200} /></Place>
-      <Place at="c-338,t40" className="hide-tablet"><Crosshair /></Place>
       <div className="container sec__grid">
         <Reveal className="sec__intro">
-          <SectionLabel n="02" label="Services" />
+          <Node><SectionLabel n="02" label="Services" /></Node>
           <h2 id="svc-h" className="h-sec">What We <strong>Do.</strong></h2>
           <p className="sec__lead">End-to-end technology and growth solutions, powered by AI.</p>
-          <HatchMark className="sec__hatch" />
         </Reveal>
         <ul className="svc-grid" role="list">
           {SERVICES.map((s, i) => (
@@ -167,25 +143,12 @@ function Services() {
 function FeaturedWork() {
   return (
     <section className="sec sec--work" aria-labelledby="work-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "R-40,t14 R+30,t14 R+46,t30", tone: "thick" },
-            { pts: "c-306,t150 c-306,t228", tone: "ink" },
-            { pts: "c-306,t228 c-290,t244 c-120,t244", tone: "faint" },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="03" />
       <div className="container">
         <Carousel
           projects={PROJECTS}
           intro={
             <div className="sec__intro">
-              <SectionLabel n="03" label="Featured Work" />
+              <Node><SectionLabel n="03" label="Featured Work" /></Node>
               <h2 id="work-h" className="h-sec">Selected <strong>Work.</strong></h2>
               <p className="sec__lead">A look at what we’ve built.</p>
             </div>
@@ -200,45 +163,18 @@ function FeaturedWork() {
 function AboutStudio() {
   return (
     <section className="sec sec--about" aria-labelledby="about-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "L-60,t26 c-210,t26 c-170,t-14 c+150,t-14 c+190,t26 R-120,t26 R-80,t66 R+20,t66", tone: "faint" },
-            { pts: "L-76,t90 L-76,t352 L-30,t398 c-50,t398", tone: "faint" },
-            { pts: "c-440,t60 c-440,t340", tone: "ink" },
-            { pts: "c-480,t100 c-480,t370", tone: "ink" },
-            { pts: "c-52,t60 c-52,t420" },
-            { pts: "c-52,t130 c-52,t176", tone: "thick" },
-            { pts: "c-52,t300 c-110,t300", tone: "faint" },
-            { pts: "R-60,t120 R+40,t120 R+100,t60 r-36,t60", tone: "faint" },
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-          ],
-          arcs: [{ c: "c-270,t380", r: 240, from: 196, to: 352, tone: "ink" }],
-          nodes: [
-            { at: "c-440,t60", kind: "dot" },
-            { at: "c-480,t100", kind: "dot" },
-            { at: "c-52,t230", kind: "chain", n: 3 },
-            { at: "c-110,t300", kind: "dot" },
-            { at: "R-60,t120", kind: "dot" },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="04" />
-      <Place at="c-140,t80" className="hide-tablet"><Barcode n={7} gap={6} h={48} /></Place>
-      <Place at="R-20,t250" className="hide-tablet"><DotMatrix cols={5} rows={5} gap={12} className="faint" /></Place>
       <div className="container about">
         <div className="about__frame">
           <div className="about__media">
             <LazyVideo name="terrain-loop" className="about__video" />
-            <div className="about__scan" aria-hidden="true" />
+            <svg className="about__arc" viewBox="0 0 600 340" fill="none" aria-hidden="true">
+              <path d="M70 340 A 250 250 0 0 1 570 340" className="tr tr--ink" />
+            </svg>
           </div>
-          <CornerMarks offset={-7} />
-          <Readout className="about__cap">FIG.04 — TERRAIN · GTA 43.65°N</Readout>
+          <Readout className="about__cap">FIG.04 — TERRAIN · 43.65°N</Readout>
         </div>
         <Reveal className="about__text">
-          <SectionLabel n="04" label="About" />
+          <Node><SectionLabel n="04" label="About" /></Node>
           <h2 id="about-h" className="h-sec">
             The <span className="anurati">ARKA</span> Studio.
           </h2>
@@ -261,10 +197,9 @@ function AboutStudio() {
 }
 
 /* ── 05 Process ──────────────────────────────────────────── */
-export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean; ruler?: boolean }) {
+export function ProcessTimeline({ steps = PROCESS, tail = false }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean; ruler?: boolean }) {
   return (
     <ol className="timeline">
-      {ruler && <span className="timeline__ruler hide-tablet" aria-hidden="true" />}
       {tail && (
         <svg className="timeline__tail hide-tablet" aria-hidden="true" viewBox="0 0 92 52" fill="none">
           <path d="M0 50.5 H22 L71 1.5 H88" className="tr tr--line" />
@@ -272,7 +207,7 @@ export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }
         </svg>
       )}
       {steps.map((p, i) => (
-        <li key={p.t} className="timeline__step">
+        <li key={p.t} className="timeline__step" style={{ ["--i" as string]: i }}>
           <SignalNode filled={i === 0} />
           <span className="timeline__n">{p.n ?? `0${i + 1}`}</span>
           <span className="timeline__t">{p.t}</span>
@@ -286,31 +221,14 @@ export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }
 function Process() {
   return (
     <section className="sec sec--process" aria-labelledby="proc-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "L-56,t22 L-56,t150", tone: "faint" },
-          ],
-          nodes: [
-            { at: "L-56,t22" },
-            { at: "L-56,t150" },
-            { at: "l40,t120", kind: "chain", n: 5 },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="05" />
-      <Place at="R+10,t70" className="hide-tablet"><DotMatrix cols={4} rows={4} gap={12} className="faint" /></Place>
       <div className="container sec__grid">
         <Reveal className="sec__intro">
-          <SectionLabel n="05" label="Process" />
+          <Node><SectionLabel n="05" label="Process" /></Node>
           <h2 id="proc-h" className="h-sec">Our Process.</h2>
           <p className="sec__lead">A clear, focused workflow from idea to growth.</p>
         </Reveal>
         <Reveal className="sec__body">
-          <ProcessTimeline tail ruler />
+          <ProcessTimeline tail />
         </Reveal>
       </div>
     </section>
@@ -318,14 +236,16 @@ function Process() {
 }
 
 export default function Home() {
+  const root = useRef<HTMLDivElement>(null);
   return (
-    <>
+    <div ref={root} className="home">
+      <ScrollCircuit root={root} />
       <Hero />
       <Services />
       <FeaturedWork />
       <AboutStudio />
       <Process />
-      <ContactBanner id="contact" />
-    </>
+      <ContactBanner id="contact" circuitNode />
+    </div>
   );
 }

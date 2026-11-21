@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "../lib/router";
 import { Logo } from "./Logo";
 import { EdgeTrace, Hatch, Icon } from "./graphics";
+import { Decode } from "./fx";
 import type { Service } from "../content/site";
 
 /* Live-site brand treatment: original mark + "ARKA" set in Anurati. */
@@ -55,7 +56,7 @@ export function SectionLabel({ n, label, className = "" }: { n: string; label: s
     <p className={`label ${className}`}>
       <span>{n}</span>
       <span aria-hidden="true">//</span>
-      <span>{label}</span>
+      <Decode text={label} />
     </p>
   );
 }
@@ -96,7 +97,6 @@ export function ServiceCard({ s, index = 0 }: { s: Service; index?: number }) {
         </span>
         <span className="svc-card__title">{s.short}</span>
         <span className="svc-card__desc">{s.card}</span>
-        <span className="svc-card__idx" aria-hidden="true">SYS.{s.n}</span>
         <EdgeTrace />
       </Link>
     </Reveal>
