@@ -1,193 +1,182 @@
+import { useEffect, useRef, useState } from "react";
 import { PROCESS, PROJECTS, SERVICES, STUDIO_FACTS } from "../content/site";
-import { Button, HatchMark, Reveal, SectionLabel, ServiceCard } from "../components/ui";
-import { Barcode, CircuitFrame, CornerMarks, Crosshair, DotMatrix, Hatch, Place, Readout, SignalNode, TickRuler } from "../components/graphics";
-import { LazyVideo, PaleImage } from "../components/media";
-
-/* Section index on the continuous left rail: SYS.0n */
-export function RailIndex({ n }: { n: string }) {
-  return (
-    <Place at="l40,t0" className="hide-tablet rail-index">
-      <span className="rail-index__node" />
-      <Readout>SYS.{n}</Readout>
-    </Place>
-  );
-}
-import { ContactBanner } from "../components/layout";
+import { Button, Reveal, SectionLabel } from "../components/ui";
+import { Icon, Readout, SignalNode } from "../components/graphics";
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
+import { LazyVideo } from "../components/media";
+import { useHeroParallax, useScene } from "../components/fx";
+import { ShowreelButton } from "../components/Showreel";
 
-/* ── 01 Hero ─────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   Home: cinematic scenes. One idea per screen. On desktop (≥1100px, motion
+   allowed) the hero and services are sticky "stages" whose progress is
+   driven by native scroll; elsewhere every scene renders as a static,
+   fully visible layout.
+   ════════════════════════════════════════════════════════════ */
+
+/* Word swap with a light trail (saas-motion-film signature 7). The fixed
+   words never move; the slot word exits up with blur, the next whips in
+   from the right, and a blurred light bar flashes behind the slot. Static
+   under reduced motion. Screen readers get one stable sentence. */
+function WordSwap({ words }: { words: string[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let t = 0;
+    const start = window.setTimeout(function tick() {
+      if (!document.hidden && !document.documentElement.classList.contains("intro-pending")) setI((v) => (v + 1) % words.length);
+      t = window.setTimeout(tick, 2800);
+    }, 3400);
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(t);
+    };
+  }, [words.length]);
+  return (
+    <span className="swap">
+      <span className="sr-only">{words.join(", ")}</span>
+      <span className="swap__slot" aria-hidden="true">
+        {words.map((w, k) => (
+          <span key={w} className={`swap__w ${k === i ? "is-on" : ""}`}>{w}</span>
+        ))}
+        <span key={i} className="swap__trail" />
+      </span>
+    </span>
+  );
+}
+
+/* ── Scene 1 · Hero ─────────────────────────────────────── */
 function Hero() {
+  const scene = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  useScene(scene, { mode: "pin" });
+  useHeroParallax(stage);
+  // intro (construct → unmask, ≈1.4s) waits for the gate; any input skips it
+  useEffect(() => {
+    const html = document.documentElement;
+    const skip = () => html.classList.add("intro-skip");
+    const off = () => {
+      window.removeEventListener("keydown", skip);
+      window.removeEventListener("pointerdown", skip);
+      window.removeEventListener("wheel", skip);
+    };
+    window.addEventListener("keydown", skip, { once: true });
+    window.addEventListener("pointerdown", skip, { once: true });
+    window.addEventListener("wheel", skip, { once: true, passive: true });
+    const t = window.setTimeout(off, 2600);
+    return () => {
+      window.clearTimeout(t);
+      off();
+    };
+  }, []);
+
   return (
-    <section className="hero" aria-labelledby="hero-h">
-      <CircuitFrame
-        className="hero__frame"
-        desktop={{
-          traces: [
-            { pts: "c-470,t60 c-400,t60 c-352,t108 c+232,t108 c+280,t60 c+330,t60 c+390,t0" },
-            { pts: "l0,t180 l44,t136 c-330,t136", tone: "faint" },
-            { pts: "l40,t150 l40,b0", tone: "faint" },
-            { pts: "l58,t270 l58,t600", tone: "faint" },
-            { pts: "l0,t612 l48,t660 c-262,t660 c-214,t612 c+130,t612", pulse: true },
-            { pts: "c-382,t604 c-318,t604", tone: "thick" },
-            { pts: "c-14,t620 c-14,t378 c+124,t240 c+268,t240", tone: "faint" },
-            { pts: "c+330,t168 c+330,b0", tone: "faint" },
-            { pts: "c+355,t134 c+355,b0", tone: "ink", pulse: "signal" },
-            { pts: "c+355,t136 c+355,t196", tone: "thick" },
-            { pts: "c+252,t486 c+355,t486" },
-            { pts: "c+32,t218 c+32,t346", tone: "faint" },
-            { pts: "c+355,b-8 c+540,b-8 c+620,b-88 r0,b-88" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "c-330,t136 c-300,t136", tone: "ink" },
-          ],
-          arcs: [{ c: "c+355,b0", r: 362, from: 180, to: 270, tone: "ink" }],
-          nodes: [
-            { at: "c-470,t60" },
-            { at: "c+80,t108", kind: "pair" },
-            { at: "l40,t138", kind: "chain", n: 4 },
-            { at: "l58,t270" },
-            { at: "c-314,t604", kind: "dot" },
-            { at: "c+355,t360", kind: "dot" },
-            { at: "c+290,t486" },
-            { at: "c+330,t486" },
-            { at: "c+32,t218" },
-            { at: "c+32,t282", kind: "dot" },
-            { at: "c+32,t346" },
-            { at: "r-36,t300", kind: "chain", n: 6 },
-          ],
-        }}
-        mobile={{
-          traces: [
-            { pts: "l12,t96 l12,b-40", tone: "faint" },
-            { pts: "l0,b-24 l24,b0 r-120,b0 r-96,b-24 r0,b-24", tone: "line" },
-          ],
-          nodes: [{ at: "l12,t96" }],
-        }}
-      />
+    <section ref={scene} className="scene scene--hero" aria-labelledby="hero-h">
+      <div ref={stage} className="stage hero">
+        <div className="hero__art" aria-hidden="true">
+          <div className="hero__moon">
+            <div className="hero__moon-inner">
+              <picture>
+                <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
+                <source media="(max-width: 700px)" srcSet="/media/moon-900.webp" type="image/webp" />
+                <source srcSet="/media/moon-1600.avif" type="image/avif" />
+                <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
+              </picture>
+              <span className="hero__light" />
+            </div>
+          </div>
+          <div className="hero__orbit">
+            <div className="hero__sphere">
+              <img src="/media/sphere-260.webp" alt="" width={260} height={260} decoding="async" />
+            </div>
+          </div>
+          {/* the single technical accent: a trace that emerges from the moon and leads on */}
+          <svg className="hero__trace" viewBox="0 0 200 600" preserveAspectRatio="xMidYMin meet" fill="none">
+            <path d="M100 0 V300 L60 340 V600" pathLength={1} />
+            <circle cx="100" cy="0" r="3.5" />
+          </svg>
+          <Readout className="hero__coord">N 43.65° / W 79.38°</Readout>
+        </div>
 
-      <div className="hero__art" aria-hidden="true">
-        <div className="hero__grid" />
-        <PaleImage name="deep-black-hero" className="hero__horizon" sizes="(max-width: 700px) 100vw, 900px" />
-        <div className="hero__moon">
-          <picture>
-            <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
-            <source media="(max-width: 700px)" srcSet="/media/moon-900.webp" type="image/webp" />
-            <source srcSet="/media/moon-1600.avif" type="image/avif" />
-            <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
-          </picture>
+        <div className="container hero__content">
+          <SectionLabel n="01" label="ARKA" className="hero__label" />
+          <h1 id="hero-h" className="h-hero">
+            <span className="h-hero__line"><span className="h-hero__in">AI, Software &amp;</span></span>{" "}
+            <span className="h-hero__line"><em className="h-hero__in">Digital Growth.</em></span>
+          </h1>
+          <p className="hero__copy">
+            We engineer <WordSwap words={["AI systems.", "modern websites.", "real growth."]} />
+          </p>
+          <div className="hero__ctas">
+            <Button to="/contact" variant="primary">Get Started</Button>
+            <ShowreelButton />
+          </div>
         </div>
-        <div className="hero__terrain">
-          <picture>
-            <source media="(max-width: 700px)" srcSet="/media/terrain-480.avif" type="image/avif" />
-            <source media="(max-width: 700px)" srcSet="/media/terrain-480.webp" type="image/webp" />
-            <source srcSet="/media/terrain-840.avif" type="image/avif" />
-            <img src="/media/terrain-840.webp" alt="" width={840} height={740} decoding="async" fetchPriority="high" />
-          </picture>
-        </div>
-        <div className="hero__sphere">
-          <img src="/media/sphere-260.webp" alt="" width={260} height={260} decoding="async" />
-        </div>
-        <svg className="hero__arc-m" viewBox="0 0 400 400" fill="none">
-          <path d="M10 400 A 390 390 0 0 1 400 10" className="tr tr--ink" />
-        </svg>
-        <DotMatrix className="hero__dots1" cols={5} rows={4} gap={14} />
-        <Barcode className="hero__barcode" n={7} gap={7} h={86} />
-        <span className="hero__bars"><span /><span /><span /><span /></span>
-        <Hatch className="hero__hatch" n={7} w={34} h={18} fade={false} />
-        <DotMatrix className="hero__dots2" cols={5} rows={4} gap={13} />
-        <Hatch className="hero__hatch-left" n={8} w={44} h={10} fade={false} />
-        <div className="hero__reticle"><CornerMarks offset={0} /></div>
-        <Readout className="hero__coord">N 43.65° / W 79.38°</Readout>
-        <Readout className="hero__sys">SYS.01 — ORBIT</Readout>
-        <TickRuler className="hero__ruler" length={150} vertical />
-        <TickRuler className="hero__ruler2" length={180} />
-      </div>
-
-      <div className="container hero__content">
-        <SectionLabel n="01" label="ARKA" className="hero__label" />
-        <h1 id="hero-h" className="h-hero">
-          <span className="h-hero__line">AI, Software &amp;</span>{" "}
-          <em className="h-hero__line">Digital Growth.</em>
-        </h1>
-        <p className="hero__copy">
-          We build intelligent systems, modern websites, and marketing ecosystems that drive real growth.
-        </p>
-        <div className="hero__ctas">
-          <Button to="/contact" variant="primary">Get Started</Button>
-          <Link to="/work" className="playlink">
-            <span className="playlink__ring" aria-hidden="true">
-              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8M6.5 2.5 10 6 6.5 9.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
-            </span>
-            Explore Our Work
-          </Link>
-        </div>
+        <span className="hero__scroll" aria-hidden="true"><span /></span>
       </div>
     </section>
   );
 }
 
-/* ── 02 Services ─────────────────────────────────────────── */
+/* ── Scene 2 · Services (pinned, one service per beat) ───── */
 function Services() {
+  const scene = useRef<HTMLElement>(null);
+  useScene(scene, { mode: "pin", steps: SERVICES.length });
+  // keyboard users: focusing a beat scrolls the stage to it
+  const focusStep = (k: number) => {
+    const el = scene.current;
+    if (!el || !el.hasAttribute("data-step")) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const total = el.offsetHeight - window.innerHeight;
+    window.scrollTo({ top: top + ((k + 0.5) / SERVICES.length) * total, behavior: "auto" });
+  };
   return (
-    <section className="sec sec--services" aria-labelledby="svc-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "c-332,t46 c-332,t236 c-286,t282 c+64,t282" },
-            { pts: "c+96,t282 c+252,t282 c+282,t252 c+600,t252 c+620,t232", pulse: true },
-            { pts: "c-110,t30 c+150,t30 c+168,t12 c+420,t12", tone: "faint" },
-          ],
-          nodes: [{ at: "c-332,t46" }, { at: "c+80,t282", kind: "pair" }],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="02" />
-      <Place at="c+300,t288" className="hide-tablet"><TickRuler length={200} /></Place>
-      <Place at="c-338,t40" className="hide-tablet"><Crosshair /></Place>
-      <div className="container sec__grid">
-        <Reveal className="sec__intro">
-          <SectionLabel n="02" label="Services" />
-          <h2 id="svc-h" className="h-sec">What We <strong>Do.</strong></h2>
-          <p className="sec__lead">End-to-end technology and growth solutions, powered by AI.</p>
-          <HatchMark className="sec__hatch" />
-        </Reveal>
-        <ul className="svc-grid" role="list">
-          {SERVICES.map((s, i) => (
-            <ServiceCard key={s.slug} s={s} index={i} />
-          ))}
-        </ul>
+    <section ref={scene} className="scene scene--svc" aria-labelledby="svc-h">
+      <div className="stage svc-stage">
+        <div className="container svc-stage__grid">
+          <div className="svc-stage__head">
+            <SectionLabel n="02" label="Services" />
+            <h2 id="svc-h" className="h-sec">What We <strong>Do.</strong></h2>
+            <ol className="svc-rail" aria-hidden="true">
+              {SERVICES.map((s) => (
+                <li key={s.slug}><span className="svc-rail__node" /><span className="svc-rail__n">{s.n}</span></li>
+              ))}
+              <span className="svc-rail__fill" />
+            </ol>
+          </div>
+          <ul className="svc-beats" role="list">
+            {SERVICES.map((s, k) => (
+              <li key={s.slug} className="svc-beat" style={{ ["--k" as string]: k }}>
+                <span className="svc-beat__icon" aria-hidden="true"><Icon name={s.icon} size={120} /></span>
+                <span className="svc-beat__n">{s.n}</span>
+                <h3 className="svc-beat__t">{s.short}</h3>
+                <p className="svc-beat__d">{s.card}</p>
+                <Link to={`/services/${s.slug}`} className="svc-beat__link" onFocus={() => focusStep(k)}>
+                  Explore {s.short} <Icon name="arrow-r" size={16} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ── 03 Featured work ────────────────────────────────────── */
-function FeaturedWork() {
+/* ── Scene 3 · Work (cinematic frame that settles in) ─────── */
+function Work() {
+  const scene = useRef<HTMLElement>(null);
+  useScene(scene, { mode: "enter" });
   return (
-    <section className="sec sec--work" aria-labelledby="work-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "R-40,t14 R+30,t14 R+46,t30", tone: "thick" },
-            { pts: "c-306,t150 c-306,t228", tone: "ink" },
-            { pts: "c-306,t228 c-290,t244 c-120,t244", tone: "faint" },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="03" />
+    <section ref={scene} className="scene scene--work" aria-labelledby="work-h">
       <div className="container">
         <Carousel
           projects={PROJECTS}
           intro={
-            <div className="sec__intro">
+            <div className="work-head">
               <SectionLabel n="03" label="Featured Work" />
               <h2 id="work-h" className="h-sec">Selected <strong>Work.</strong></h2>
-              <p className="sec__lead">A look at what we’ve built.</p>
             </div>
           }
         />
@@ -196,83 +185,48 @@ function FeaturedWork() {
   );
 }
 
-/* ── 04 About ────────────────────────────────────────────── */
-function AboutStudio() {
+/* ── Scene 4 · Studio (statement, numerals, cinematic band) ── */
+function Studio() {
+  const band = useRef<HTMLDivElement>(null);
+  useScene(band, { mode: "enter" });
   return (
-    <section className="sec sec--about" aria-labelledby="about-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "L-60,t26 c-210,t26 c-170,t-14 c+150,t-14 c+190,t26 R-120,t26 R-80,t66 R+20,t66", tone: "faint" },
-            { pts: "L-76,t90 L-76,t352 L-30,t398 c-50,t398", tone: "faint" },
-            { pts: "c-440,t60 c-440,t340", tone: "ink" },
-            { pts: "c-480,t100 c-480,t370", tone: "ink" },
-            { pts: "c-52,t60 c-52,t420" },
-            { pts: "c-52,t130 c-52,t176", tone: "thick" },
-            { pts: "c-52,t300 c-110,t300", tone: "faint" },
-            { pts: "R-60,t120 R+40,t120 R+100,t60 r-36,t60", tone: "faint" },
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-          ],
-          arcs: [{ c: "c-270,t380", r: 240, from: 196, to: 352, tone: "ink" }],
-          nodes: [
-            { at: "c-440,t60", kind: "dot" },
-            { at: "c-480,t100", kind: "dot" },
-            { at: "c-52,t230", kind: "chain", n: 3 },
-            { at: "c-110,t300", kind: "dot" },
-            { at: "R-60,t120", kind: "dot" },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="04" />
-      <Place at="c-140,t80" className="hide-tablet"><Barcode n={7} gap={6} h={48} /></Place>
-      <Place at="R-20,t250" className="hide-tablet"><DotMatrix cols={5} rows={5} gap={12} className="faint" /></Place>
-      <div className="container about">
-        <div className="about__frame">
-          <div className="about__media">
-            <LazyVideo name="terrain-loop" className="about__video" />
-            <div className="about__scan" aria-hidden="true" />
-          </div>
-          <CornerMarks offset={-7} />
-          <Readout className="about__cap">FIG.04 — TERRAIN · GTA 43.65°N</Readout>
-        </div>
-        <Reveal className="about__text">
+    <section className="scene scene--studio" aria-labelledby="about-h">
+      <div className="container studio">
+        <Reveal className="studio__head">
           <SectionLabel n="04" label="About" />
-          <h2 id="about-h" className="h-sec">
+          <h2 id="about-h" className="h-display">
             The <span className="anurati">ARKA</span> Studio.
           </h2>
-          <p className="about__p">
+          <p className="studio__p">
             A modern technology company at the intersection of AI, software, design and growth. We turn ideas into
             intelligent products and scalable digital systems.
           </p>
-          <dl className="facts">
-            {STUDIO_FACTS.map((f) => (
-              <div key={f.l} className="facts__item">
-                <dt className="facts__v">{f.v}</dt>
-                <dd className="facts__l">{f.l}</dd>
-              </div>
-            ))}
-          </dl>
         </Reveal>
+        <dl className="numerals">
+          {STUDIO_FACTS.map((f, i) => (
+            <Reveal key={f.l} className="numerals__item" delay={i * 70}>
+              <dt className="numerals__v">{f.v}</dt>
+              <dd className="numerals__l">{f.l}</dd>
+            </Reveal>
+          ))}
+        </dl>
+      </div>
+      <div ref={band} className="band">
+        <div className="band__frame">
+          <LazyVideo name="terrain-loop" className="band__video" />
+        </div>
+        <Readout className="band__cap">FIG.04 — TERRAIN · 43.65°N</Readout>
       </div>
     </section>
   );
 }
 
-/* ── 05 Process ──────────────────────────────────────────── */
-export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean; ruler?: boolean }) {
+/* ── Scene 5 · Process (draws as it enters) ──────────────── */
+export function ProcessTimeline({ steps = PROCESS }: { steps?: { n?: string; t: string; d: string }[]; tail?: boolean; ruler?: boolean }) {
   return (
     <ol className="timeline">
-      {ruler && <span className="timeline__ruler hide-tablet" aria-hidden="true" />}
-      {tail && (
-        <svg className="timeline__tail hide-tablet" aria-hidden="true" viewBox="0 0 92 52" fill="none">
-          <path d="M0 50.5 H22 L71 1.5 H88" className="tr tr--line" />
-          <circle cx="88" cy="1.5" r="3" className="nd nd--fill" />
-        </svg>
-      )}
       {steps.map((p, i) => (
-        <li key={p.t} className="timeline__step">
+        <li key={p.t} className="timeline__step" style={{ ["--i" as string]: i }}>
           <SignalNode filled={i === 0} />
           <span className="timeline__n">{p.n ?? `0${i + 1}`}</span>
           <span className="timeline__t">{p.t}</span>
@@ -285,47 +239,52 @@ export function ProcessTimeline({ steps = PROCESS, tail = false, ruler = false }
 
 function Process() {
   return (
-    <section className="sec sec--process" aria-labelledby="proc-h">
-      <CircuitFrame
-        desktop={{
-          traces: [
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "L-56,t22 L-56,t150", tone: "faint" },
-          ],
-          nodes: [
-            { at: "L-56,t22" },
-            { at: "L-56,t150" },
-            { at: "l40,t120", kind: "chain", n: 5 },
-          ],
-        }}
-        mobile={{ traces: [{ pts: "l12,t0 l12,b0", tone: "faint" }] }}
-      />
-      <RailIndex n="05" />
-      <Place at="R+10,t70" className="hide-tablet"><DotMatrix cols={4} rows={4} gap={12} className="faint" /></Place>
-      <div className="container sec__grid">
-        <Reveal className="sec__intro">
+    <section className="scene scene--process" aria-labelledby="proc-h">
+      <div className="container">
+        <Reveal className="process-head">
           <SectionLabel n="05" label="Process" />
-          <h2 id="proc-h" className="h-sec">Our Process.</h2>
-          <p className="sec__lead">A clear, focused workflow from idea to growth.</p>
+          <h2 id="proc-h" className="h-sec">From idea to <em>growth.</em></h2>
         </Reveal>
-        <Reveal className="sec__body">
-          <ProcessTimeline tail ruler />
+        <Reveal className="process-body">
+          <ProcessTimeline />
         </Reveal>
       </div>
     </section>
   );
 }
 
+/* ── Scene 6 · Closing CTA ───────────────────────────────── */
+function Closing() {
+  return (
+    <section id="contact" className="scene scene--cta" aria-labelledby="cta-h">
+      <div className="cta__bg" aria-hidden="true">
+        <LazyVideo name="horizon-loop" />
+      </div>
+      <Reveal className="container cta">
+        <h2 id="cta-h" className="h-display cta__h">
+          <span className="cta__l">
+            {"Let’s Build".split(" ").map((w, i) => (<span key={w}>{i > 0 && " "}<span className="whip" style={{ ["--w" as string]: i }}>{w}</span></span>))}
+          </span>{" "}
+          <em className="cta__l">
+            {"What’s Next.".split(" ").map((w, i) => (<span key={w}>{i > 0 && " "}<span className="whip" style={{ ["--w" as string]: i + 2 }}>{w}</span></span>))}
+          </em>
+        </h2>
+        <p className="cta__p">From AI systems to full digital growth — tell us what you’re building.</p>
+        <Button to="/contact" variant="primary">Get in Touch</Button>
+      </Reveal>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
-    <>
+    <div className="home home--v4">
       <Hero />
       <Services />
-      <FeaturedWork />
-      <AboutStudio />
+      <Work />
+      <Studio />
       <Process />
-      <ContactBanner id="contact" />
-    </>
+      <Closing />
+    </div>
   );
 }

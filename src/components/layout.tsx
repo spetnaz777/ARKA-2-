@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "../lib/router";
 import { NAV, SERVICES, SITE } from "../content/site";
 import { Button, Wordmark } from "./ui";
-import { CircuitFrame, CornerMarks, DotMatrix, Icon, Readout } from "./graphics";
+import { CircuitFrame, Icon } from "./graphics";
 import { LazyVideo } from "./media";
 import { Logo } from "./Logo";
 
@@ -176,9 +176,6 @@ export function ContactBanner({ id }: { id?: string }) {
           traces: [
             { pts: "c-260,t24 c-120,t24 c-100,t4 c+500,t4 c+520,t-16" },
             { pts: "c+240,t24 c+340,t24", tone: "thick" },
-            { pts: "l40,t0 l40,b0", tone: "faint" },
-            { pts: "r-36,t0 r-36,b0", tone: "faint" },
-            { pts: "L-60,t40 L-60,b-30", tone: "faint" },
             { pts: "R+40,t30 R+40,b-60 R+10,b-30", tone: "faint" },
           ],
           nodes: [{ at: "c-280,t24", kind: "pair" }],
@@ -198,7 +195,6 @@ export function ContactBanner({ id }: { id?: string }) {
             <svg className="cbanner__arc" viewBox="0 0 400 400" fill="none">
               <path d="M30 360 A 330 330 0 0 1 300 40" className="tr tr--ink" />
             </svg>
-            <DotMatrix cols={6} rows={4} gap={11} className="cbanner__dots" />
           </div>
           <div className="cbanner__symbol" aria-hidden="true">
             <Logo className="cbanner__logo" />
@@ -211,8 +207,6 @@ export function ContactBanner({ id }: { id?: string }) {
           <Button to="/contact" variant="primary" className="cbanner__btn">
             Get in Touch
           </Button>
-          <CornerMarks offset={-14} />
-          <Readout className="cbanner__readout">SYS.06 — CONTACT · CH 01</Readout>
         </div>
       </div>
     </section>
@@ -224,9 +218,6 @@ export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="site-footer">
-      <CircuitFrame
-        desktop={{ traces: [{ pts: "l40,t0 l40,t46", tone: "faint" }, { pts: "r-36,t0 r-36,t46", tone: "faint" }], nodes: [{ at: "l40,t46", kind: "square" }, { at: "r-36,t46", kind: "square" }] }}
-      />
       <div className="container">
         <div className="site-footer__top">
           <Link to="/" aria-label="ARKA — home" className="site-footer__brand">
@@ -251,7 +242,6 @@ export function Footer() {
         <div className="site-footer__bottom">
           <p>
             © <span suppressHydrationWarning>{year}</span> ARKA. All rights reserved. <span className="site-footer__loc">{SITE.locationShort}</span>
-            <span className="site-footer__coord" aria-hidden="true">43.65°N 79.38°W</span>
           </p>
           <ul className="site-footer__legal">
             <li><Link to="/privacy">Privacy</Link></li>
