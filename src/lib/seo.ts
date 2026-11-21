@@ -6,6 +6,8 @@ export type Meta = {
   description: string;
   noindex?: boolean;
   jsonLd?: object[];
+  /** Critical images to preload for this route (emitted by the prerenderer). */
+  preload?: { href: string; type: string; media?: string }[];
   sitemap?: { priority: string; changefreq: string };
 };
 
@@ -71,6 +73,10 @@ export const ROUTES: Meta[] = [
         publisher: { "@id": ORG_ID },
         inLanguage: "en",
       },
+    ],
+    preload: [
+      { href: "/media/terrain-480.avif", type: "image/avif", media: "(max-width: 700px)" },
+      { href: "/media/moon-1600.avif", type: "image/avif", media: "(min-width: 1100px)" },
     ],
     sitemap: { priority: "1.0", changefreq: "monthly" },
   },

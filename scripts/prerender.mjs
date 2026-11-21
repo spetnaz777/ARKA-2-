@@ -32,6 +32,9 @@ function head(meta, urlPath) {
     `<meta property="og:url" content="${url}" />`,
     `<meta name="twitter:title" content="${esc(meta.title)}" />`,
     `<meta name="twitter:description" content="${esc(meta.description)}" />`,
+    ...(meta.preload ?? []).map(
+      (l) => `<link rel="preload" as="image" href="${l.href}" type="${l.type}"${l.media ? ` media="${l.media}"` : ""} fetchpriority="high" />`,
+    ),
     ...(meta.jsonLd ?? []).map((o) => `<script type="application/ld+json">${json(o)}</script>`),
   ];
   return tags.filter(Boolean).join("\n    ");

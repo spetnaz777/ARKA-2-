@@ -114,6 +114,22 @@ function MenuPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
       aria-label="Site menu"
       hidden={!open}
     >
+      {open && (
+        <CircuitFrame
+          desktop={{
+            traces: [
+              { pts: "l40,t140 l40,b-60", tone: "faint" },
+              { pts: "c-80,t96 c-80,t500 c-40,t540 c+260,t540", tone: "faint" },
+              { pts: "R-180,b-120 R-120,b-60 r0,b-60" },
+            ],
+            nodes: [{ at: "l40,t140", kind: "chain", n: 4 }, { at: "c-80,t96" }, { at: "R-180,b-120", kind: "dot" }],
+          }}
+          mobile={{ traces: [{ pts: "l12,t96 l12,b-40", tone: "faint" }] }}
+        />
+      )}
+      <div className="menu-panel__deco" aria-hidden="true">
+        {open && <img src="/media/moon-900.webp" alt="" width={900} height={900} />}
+      </div>
       <div className="menu-panel__bar container">
         <Wordmark />
         <button type="button" className="menu-btn menu-btn--close" onClick={onClose} aria-label="Close menu">
