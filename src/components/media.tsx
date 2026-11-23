@@ -2,15 +2,25 @@ import { useEffect, useRef } from "react";
 
 /* Existing site imagery, re-graded for the white system (grayscale, raised
    exposure) as AVIF/WebP derivatives in /media (see scripts/assets). */
-export type PaleName = "img-space" | "img-monolith" | "img-corridor" | "img-hall" | "img-concrete" | "rocket-hangar" | "deep-black-hero";
+export type BrandName = "img-space" | "img-monolith" | "img-corridor" | "img-hall" | "img-concrete" | "rocket-hangar" | "deep-black-hero";
+/* Licensed stock (Unsplash License / NASA public domain), graded to monochrome.
+   Sources and licences: public/media/CREDITS.md */
+export type StockName =
+  | "earth-night" | "white-curve" | "grid-facade" | "peak-clouds" | "towers-up" | "server-cables"
+  | "dark-hall" | "server-aisle" | "light-corridor" | "storm-peaks" | "glass-tower" | "tall-tower" | "earthrise";
+export type PaleName = BrandName | StockName;
+const BRAND = new Set(["img-space", "img-monolith", "img-corridor", "img-hall", "img-concrete", "rocket-hangar", "deep-black-hero"]);
 
 export function PaleImage({ name, className = "", sizes = "(max-width: 700px) 100vw, 640px", eager = false }: { name: PaleName; className?: string; sizes?: string; eager?: boolean }) {
-  const set = (ext: string) => `/media/pale-${name}-640.${ext} 640w, /media/pale-${name}-1200.${ext} 1200w`;
+  const brand = BRAND.has(name);
+  const [sm, lg] = brand ? [640, 1200] : [800, 1600];
+  const base = brand ? `/media/pale-${name}` : `/media/stock-${name}`;
+  const set = (ext: string) => `${base}-${sm}.${ext} ${sm}w, ${base}-${lg}.${ext} ${lg}w`;
   return (
     <picture className={className}>
       <source type="image/avif" srcSet={set("avif")} sizes={sizes} />
       <source type="image/webp" srcSet={set("webp")} sizes={sizes} />
-      <img src={`/media/pale-${name}-640.webp`} alt="" width={1200} height={675} loading={eager ? "eager" : "lazy"} decoding="async" />
+      <img src={`${base}-${sm}.webp`} alt="" width={lg} height={Math.round(lg * 0.6)} loading={eager ? "eager" : "lazy"} decoding="async" />
     </picture>
   );
 }

@@ -165,14 +165,41 @@ export function CircuitFrame({
   mobile,
   bp = 1100,
   className = "",
+  scrub = false,
 }: {
   desktop: FrameSpec;
   mobile?: FrameSpec;
   bp?: number;
   className?: string;
+  /** tie stroke drawing to scroll progress of the enclosing .scene/section */
+  scrub?: boolean;
 }) {
   const { ref, size, measured } = useSize<HTMLDivElement>([1440, 800]);
   const inView = useInView(ref);
+  useEffect(() => {
+    const el = ref.current;
+    if (!scrub || !el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.style.setProperty("--sp", "1");
+      return;
+    }
+    const host = (el.closest(".scene, section, .band") as HTMLElement) ?? el.parentElement!;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = host.getBoundingClientRect();
+      const vh = window.innerHeight;
+      let p: number;
+      if (r.height > vh * 1.6) p = (-r.top + vh * 0.25) / (r.height - vh * 0.75); // pinned scene
+      else p = (vh * 0.95 - r.top) / (Math.min(r.height, vh) * 0.9);
+      el.style.setProperty("--sp", Math.max(0, Math.min(1, p)).toFixed(4));
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
+  }, [scrub, ref]);
   const [w, h] = size;
   const spec = w < bp ? mobile : desktop;
 
@@ -186,7 +213,7 @@ export function CircuitFrame({
     <div
       ref={ref}
       aria-hidden="true"
-      className={`frame ${measured ? "is-measured" : ""} ${inView ? "is-in" : ""} ${className}`}
+      className={`frame ${scrub ? "frame--scrub" : ""} ${measured ? "is-measured" : ""} ${inView ? "is-in" : ""} ${className}`}
     >
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
         {traces.map((t, i) => (

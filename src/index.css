@@ -1588,3 +1588,87 @@ html.intro-pending .js .sweep, html.intro-pending .sweep { animation-play-state:
   .scene--svc .svc-beat__icon { margin-top: -75px; }
 }
 .page-hero > .frame { display: none; }
+
+/* ════════════════════════════════════════════════════════════
+   v6 — cyber line layer (white on dark, graphite on light)
+   ════════════════════════════════════════════════════════════ */
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+.lines { z-index: 1; }
+.scene .container, .stage .container { position: relative; z-index: 2; }
+.frame--scrub .draw { stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--sp, 0)) !important; transition: none !important; animation: none !important; }
+.frame--scrub .nd { opacity: calc(var(--sp, 0) * 3 - 0.4); }
+
+/* light scenes: graphite */
+.lines .tr--faint { stroke: rgba(29, 29, 31, 0.16); }
+.lines .tr--line { stroke: rgba(29, 29, 31, 0.42); }
+.lines .nd { stroke: rgba(29, 29, 31, 0.55); }
+.lines .nd--bg { fill: var(--surface); }
+.lines .nd--fill { fill: #1d1d1f; stroke: #1d1d1f; }
+/* dark scenes: white */
+[data-tone="dark"] .tr--faint { stroke: rgba(255, 255, 255, 0.14); }
+[data-tone="dark"] .tr--line { stroke: rgba(255, 255, 255, 0.4); }
+[data-tone="dark"] .tr--ink { stroke: rgba(255, 255, 255, 0.85); }
+[data-tone="dark"] .tr--thick { stroke: #f5f5f7; }
+[data-tone="dark"] .nd { stroke: rgba(255, 255, 255, 0.6); }
+[data-tone="dark"] .nd--bg { fill: #000; }
+[data-tone="dark"] .nd--fill { fill: #f5f5f7; stroke: #f5f5f7; }
+[data-tone="dark"] .pulse { background: #f5f5f7; box-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
+.pulse { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
+[data-tone="dark"] .readout { color: rgba(255, 255, 255, 0.46); }
+.readout { color: rgba(29, 29, 31, 0.5); font-size: 10px; letter-spacing: 0.16em; }
+[data-tone="dark"] .ruler line { stroke: rgba(255, 255, 255, 0.3); }
+.ruler line { stroke: rgba(29, 29, 31, 0.3); }
+
+/* HUD corner brackets on glass + media */
+.hud { z-index: 3; }
+.hud > span { border-color: rgba(29, 29, 31, 0.5); }
+[data-tone="dark"] .hud > span, .glass--dark > .hud > span { border-color: rgba(255, 255, 255, 0.55); }
+.scene--work .hud { display: block; }
+.svc-panel { position: relative; }
+
+/* scan grid behind dark scenes */
+.scangrid { position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 64px 64px; background-position: calc(50% + 0.5px) 0;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 45%, #000 10%, transparent 80%); mask-image: radial-gradient(70% 60% at 50% 45%, #000 10%, transparent 80%); }
+
+/* fine 1px edge-trace that runs around glass borders on reveal and hover */
+.glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 3;
+  background: conic-gradient(from var(--ang), transparent 0deg, transparent 290deg, rgba(29,29,31,0.75) 340deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); opacity: 0; }
+.glass--dark::before, [data-tone="dark"] .glass::before { background: conic-gradient(from var(--ang), transparent 0deg, transparent 290deg, rgba(255,255,255,0.9) 340deg, transparent 360deg); }
+.glass:hover::before, .reveal.is-in.glass::before { animation: edge-run 1.5s var(--reveal) both; }
+@keyframes edge-run { 0% { --ang: 0deg; opacity: 0; } 12% { opacity: 1; } 85% { opacity: 1; } 100% { --ang: 360deg; opacity: 0; } }
+.gnav .glass::before { display: none; }
+
+/* process: graphite connector behind the glass steps, drawn on reveal */
+.scene--process .timeline::before { display: block; top: 37px; left: 24px; right: 24px; height: 1px; background: rgba(29, 29, 31, 0.35); z-index: 0; }
+.scene--process .timeline__step { z-index: 1; }
+
+/* real moon on the dark hero */
+.scene--hero .hero__moon img { filter: grayscale(1) brightness(1.02) contrast(1.06); }
+.hero__shade { background: radial-gradient(circle at calc(30% + var(--mx, 0) * 10%) calc(26% + var(--my, 0) * 8%), transparent 42%, rgba(0,0,0,0.35) 66%, rgba(0,0,0,0.85) 82%); }
+.bgfield--svc img { filter: grayscale(1) brightness(0.9); opacity: 0.32; }
+
+@media (max-width: 1099px) { .scangrid { background-size: 44px 44px; } }
+@media (prefers-reduced-motion: reduce) {
+  .glass::before { display: none; }
+  .frame--scrub .nd { opacity: 1; }
+}
+[data-tone="dark"] .tr--faint { stroke: rgba(255, 255, 255, 0.2); }
+[data-tone="dark"] .tr--line { stroke: rgba(255, 255, 255, 0.55); }
+.lines .tr--faint { stroke: rgba(29, 29, 31, 0.2); }
+.lines .tr--line { stroke: rgba(29, 29, 31, 0.5); }
+.band__img { position: absolute; inset: 0; }
+.band__img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; filter: brightness(0.62) contrast(1.15); transform: scale(calc(1.12 - var(--p, 1) * 0.12)); will-change: transform; }
+.film__video { filter: brightness(0.6); }
+@media (prefers-reduced-motion: reduce) { .band__img img { transform: none; } }
+.stage > .lines, .scene > .lines, .band > .lines { z-index: 2; }
+.band .numerals__item.glass--dark { --tint: rgba(16, 16, 18, 0.55); }
+[data-tone="dark"] .lines .tr--faint { stroke: rgba(255, 255, 255, 0.2); }
+[data-tone="dark"] .lines .tr--line { stroke: rgba(255, 255, 255, 0.55); }
+[data-tone="dark"] .lines .nd { stroke: rgba(255, 255, 255, 0.65); }
+[data-tone="dark"] .lines .nd--bg { fill: #000; }
+[data-tone="dark"] .lines .nd--fill { fill: #f5f5f7; stroke: #f5f5f7; }

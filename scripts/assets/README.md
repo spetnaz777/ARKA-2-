@@ -16,3 +16,16 @@ Video loops (muted, gray, lifted):
     (mp4/h264 fallbacks: same filters + format=yuv420p, -c:v libx264 -crf 32 -movflags +faststart)
 
 `landing-bg.mp4` itself is git-ignored (only its derivative is committed). Moon: `generate-moon.py`; white terrain: `derive-terrain.py`.
+
+## Stock imagery (v6)
+
+Sources, photographers and licences: `public/media/CREDITS.md`. Grading/export:
+
+    curl -sSL -o full.jpg "https://images.unsplash.com/photo-<id>?w=2600&q=90&fm=jpg"
+    for w in 1600 800; do
+      magick full.jpg -colorspace gray -auto-level -sigmoidal-contrast 3,50% -resize ${w}x -quality 54 public/media/stock-<key>-$w.avif
+      magick full.jpg -colorspace gray -auto-level -sigmoidal-contrast 3,50% -resize ${w}x -quality 72 public/media/stock-<key>-$w.webp
+    done
+
+NASA originals come from `https://images-assets.nasa.gov/image/<nasa_id>/collection.json` (~orig.jpg); the
+full moon is cut to alpha from its black sky (luminance > 14, feathered).

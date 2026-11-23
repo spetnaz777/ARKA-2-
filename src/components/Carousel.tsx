@@ -4,11 +4,11 @@ import { ContourPattern, Hatch, HudBrackets, Icon, Readout } from "./graphics";
 import { PaleImage, type PaleName } from "./media";
 
 const SLIDE_IMG: Record<string, PaleName> = {
-  "royal-caspian": "img-hall",
-  "healexa-clinic": "img-concrete",
-  "mehri-noshad": "img-monolith",
-  "six-side-marketing": "img-space",
-  "noctavius-aviation": "rocket-hangar",
+  "royal-caspian": "light-corridor",
+  "healexa-clinic": "white-curve",
+  "mehri-noshad": "towers-up",
+  "six-side-marketing": "glass-tower",
+  "noctavius-aviation": "earth-night",
 };
 import { Link } from "../lib/router";
 

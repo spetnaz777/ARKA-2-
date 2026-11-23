@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { PROCESS, PROJECTS, SERVICES, STUDIO_FACTS } from "../content/site";
 import { Reveal } from "../components/ui";
-import { Icon, SignalNode } from "../components/graphics";
+import { CircuitFrame, HudBrackets, Icon, Place, Readout, SignalNode, TickRuler, type Trace, type Node as FNode } from "../components/graphics";
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
-import { LazyVideo } from "../components/media";
+import { LazyVideo, PaleImage } from "../components/media";
 import { useHeroParallax, useScene } from "../components/fx";
 import { ShowreelButton } from "../components/Showreel";
 
@@ -14,6 +14,29 @@ import { ShowreelButton } from "../components/Showreel";
    driven by native scroll; elsewhere every scene renders as a static,
    fully visible layout.
    ════════════════════════════════════════════════════════════ */
+
+/* ── Cyber line layer ────────────────────────────────────────
+   One frame per scene: continuous left/right rails (they meet the next
+   scene's rails, so the trace runs top to bottom), 45° connectors along the
+   content edges, hollow/filled nodes, a mono readout and a tick ruler.
+   Strokes draw with scroll; white on dark scenes, graphite on light ones. */
+function Lines({ traces = [], nodes = [], readout, readoutAt = "L+0,b-44", ruler, top = "t0", scrub = true }: { traces?: Trace[]; nodes?: FNode[]; readout?: string; readoutAt?: string; ruler?: string; top?: string; scrub?: boolean }) {
+  return (
+    <>
+      <CircuitFrame
+        scrub={scrub}
+        className="lines"
+        desktop={{
+          traces: [{ pts: `l40,${top} l40,b0`, tone: "faint" }, { pts: `r-40,${top} r-40,b0`, tone: "faint" }, ...traces],
+          nodes: [{ at: "l40,b-1", kind: "square" }, { at: "r-40,b-1", kind: "square" }, ...nodes],
+        }}
+        mobile={{ traces: [{ pts: `l10,${top} l10,b0`, tone: "faint" }], nodes: [{ at: "l10,b-1", kind: "square" }] }}
+      />
+      {readout && <Place at={readoutAt} className="hide-tablet"><Readout>{readout}</Readout></Place>}
+      {ruler && <Place at={ruler} className="hide-tablet"><TickRuler length={140} vertical /></Place>}
+    </>
+  );
+}
 
 /* Word swap with a light trail (saas-motion-film signature 7). The fixed
    words never move; the slot word exits up with blur, the next whips in
@@ -74,15 +97,30 @@ function Hero() {
   return (
     <section ref={scene} className="scene scene--hero" data-tone="dark" aria-labelledby="hero-h">
       <div ref={stage} className="stage hero">
+        <div className="scangrid" aria-hidden="true" />
+        <Lines
+          scrub={false}
+          top="t126"
+          traces={[
+            { pts: "l40,t126 l80,t86 c-360,t86", tone: "line" },
+            { pts: "c+360,t86 r-80,t86 r-40,t126", tone: "line" },
+            { pts: "l40,b-120 l80,b-80 c-240,b-80", tone: "line", pulse: true },
+            { pts: "c-240,b-80 c-200,b-40 c+40,b-40", tone: "faint" },
+          ]}
+          nodes={[{ at: "c-360,t86" }, { at: "c+360,t86" }, { at: "c-240,b-80", kind: "dot" }, { at: "l40,t126" }, { at: "r-40,t126" }]}
+          readout="SYS.01 · N 43.65° / W 79.38°"
+          readoutAt="L+0,b-118"
+          ruler="r-58,t300"
+        />
         <div className="hero__art" aria-hidden="true">
           <div className="bgfield bgfield--hero" />
           <div className="hero__moon">
             <div className="hero__moon-inner">
               <picture>
-                <source media="(max-width: 700px)" srcSet="/media/moon-900.avif" type="image/avif" />
-                <source media="(max-width: 700px)" srcSet="/media/moon-900.webp" type="image/webp" />
-                <source srcSet="/media/moon-1600.avif" type="image/avif" />
-                <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
+                <source media="(max-width: 700px)" srcSet="/media/moon-real-900.avif" type="image/avif" />
+                <source media="(max-width: 700px)" srcSet="/media/moon-real-900.webp" type="image/webp" />
+                <source srcSet="/media/moon-real-1600.avif" type="image/avif" />
+                <img src="/media/moon-real-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
               </picture>
               <span className="hero__light" />
               <span className="hero__shade" />
@@ -136,8 +174,21 @@ function Services() {
     <section ref={scene} className="scene scene--svc" data-tone="dark" aria-labelledby="svc-h">
       <div className="stage svc-stage">
         <div className="bgfield bgfield--svc" aria-hidden="true">
-          <img src="/media/moon-900.webp" alt="" width={900} height={900} loading="lazy" decoding="async" />
+          <picture>
+            <source srcSet="/media/moon-gibbous-1400.avif" type="image/avif" />
+            <img src="/media/moon-gibbous-1400.webp" alt="" width={1400} height={1400} loading="lazy" decoding="async" />
+          </picture>
         </div>
+        <div className="scangrid" aria-hidden="true" />
+        <Lines
+          traces={[
+            { pts: "l40,t120 l80,t160 L-20,t160", tone: "line" },
+            { pts: "R+20,b-150 r-80,b-150 r-40,b-110", tone: "line", pulse: true },
+          ]}
+          nodes={[{ at: "L-20,t160" }, { at: "R+20,b-150" }]}
+          readout="SYS.02 · 4 MODULES"
+          readoutAt="L+0,b-60"
+        />
         <div className="container svc-stage__grid">
           <div className="svc-stage__head">
             <p className="eyebrow">Services</p>
@@ -149,6 +200,8 @@ function Services() {
               <span className="svc-rail__fill" />
             </ol>
           </div>
+          <div className="svc-panel">
+          <HudBrackets inset={-12} size={14} className="hide-tablet" />
           <ul className="svc-beats glass glass--panel glass--dark" data-tilt="" role="list">
             {SERVICES.map((s, k) => (
               <li key={s.slug} className="svc-beat" style={{ ["--k" as string]: k }}>
@@ -162,6 +215,7 @@ function Services() {
               </li>
             ))}
           </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -174,6 +228,11 @@ function Work() {
   useScene(scene, { mode: "enter" });
   return (
     <section ref={scene} className="scene scene--work" aria-labelledby="work-h">
+      <Lines
+        traces={[{ pts: "l40,t110 l80,t150 L-26,t150", tone: "line" }, { pts: "R+26,b-140 r-80,b-140 r-40,b-100", tone: "line", pulse: true }]}
+        nodes={[{ at: "L-26,t150" }, { at: "R+26,b-140" }]}
+        ruler="r-58,t240"
+      />
       <div className="container">
         <Carousel
           projects={PROJECTS}
@@ -195,6 +254,7 @@ function Studio() {
   useScene(band, { mode: "enter" });
   return (
     <section className="scene scene--studio" aria-labelledby="about-h">
+      <Lines traces={[{ pts: "l40,t140 l80,t180 L-26,t180", tone: "line" }]} nodes={[{ at: "L-26,t180" }]} readout="SYS.04 · STUDIO · GTA" readoutAt="R-200,t120" />
       <div className="container studio">
         <Reveal className="studio__head">
           <p className="eyebrow">About</p>
@@ -208,8 +268,9 @@ function Studio() {
         </Reveal>
       </div>
       <div ref={band} className="band" data-tone="dark">
+        <Lines traces={[{ pts: "l40,t60 L-26,t60", tone: "line" }]} nodes={[{ at: "L-26,t60" }]} readout="FIG.04 — TERRAIN · 43.65°N" readoutAt="L+0,t36" />
         <div className="band__frame">
-          <LazyVideo name="terrain-loop" className="band__video" />
+          <PaleImage name="storm-peaks" className="band__img" sizes="100vw" />
         </div>
         <dl className="numerals container">
           {STUDIO_FACTS.map((f, i) => (
@@ -244,6 +305,7 @@ function Process() {
   return (
     <section className="scene scene--process" aria-labelledby="proc-h">
       <div className="bgfield bgfield--chrome" aria-hidden="true" />
+      <Lines traces={[{ pts: "l40,t140 l80,t180 L-26,t180", tone: "line" }]} nodes={[{ at: "L-26,t180" }]} readout="SYS.05 · 4 PHASES" readoutAt="R-170,t120" />
       <div className="container">
         <Reveal className="process-head">
           <p className="eyebrow">Process</p>
@@ -263,10 +325,18 @@ function Film() {
   useScene(scene, { mode: "enter" });
   return (
     <section ref={scene} className="scene scene--film" data-tone="dark" aria-labelledby="film-h">
+      <div className="scangrid" aria-hidden="true" />
+      <Lines
+        traces={[{ pts: "l40,b-300 l80,b-260 L-30,b-260", tone: "line" }]}
+        nodes={[{ at: "L-30,b-260" }]}
+        readout="SYS.03 · FILM 00:12 · 60FPS"
+        readoutAt="R-230,t48"
+      />
       <div className="film__bg" aria-hidden="true">
         <LazyVideo name="film-720" poster="/media/film-poster.webp" className="film__video" />
       </div>
       <Reveal className="container film__card glass glass--panel glass--dark glass--refract" data-tilt="">
+        <HudBrackets inset={-12} size={14} />
         <p className="eyebrow">The film</p>
         <h2 id="film-h" className="h-sec">See ARKA in motion.</h2>
         <p className="film__p">Twelve seconds on how we think about AI, software and growth.</p>
@@ -280,10 +350,18 @@ function Film() {
 function Closing() {
   return (
     <section id="contact" className="scene scene--cta" data-tone="dark" aria-labelledby="cta-h">
+      <div className="scangrid" aria-hidden="true" />
+      <Lines
+        traces={[{ pts: "l40,t160 l80,t200 c-360,t200", tone: "line" }, { pts: "c+360,b-200 r-80,b-200 r-40,b-160", tone: "line", pulse: true }]}
+        nodes={[{ at: "c-360,t200" }, { at: "c+360,b-200" }]}
+        readout="SYS.06 · CONTACT · CH 01"
+        readoutAt="L+0,b-60"
+      />
       <div className="cta__bg" aria-hidden="true">
         <LazyVideo name="horizon-loop" />
       </div>
       <Reveal className="container cta glass glass--panel glass--dark glass--refract">
+        <HudBrackets inset={-14} size={16} />
         <h2 id="cta-h" className="h-display cta__h">
           <span className="cta__l">
             {"Let’s Build".split(" ").map((w, i) => (<span key={w}>{i > 0 && " "}<span className="whip" style={{ ["--w" as string]: i }}>{w}</span></span>))}

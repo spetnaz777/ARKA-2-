@@ -5,17 +5,17 @@ import { ChamferedPanel, CircuitFrame, ContourPattern, CornerMarks, DotMatrix, E
 import { PaleImage, type PaleName } from "../components/media";
 
 const PROJECT_IMG: Record<string, PaleName> = {
-  "royal-caspian": "img-hall",
-  "healexa-clinic": "img-concrete",
-  "mehri-noshad": "img-monolith",
-  "six-side-marketing": "img-space",
-  "noctavius-aviation": "rocket-hangar",
+  "royal-caspian": "light-corridor",
+  "healexa-clinic": "white-curve",
+  "mehri-noshad": "towers-up",
+  "six-side-marketing": "glass-tower",
+  "noctavius-aviation": "earth-night",
 };
 const SERVICE_IMG: Record<string, PaleName> = {
-  ai: "img-space",
-  web: "img-corridor",
-  marketing: "img-monolith",
-  consulting: "img-hall",
+  ai: "server-cables",
+  web: "grid-facade",
+  marketing: "tall-tower",
+  consulting: "server-aisle",
 };
 
 /* Framed asset panel: existing imagery in a chamfered frame with registration marks. */
@@ -90,7 +90,7 @@ export function ServicesOverview() {
         <PageHeroFrame />
         <div className="container page-hero__grid">
           <PageIntro n="02" label="Services" title="Four disciplines," italic="one growth system." intro="AI solutions, web and software development, digital marketing and technology consulting — designed to connect, so every part of your business works with the others." />
-          <AssetPanel name="img-concrete" caption="FIG.02 — SYSTEMS · 4 MODULES" eager>
+          <AssetPanel name="dark-hall" caption="FIG.02 — SYSTEMS · 4 MODULES" eager>
             <ServiceGraphic kind="consulting" />
           </AssetPanel>
         </div>
@@ -282,7 +282,7 @@ export function Work() {
         <div className="container">
           <div className="page-hero__grid">
             <PageIntro n="03" label="Work" title="Selected" italic="Work." intro="Websites and digital platforms ARKA has designed and built for real businesses across Toronto, the GTA and Ontario. We don’t publish client performance figures without their approval." />
-            <AssetPanel name="deep-black-hero" caption="FIG.03 — INDEX · 05 BUILDS" eager />
+            <AssetPanel name="peak-clouds" caption="FIG.03 — INDEX · 05 BUILDS" eager />
           </div>
         </div>
       </section>
@@ -374,7 +374,7 @@ export function About() {
         <PageHeroFrame />
         <div className="container page-hero__grid">
           <PageIntro n="04" label="About" title="The ARKA" italic="Studio." intro="A modern technology company at the intersection of AI, software, design and growth. We turn ideas into intelligent products and scalable digital systems." />
-          <AssetPanel name="img-monolith" caption="FIG.04 — STUDIO · 43.65°N 79.38°W" eager />
+          <AssetPanel name="storm-peaks" caption="FIG.04 — STUDIO · 43.65°N 79.38°W" eager />
         </div>
       </section>
 
@@ -561,7 +561,7 @@ export function NotFound() {
           <Button to="/services" variant="outline" arrow="r">Our Services</Button>
         </div>
         <div className="nf__moon" aria-hidden="true">
-          <img src="/media/moon-900.webp" alt="" width={900} height={900} loading="lazy" />
+          <img src="/media/stock-earthrise-800.webp" alt="" width={800} height={800} loading="lazy" />
         </div>
       </div>
     </section>
