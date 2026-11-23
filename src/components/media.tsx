@@ -18,7 +18,8 @@ export function PaleImage({ name, className = "", sizes = "(max-width: 700px) 10
 /* Muted, looping background video derived from the site's existing footage.
    Never preloaded; starts only while on screen; stays on its poster under
    prefers-reduced-motion or Save-Data. */
-export function LazyVideo({ name, className = "" }: { name: "terrain-loop" | "horizon-loop"; className?: string }) {
+export function LazyVideo({ name, className = "", poster }: { name: "terrain-loop" | "horizon-loop" | "film-720"; className?: string; poster?: string }) {
+  const posterUrl = poster ?? `/media/${name}-poster.webp`;
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
@@ -26,18 +27,18 @@ export function LazyVideo({ name, className = "" }: { name: "terrain-loop" | "ho
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
     if (!("IntersectionObserver" in window)) {
-      v.poster = `/media/${name}-poster.webp`;
+      v.poster = posterUrl;
       return;
     }
     if (reduce || saveData) {
-      v.poster = `/media/${name}-poster.webp`;
+      v.poster = posterUrl;
       return;
     }
     let loaded = false;
     // poster is attached only once the video nears the viewport (keeps it off the critical path)
     const po = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        v.poster = `/media/${name}-poster.webp`;
+        v.poster = posterUrl;
         po.disconnect();
       }
     }, { rootMargin: "400px" });

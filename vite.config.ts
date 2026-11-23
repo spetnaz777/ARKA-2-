@@ -36,5 +36,6 @@ function vercelLikePreview(): Plugin {
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react(), tailwindcss(), vercelLikePreview()],
+  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
   build: { target: "es2020", cssCodeSplit: false, copyPublicDir: !isSsrBuild },
 }));

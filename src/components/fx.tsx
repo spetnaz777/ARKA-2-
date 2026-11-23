@@ -368,3 +368,63 @@ export function useScene(
     };
   }, [ref, mode, steps, minWidth]);
 }
+
+/* ── Liquid Glass: pointer-following specular + ≤4° tilt ───────
+   Delegated (one listener). Writes --gx/--gy (0–100%) on the glass under
+   the pointer and a small rotateX/Y on [data-tilt]. Chromium also gets a
+   displacement refraction filter (html.refract). */
+export function useGlass() {
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const refract = /Chrome\/|Chromium\/|Edg\//.test(ua) && !!(CSS as unknown as { supports?: (a: string, b: string) => boolean }).supports?.("backdrop-filter", "url(#a)");
+    if (refract) document.documentElement.classList.add("refract");
+    if (!finePointer() || reduced()) return;
+    let active: HTMLElement | null = null;
+    let raf = 0;
+    let ev: PointerEvent | null = null;
+    const apply = () => {
+      raf = 0;
+      if (!ev) return;
+      const g = (ev.target as HTMLElement).closest<HTMLElement>(".glass");
+      if (active && active !== g) {
+        active.style.removeProperty("--rx");
+        active.style.removeProperty("--ry");
+        active.classList.remove("is-lit");
+        active = null;
+      }
+      if (!g) return;
+      active = g;
+      const r = g.getBoundingClientRect();
+      const x = (ev.clientX - r.left) / r.width;
+      const y = (ev.clientY - r.top) / r.height;
+      g.style.setProperty("--gx", `${(x * 100).toFixed(1)}%`);
+      g.style.setProperty("--gy", `${(y * 100).toFixed(1)}%`);
+      g.classList.add("is-lit");
+      if (g.hasAttribute("data-tilt")) {
+        g.style.setProperty("--rx", `${((0.5 - y) * 6).toFixed(2)}deg`);
+        g.style.setProperty("--ry", `${((x - 0.5) * 6).toFixed(2)}deg`);
+      }
+    };
+    const move = (e: PointerEvent) => {
+      ev = e;
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", move);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+}
+
+export function GlassDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
+      <filter id="glass-refract" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.004 0.012" numOctaves="2" seed="11" result="n" />
+        <feGaussianBlur in="n" stdDeviation="3" result="s" />
+        <feDisplacementMap in="SourceGraphic" in2="s" scale="38" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+  );
+}

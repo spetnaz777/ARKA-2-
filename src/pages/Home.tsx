@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PROCESS, PROJECTS, SERVICES, STUDIO_FACTS } from "../content/site";
-import { Button, Reveal, SectionLabel } from "../components/ui";
-import { Icon, Readout, SignalNode } from "../components/graphics";
+import { Reveal } from "../components/ui";
+import { Icon, SignalNode } from "../components/graphics";
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
 import { LazyVideo } from "../components/media";
@@ -64,7 +64,7 @@ function Hero() {
     window.addEventListener("keydown", skip, { once: true });
     window.addEventListener("pointerdown", skip, { once: true });
     window.addEventListener("wheel", skip, { once: true, passive: true });
-    const t = window.setTimeout(off, 2600);
+    const t = window.setTimeout(off, 4000);
     return () => {
       window.clearTimeout(t);
       off();
@@ -72,9 +72,10 @@ function Hero() {
   }, []);
 
   return (
-    <section ref={scene} className="scene scene--hero" aria-labelledby="hero-h">
+    <section ref={scene} className="scene scene--hero" data-tone="dark" aria-labelledby="hero-h">
       <div ref={stage} className="stage hero">
         <div className="hero__art" aria-hidden="true">
+          <div className="bgfield bgfield--hero" />
           <div className="hero__moon">
             <div className="hero__moon-inner">
               <picture>
@@ -84,6 +85,7 @@ function Hero() {
                 <img src="/media/moon-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
               </picture>
               <span className="hero__light" />
+              <span className="hero__shade" />
             </div>
           </div>
           <div className="hero__orbit">
@@ -96,21 +98,20 @@ function Hero() {
             <path d="M100 0 V300 L60 340 V600" pathLength={1} />
             <circle cx="100" cy="0" r="3.5" />
           </svg>
-          <Readout className="hero__coord">N 43.65° / W 79.38°</Readout>
         </div>
 
         <div className="container hero__content">
-          <SectionLabel n="01" label="ARKA" className="hero__label" />
+          <p className="eyebrow hero__label">ARKA · AI studio</p>
           <h1 id="hero-h" className="h-hero">
             <span className="h-hero__line"><span className="h-hero__in">AI, Software &amp;</span></span>{" "}
-            <span className="h-hero__line"><em className="h-hero__in">Digital Growth.</em></span>
+            <span className="h-hero__line"><em className="h-hero__in sweep">Digital Growth.</em></span>
           </h1>
           <p className="hero__copy">
             We engineer <WordSwap words={["AI systems.", "modern websites.", "real growth."]} />
           </p>
           <div className="hero__ctas">
-            <Button to="/contact" variant="primary">Get Started</Button>
-            <ShowreelButton />
+            <Link to="/contact" className="pill pill--solid">Get Started</Link>
+            <ShowreelButton className="pill glass glass--pill glass--dark" />
           </div>
         </div>
         <span className="hero__scroll" aria-hidden="true"><span /></span>
@@ -132,12 +133,15 @@ function Services() {
     window.scrollTo({ top: top + ((k + 0.5) / SERVICES.length) * total, behavior: "auto" });
   };
   return (
-    <section ref={scene} className="scene scene--svc" aria-labelledby="svc-h">
+    <section ref={scene} className="scene scene--svc" data-tone="dark" aria-labelledby="svc-h">
       <div className="stage svc-stage">
+        <div className="bgfield bgfield--svc" aria-hidden="true">
+          <img src="/media/moon-900.webp" alt="" width={900} height={900} loading="lazy" decoding="async" />
+        </div>
         <div className="container svc-stage__grid">
           <div className="svc-stage__head">
-            <SectionLabel n="02" label="Services" />
-            <h2 id="svc-h" className="h-sec">What We <strong>Do.</strong></h2>
+            <p className="eyebrow">Services</p>
+            <h2 id="svc-h" className="h-sec">Four disciplines.<br />One system.</h2>
             <ol className="svc-rail" aria-hidden="true">
               {SERVICES.map((s) => (
                 <li key={s.slug}><span className="svc-rail__node" /><span className="svc-rail__n">{s.n}</span></li>
@@ -145,7 +149,7 @@ function Services() {
               <span className="svc-rail__fill" />
             </ol>
           </div>
-          <ul className="svc-beats" role="list">
+          <ul className="svc-beats glass glass--panel glass--dark" data-tilt="" role="list">
             {SERVICES.map((s, k) => (
               <li key={s.slug} className="svc-beat" style={{ ["--k" as string]: k }}>
                 <span className="svc-beat__icon" aria-hidden="true"><Icon name={s.icon} size={120} /></span>
@@ -175,8 +179,8 @@ function Work() {
           projects={PROJECTS}
           intro={
             <div className="work-head">
-              <SectionLabel n="03" label="Featured Work" />
-              <h2 id="work-h" className="h-sec">Selected <strong>Work.</strong></h2>
+              <p className="eyebrow">Featured work</p>
+              <h2 id="work-h" className="h-sec">Built to perform.</h2>
             </div>
           }
         />
@@ -193,7 +197,7 @@ function Studio() {
     <section className="scene scene--studio" aria-labelledby="about-h">
       <div className="container studio">
         <Reveal className="studio__head">
-          <SectionLabel n="04" label="About" />
+          <p className="eyebrow">About</p>
           <h2 id="about-h" className="h-display">
             The <span className="anurati">ARKA</span> Studio.
           </h2>
@@ -202,20 +206,19 @@ function Studio() {
             intelligent products and scalable digital systems.
           </p>
         </Reveal>
-        <dl className="numerals">
+      </div>
+      <div ref={band} className="band" data-tone="dark">
+        <div className="band__frame">
+          <LazyVideo name="terrain-loop" className="band__video" />
+        </div>
+        <dl className="numerals container">
           {STUDIO_FACTS.map((f, i) => (
-            <Reveal key={f.l} className="numerals__item" delay={i * 70}>
+            <Reveal key={f.l} className="numerals__item glass glass--panel glass--dark" data-tilt="" delay={i * 80}>
               <dt className="numerals__v">{f.v}</dt>
               <dd className="numerals__l">{f.l}</dd>
             </Reveal>
           ))}
         </dl>
-      </div>
-      <div ref={band} className="band">
-        <div className="band__frame">
-          <LazyVideo name="terrain-loop" className="band__video" />
-        </div>
-        <Readout className="band__cap">FIG.04 — TERRAIN · 43.65°N</Readout>
       </div>
     </section>
   );
@@ -226,7 +229,7 @@ export function ProcessTimeline({ steps = PROCESS }: { steps?: { n?: string; t: 
   return (
     <ol className="timeline">
       {steps.map((p, i) => (
-        <li key={p.t} className="timeline__step" style={{ ["--i" as string]: i }}>
+        <li key={p.t} className="timeline__step glass glass--panel" data-tilt="" style={{ ["--i" as string]: i }}>
           <SignalNode filled={i === 0} />
           <span className="timeline__n">{p.n ?? `0${i + 1}`}</span>
           <span className="timeline__t">{p.t}</span>
@@ -240,10 +243,11 @@ export function ProcessTimeline({ steps = PROCESS }: { steps?: { n?: string; t: 
 function Process() {
   return (
     <section className="scene scene--process" aria-labelledby="proc-h">
+      <div className="bgfield bgfield--chrome" aria-hidden="true" />
       <div className="container">
         <Reveal className="process-head">
-          <SectionLabel n="05" label="Process" />
-          <h2 id="proc-h" className="h-sec">From idea to <em>growth.</em></h2>
+          <p className="eyebrow">Process</p>
+          <h2 id="proc-h" className="h-sec">From idea to growth.</h2>
         </Reveal>
         <Reveal className="process-body">
           <ProcessTimeline />
@@ -253,14 +257,33 @@ function Process() {
   );
 }
 
+/* ── Scene · Film (the ARKA brand film, playing behind glass) ── */
+function Film() {
+  const scene = useRef<HTMLElement>(null);
+  useScene(scene, { mode: "enter" });
+  return (
+    <section ref={scene} className="scene scene--film" data-tone="dark" aria-labelledby="film-h">
+      <div className="film__bg" aria-hidden="true">
+        <LazyVideo name="film-720" poster="/media/film-poster.webp" className="film__video" />
+      </div>
+      <Reveal className="container film__card glass glass--panel glass--dark glass--refract" data-tilt="">
+        <p className="eyebrow">The film</p>
+        <h2 id="film-h" className="h-sec">See ARKA in motion.</h2>
+        <p className="film__p">Twelve seconds on how we think about AI, software and growth.</p>
+        <ShowreelButton className="pill glass glass--pill glass--dark" />
+      </Reveal>
+    </section>
+  );
+}
+
 /* ── Scene 6 · Closing CTA ───────────────────────────────── */
 function Closing() {
   return (
-    <section id="contact" className="scene scene--cta" aria-labelledby="cta-h">
+    <section id="contact" className="scene scene--cta" data-tone="dark" aria-labelledby="cta-h">
       <div className="cta__bg" aria-hidden="true">
         <LazyVideo name="horizon-loop" />
       </div>
-      <Reveal className="container cta">
+      <Reveal className="container cta glass glass--panel glass--dark glass--refract">
         <h2 id="cta-h" className="h-display cta__h">
           <span className="cta__l">
             {"Let’s Build".split(" ").map((w, i) => (<span key={w}>{i > 0 && " "}<span className="whip" style={{ ["--w" as string]: i }}>{w}</span></span>))}
@@ -270,7 +293,7 @@ function Closing() {
           </em>
         </h2>
         <p className="cta__p">From AI systems to full digital growth — tell us what you’re building.</p>
-        <Button to="/contact" variant="primary">Get in Touch</Button>
+        <Link to="/contact" className="pill pill--solid">Get in Touch</Link>
       </Reveal>
     </section>
   );
@@ -281,6 +304,7 @@ export default function Home() {
     <div className="home home--v4">
       <Hero />
       <Services />
+      <Film />
       <Work />
       <Studio />
       <Process />

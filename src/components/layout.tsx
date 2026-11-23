@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { LiquidNavbar, NimbusIcons, type LiquidNavItem } from "@/components/ui/liquid-glass-navbar";
 import { Link, useRouter } from "../lib/router";
 import { NAV, SERVICES, SITE } from "../content/site";
 import { Button, Wordmark } from "./ui";
@@ -8,59 +9,85 @@ import { Logo } from "./Logo";
 
 const isActive = (path: string, to: string) => (to === "/" ? path === "/" : path === to || path.startsWith(to + "/"));
 
-export function Header() {
+const G = (d: React.ReactNode) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+);
+const NAV_ITEMS: LiquidNavItem[] = [
+  { label: "Home", href: "/", icon: NimbusIcons.home, fx: "glow" },
+  { label: "Services", href: "/services", icon: G(<><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></>), fx: "pop" },
+  { label: "Work", href: "/work", icon: G(<><rect x="3.5" y="5" width="17" height="12" rx="2" /><path d="M8 20h8M12 17v3" /></>), fx: "spin" },
+  { label: "About", href: "/about", icon: NimbusIcons.globe, fx: "spin" },
+  { label: "Contact", href: "/contact", icon: G(<><rect x="3.5" y="5.5" width="17" height="13" rx="2" /><path d="m4 7 8 6 8-6" /></>), fx: "wave" },
+];
+
+/* Which tone sits under the header: sections opt in with data-tone="dark". */
+function useToneUnder() {
+  const [tone, setTone] = useState<"light" | "dark">("light");
   const { path } = useRouter();
+  useEffect(() => {
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const els = document.elementsFromPoint(window.innerWidth / 2, 40);
+      const dark = els.some((el) => !el.closest(".gnav") && el.closest('[data-tone="dark"]'));
+      setTone(dark ? "dark" : "light");
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(check); };
+    check();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
+  }, [path]);
+  return tone;
+}
+
+export function Header() {
+  const { path, navigate } = useRouter();
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [compact, setCompact] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  const tone = useToneUnder();
+  const active = Math.max(0, NAV_ITEMS.findIndex((n) => (n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/"))));
 
   useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 24);
+    const mq = window.matchMedia("(max-width: 767px)");
+    const on = () => setCompact(mq.matches);
     on();
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
   }, []);
-
   useEffect(() => setOpen(false), [path]);
 
   return (
     <>
-      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
-        <div className="container site-header__inner">
-          <Link to="/" className="site-header__brand" aria-label="ARKA — home">
-            <Wordmark />
+      <header className="gnav site-header" data-tone={tone}>
+        <Link to="/" className="gnav__brand glass glass--pill" aria-label="ARKA — home">
+          <Wordmark />
+        </Link>
+        <div className="gnav__bar site-header__nav">
+          <LiquidNavbar
+            items={NAV_ITEMS}
+            active={NAV_ITEMS.some((n) => isActive(path, n.href!)) ? active : -1}
+            tone={tone}
+            compact={compact}
+            onNavigate={(href, e) => { e.preventDefault(); navigate(href); }}
+          />
+        </div>
+        <div className="gnav__actions">
+          <Link to="/contact" className="glass glass--pill glass-btn site-header__cta">
+            Get in Touch <Icon name="arrow-ur" size={15} />
           </Link>
-          <nav className="site-header__nav" aria-label="Primary">
-            <ul>
-              {NAV.map((n) => (
-                <li key={n.to}>
-                  <Link to={n.to} className="navlink" aria-current={isActive(path, n.to) ? "page" : undefined}>
-                    {n.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="site-header__actions">
-            <Button to="/contact" variant="outline" className="site-header__cta">
-              Get in Touch
-            </Button>
-            <button
-              ref={trigger}
-              type="button"
-              className="menu-btn"
-              aria-expanded={open}
-              aria-controls="site-menu"
-              aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((o) => !o)}
-            >
-              <span className="menu-btn__lines" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-            </button>
-          </div>
+          <button
+            ref={trigger}
+            type="button"
+            className="glass glass--pill menu-btn"
+            aria-expanded={open}
+            aria-controls="site-menu"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((o) => !o)}
+          >
+            <span className="menu-btn__lines" aria-hidden="true"><span /><span /><span /></span>
+          </button>
         </div>
       </header>
       <MenuPanel open={open} onClose={() => { setOpen(false); trigger.current?.focus(); }} />
@@ -170,7 +197,7 @@ function MenuPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 export function ContactBanner({ id }: { id?: string }) {
   return (
-    <section id={id} className="cbanner-sec" aria-labelledby={`${id ?? "cb"}-h`}>
+    <section id={id} className="cbanner-sec" data-tone="dark" aria-labelledby={`${id ?? "cb"}-h`}>
       <CircuitFrame
         desktop={{
           traces: [

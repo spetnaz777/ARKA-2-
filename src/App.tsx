@@ -3,7 +3,7 @@ import { RouterProvider, useRouter } from "./lib/router";
 import { canonical, metaFor } from "./lib/seo";
 import { Footer, Header } from "./components/layout";
 import { Gate } from "./components/Gate";
-import { useMagnetic } from "./components/fx";
+import { GlassDefs, useGlass } from "./components/fx";
 import Home from "./pages/Home";
 import { About, CaseStudy, Contact, NotFound, Privacy, ServicePage, ServicesOverview, Terms, Work } from "./pages/pages";
 import { PROJECTS, SERVICES } from "./content/site";
@@ -55,7 +55,7 @@ function Shell() {
   const { path } = useRouter();
   const { el, found } = resolve(path);
   useHeadSync(path, found);
-  useMagnetic();
+  useGlass();
   return (
     <>
     <Gate />
@@ -66,6 +66,7 @@ function Shell() {
         {el}
       </main>
       <Footer />
+      <GlassDefs />
     </div>
     </>
   );
