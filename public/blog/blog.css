@@ -1,7 +1,7 @@
 /* ARKA blog — v8 deep-space reading theme (static articles). */
 :root {
   --space: #05060a; --tx: #f5f5f7; --tx-2: rgba(245,245,247,0.74); --hair: rgba(255,255,255,0.12);
-  --acc: #4fd6ff; --acc2: #a78bff;
+  --acc: #e6e9ee; --acc2: #868c97;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
   color-scheme: dark;
@@ -28,7 +28,7 @@ a:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
 .b-hero p span { color: var(--acc); }
 
 article { max-width: 760px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 0px) 96px; }
-article h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.04em; font-weight: 650; margin: 8px 0 32px; background: linear-gradient(100deg, #fff 30%, var(--acc) 75%, var(--acc2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+article h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.02; letter-spacing: -0.04em; font-weight: 650; margin: 8px 0 32px; color: #f5f5f7; }
 article h2 { font-size: clamp(26px, 3vw, 36px); line-height: 1.15; letter-spacing: -0.03em; font-weight: 650; margin: 64px 0 16px; padding-top: 22px; border-top: 1px solid var(--hair); position: relative; }
 article h2::before { content: ""; position: absolute; left: 0; top: -1px; width: 40px; height: 1px; background: linear-gradient(90deg, var(--acc), var(--acc2)); }
 article h3 { font-size: 21px; letter-spacing: -0.015em; font-weight: 620; margin: 36px 0 8px; }

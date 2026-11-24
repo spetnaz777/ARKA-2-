@@ -13,8 +13,8 @@
   --tx-3: rgba(245, 245, 247, 0.5);
   --hair: rgba(255, 255, 255, 0.1);
   --hair-2: rgba(255, 255, 255, 0.18);
-  --acc: #4fd6ff;
-  --acc2: #a78bff;
+  --acc: #e6e9ee;
+  --acc2: #868c97;
   --r: 28px;
   position: relative;
   isolation: isolate;
@@ -221,7 +221,7 @@ body:has(.v8) .site::before { display: none; }
 .x-swap__ch { min-height: 70svh; display: flex; flex-direction: column; justify-content: center; gap: 18px; opacity: 0.4; transition: opacity 0.6s var(--reveal); }
 .x-swap__ch.is-on { opacity: 1; }
 .x-swap__n { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--acc); margin: 0; }
-.x-swap__ch .x-grad { background-image: linear-gradient(100deg, var(--acc), var(--acc2, #a78bff)); }
+.x-swap__ch .x-grad { background-image: linear-gradient(100deg, var(--acc), var(--acc2)); }
 .x-swap__inline { display: none; }
 .x-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px; }
 .x-chips li { font-size: 13.5px; padding: 8px 14px; border-radius: 999px; color: var(--tx-2); box-shadow: inset 0 0 0 1px var(--hair-2); background: rgba(255,255,255,0.03); }
@@ -489,3 +489,27 @@ body:has(.v8) .site-footer .wordmark, body:has(.v8) .site-footer svg { color: #f
   .x-rail__line i { transform: none; }
   .x-tilt { transform: none !important; }
 }
+
+
+/* ── Monochrome accent system (replaces the cyan/violet gradients) ──
+   Accent words read as brushed metal, like the homepage sweep; details are
+   silver hairlines. No hue anywhere: black, white, steel. */
+.x-grad, .x-kin__m--acc .x-kin__w, .x-swap__ch .x-grad {
+  background-image: linear-gradient(100deg, #ffffff 0%, #d9dde3 38%, #9aa0aa 72%, #6f7580 100%) !important;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.x-stat__v { background-image: linear-gradient(120deg, #ffffff 30%, #9aa0aa 100%) !important; }
+.x-svc-card__icon { background: rgba(255,255,255,0.04) !important; color: #f5f5f7 !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22); border-radius: 0; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.x-svc-card:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 40px 80px -50px rgba(0,0,0,0.9) !important; }
+.x-eyebrow__bar, .x-rail__line i, .x-facts > div::before { background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.15)) !important; }
+.x-marquee__dot { background: none !important; border: 1px solid rgba(255,255,255,0.6); border-radius: 0 !important; transform: rotate(45deg); width: 6px; height: 6px; }
+.x-rail__dot::after { background: #f5f5f7 !important; }
+.x-check, .v8 .check.chamfer.is-on { color: #05060a; }
+.v8 .x-row__media::before, .v8 .x-row__media::after { opacity: 0.35; }
+.x-story__photo, .x-contact__form, .x-swap__frame { box-shadow: inset 0 0 0 1px var(--hair), 0 50px 100px -60px rgba(0,0,0,0.95) !important; }
+/* Two-tone headline: accent words in one flat steel grey (a per-word gradient looked blotchy). */
+.x-grad, .x-kin__m--acc .x-kin__w, .x-swap__ch .x-grad {
+  background: none !important; -webkit-background-clip: border-box; background-clip: border-box;
+  color: #8b919b !important; -webkit-text-fill-color: #8b919b;
+}
+.x-stat__v { background: none !important; color: #f5f5f7 !important; -webkit-text-fill-color: #f5f5f7; }

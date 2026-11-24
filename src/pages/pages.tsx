@@ -53,7 +53,8 @@ const CASE: Record<string, { acc: string; sky: PhotoKey; skyAlt: string }> = {
   "noctavius-aviation": { acc: "#ffb36b", sky: "launch", skyAlt: "A rocket lifting off on a column of smoke and fire" },
 };
 
-const accVars = (acc: string, acc2?: string) => ({ ["--acc" as string]: acc, ["--acc2" as string]: acc2 ?? acc }) as React.CSSProperties;
+// Monochrome only (brand rule): silver accent + steel, whatever colour an item used to carry.
+const accVars = (_acc?: string, _acc2?: string) => ({ ["--acc" as string]: "#e6e9ee", ["--acc2" as string]: "#868c97" }) as React.CSSProperties;
 
 /* Section heading block */
 function Head({ n, label, title, accent, lead, id, center = false }: { n?: string; label: string; title: string; accent?: string; lead?: string; id?: string; center?: boolean }) {

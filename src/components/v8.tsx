@@ -345,7 +345,7 @@ export function StickySwap({ chapters }: { chapters: { photo: PhotoKey; alt: str
   return (
     <div className="x-swap">
       <div className="x-swap__stage" aria-hidden="true">
-        <div className="x-swap__frame" style={{ ["--acc" as string]: chapters[active]?.accent }}>
+        <div className="x-swap__frame" >
           {chapters.map((c, i) => (
             <div key={c.photo} className={`x-swap__img ${i === active ? "is-on" : ""}`}>
               <Photo k={c.photo} alt="" sizes="(max-width: 999px) 100vw, 50vw" />
@@ -364,7 +364,7 @@ export function StickySwap({ chapters }: { chapters: { photo: PhotoKey; alt: str
             ref={(el) => { refs.current[i] = el; }}
             data-i={i}
             className={`x-swap__ch ${i === active ? "is-on" : ""}`}
-            style={{ ["--acc" as string]: c.accent }}
+            
           >
             <div className="x-swap__inline"><Photo k={c.photo} alt={c.alt} sizes="100vw" /></div>
             {c.content}
