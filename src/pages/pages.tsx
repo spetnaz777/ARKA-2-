@@ -12,6 +12,7 @@ import {
 import { BrowserPreview, PhonePreview, SiteShot, VisitLink, domainOf } from "../components/SitePreview";
 import { LOCAL_PAGES, POSTS, SERVICE_READING, localBySlug, postBySlug, type Post } from "../content/growth";
 import "./v8.css";
+import { DescentOpening, DetailOpening, HorizonOpening, OrbitOpening, WarpOpening } from "../components/openings";
 
 /* ── Imagery + accent per service / project ──────────────── */
 type Look = { hero: PhotoKey; heroAlt: string; a: PhotoKey; aAlt: string; b: PhotoKey; bAlt: string; c: PhotoKey; acc: string; acc2: string };
@@ -84,21 +85,18 @@ function Page({ children, style, className = "" }: { children: React.ReactNode; 
 export function ServicesOverview() {
   return (
     <Page style={accVars("#4fd6ff", "#a78bff")}>
-      <CineHero
-        photo="orbit-night"
-        alt="City lights across a continent at night, seen from orbit"
+      <OrbitOpening
         n="02"
         eyebrow="Services"
         title="Four disciplines,"
         accent="one growth system."
         intro="AI solutions, web and software development, digital marketing and technology consulting — designed to connect, so every part of your business works with the others."
-        readout="SYS.02 · 4 MODULES · ORBIT VIEW"
       >
         <div className="x-hero__ctas">
           <Button to="/contact" variant="primary">Start a Project</Button>
           <a href="#svc-list" className="x-ghost">See the four services <Arrow dir="r" size={16} /></a>
         </div>
-      </CineHero>
+      </OrbitOpening>
 
       <Marquee items={SERVICES.flatMap((s) => s.capabilities.slice(0, 3).map((c) => c.t))} />
 
@@ -185,7 +183,7 @@ export function ServicePage({ slug }: { slug: string }) {
   const stickyRef = useProgress<HTMLElement>("sticky");
   return (
     <Page style={accVars(L.acc, L.acc2)} className={`v8--${s.graphic}`}>
-      <CineHero
+      <DetailOpening
         photo={L.hero}
         alt={L.heroAlt}
         n={s.n}
@@ -200,7 +198,7 @@ export function ServicePage({ slug }: { slug: string }) {
           <Button to="/contact" variant="primary">Start a Project</Button>
           <a href="#problems-h" className="x-ghost">How it works <Arrow dir="r" size={16} /></a>
         </div>
-      </CineHero>
+      </DetailOpening>
 
       <Marquee items={s.capabilities.map((c) => c.t)} />
 
@@ -425,16 +423,12 @@ function WorkRow({ p, i }: { p: (typeof PROJECTS)[number]; i: number }) {
 export function Work() {
   return (
     <Page style={accVars("#a78bff", "#ff7aa8")}>
-      <CineHero
-        photo="night-sky"
-        alt="A star-filled night sky over a mountain ridge at dusk"
+      <WarpOpening
         n="03"
         eyebrow="Work"
         title="Selected"
         accent="Work."
         intro="Websites and digital platforms ARKA has designed and built for real businesses across Toronto, the GTA and Ontario. We don’t publish client performance figures without their approval."
-        readout={`INDEX · ${String(PROJECTS.length).padStart(2, "0")} BUILDS`}
-        size="mid"
       />
       <Marquee items={PROJECTS.map((p) => p.name)} />
       <section className="x-sec" aria-label="Projects">
@@ -458,7 +452,7 @@ export function CaseStudy({ slug }: { slug: string }) {
   const nc = CASE[next.slug];
   return (
     <Page style={accVars(c.acc, "#a78bff")}>
-      <CineHero
+      <DetailOpening
         photo={c.sky}
         alt={c.skyAlt}
         n={String(idx + 1).padStart(2, "0")}
@@ -476,7 +470,7 @@ export function CaseStudy({ slug }: { slug: string }) {
           </a>
           <span className="x-hero__domain">{domainOf(p.url)}</span>
         </div>
-      </CineHero>
+      </DetailOpening>
 
       <section className="x-sec x-showcase" aria-label={`${p.name} live website preview`}>
         <div className="container">
@@ -560,15 +554,12 @@ export function CaseStudy({ slug }: { slug: string }) {
 export function About() {
   return (
     <Page style={accVars("#4fd6ff", "#a78bff")}>
-      <CineHero
-        photo="orbit-day"
-        alt="Earth from orbit with a spacecraft module in the foreground"
+      <DescentOpening
         n="04"
         eyebrow="About"
         title="The ARKA"
         accent="Studio."
         intro="A modern technology company at the intersection of AI, software, design and growth. We turn ideas into intelligent products and scalable digital systems."
-        readout="STUDIO · 43.65°N 79.38°W"
       />
 
       <section className="x-sec x-sec--tight" aria-label="Studio facts">
@@ -648,16 +639,12 @@ export function About() {
 export function Contact() {
   return (
     <Page style={accVars("#5cffb0", "#4fd6ff")} className="v8--contact">
-      <CineHero
-        photo="aurora"
-        alt="Green aurora borealis over a dark forest"
+      <HorizonOpening
         n="06"
         eyebrow="Contact"
         title="Let’s Build"
         accent="What’s Next."
         intro="Tell us what you’re working on. We’ll set up a free strategy call, then send a clear scope and quote."
-        readout="CH.06 · OPEN CHANNEL"
-        size="mid"
       />
       <section className="x-sec x-contact" aria-label="Contact form">
         <div className="container x-contact__grid">

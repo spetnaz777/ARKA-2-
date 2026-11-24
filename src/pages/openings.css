@@ -1,0 +1,289 @@
+/* ════════════════════════════════════════════════════════════
+   Openings — signature scroll-pinned entrances for inner pages.
+   One --p (0→1) per section, written by a rAF scroll driver.
+   transform / opacity only; no blur, no backdrop-filter, no filters on
+   text. Without JS or with reduced motion: un-pinned, resolved (p = 1).
+   Monochrome: black, white, steel #8b919b.
+   ════════════════════════════════════════════════════════════ */
+
+.op { --p: 1; position: relative; color: #fff; }
+.js .op { --p: 0; }
+.op.is-static { --p: 1 !important; }
+
+.op__stage {
+  /* phase helpers (numbers) */
+  --e: calc(1 - (1 - var(--p)) * (1 - var(--p)));
+  --a: clamp(0, var(--p) / 0.62, 1);
+  --ae: calc(1 - (1 - var(--a)) * (1 - var(--a)));
+  --rv: clamp(0, (var(--p) - 0.3) / 0.28, 1);
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; align-items: flex-end;
+  min-height: 100svh;
+  padding: calc(var(--header-h) + 64px) 0 clamp(72px, 11vh, 128px);
+  background: #05060a;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js .op--orbit, .js .op--warp, .js .op--descent { height: 230svh; }
+  .js .op--detail { height: 165svh; }
+  .js .op--orbit .op__stage, .js .op--warp .op__stage, .js .op--descent .op__stage, .js .op--detail .op__stage {
+    position: sticky; top: 0; height: 100svh; min-height: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .op { --p: 1; }
+}
+
+/* ── copy lockup ─────────────────────────────────────────── */
+.op__inner { position: relative; z-index: 5; }
+.op__title { font-size: clamp(46px, 7.6vw, 124px); max-width: 12ch; }
+.op__reveal { opacity: var(--rv); transform: translate3d(0, calc((1 - var(--rv)) * 28px), 0); }
+.op__reveal:focus-within, .op__reveal--early { opacity: 1; transform: none; }
+.op--detail .op__inner { transform: translate3d(0, calc(var(--p) * -5svh), 0); }
+
+.op__shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.op__shade--orbit {
+  background:
+    linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0.7) 24%, rgba(5, 6, 10, 0) 58%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.9) 0%, rgba(5, 6, 10, 0.45) 40%, rgba(5, 6, 10, 0) 70%);
+}
+.op__shade--warp {
+  background:
+    linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0.78) 22%, rgba(5, 6, 10, 0) 55%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.72) 0%, rgba(5, 6, 10, 0) 55%);
+}
+.op__shade--descent {
+  background:
+    linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0.74) 26%, rgba(5, 6, 10, 0.06) 60%, rgba(5, 6, 10, 0.5) 100%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.86) 0%, rgba(5, 6, 10, 0.4) 42%, rgba(5, 6, 10, 0) 72%);
+}
+.op__shade--detail {
+  background:
+    linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0.74) 28%, rgba(5, 6, 10, 0.18) 62%, rgba(5, 6, 10, 0.6) 100%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.88) 0%, rgba(5, 6, 10, 0.5) 45%, rgba(5, 6, 10, 0.1) 80%);
+}
+.op__shade--detail::after { content: ""; position: absolute; inset: 0; background: #05060a; opacity: calc(var(--p) * 0.45); }
+.op__shade--horizon { background: linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0) 30%); }
+
+.op__cue {
+  position: absolute; left: 50%; bottom: 22px; translate: -50% 0; z-index: 5;
+  display: grid; justify-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
+  opacity: clamp(0, 1 - var(--p) * 7, 1);
+}
+.op__cue i { display: block; width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), transparent); transform-origin: top; animation: x-cue 2.2s var(--reveal) infinite; }
+
+/* ── HUD frame: corners + hairlines drawn by scroll ─────── */
+.op-hud {
+  --hl: clamp(0.12, 0.12 + var(--p) * 1.6, 1);
+  position: absolute; inset: calc(var(--header-h) + 20px) clamp(14px, 2vw, 28px) 24px; z-index: 4; pointer-events: none;
+  animation: x-fade 1.2s var(--reveal) 0.3s both;
+}
+.op-hud__c { position: absolute; width: 14px; height: 14px; border: 0 solid rgba(255, 255, 255, 0.6); }
+.op-hud__c--tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+.op-hud__c--tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+.op-hud__c--bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+.op-hud__c--br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+.op-hud__l { position: absolute; background: rgba(255, 255, 255, 0.2); will-change: transform; }
+.op-hud__l--t { top: 0; left: 22px; right: 22px; height: 1px; transform-origin: 0 0; transform: scaleX(var(--hl)); }
+.op-hud__l--b { bottom: 0; left: 22px; right: 22px; height: 1px; transform-origin: 100% 0; transform: scaleX(var(--hl)); }
+.op-hud__l--l { left: 0; top: 22px; bottom: 22px; width: 1px; transform-origin: 0 100%; transform: scaleY(var(--hl)); }
+.op-hud__l--r { right: 0; top: 22px; bottom: 22px; width: 1px; transform-origin: 0 0; transform: scaleY(var(--hl)); }
+.op-hud__r {
+  position: absolute; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap; font-variant-numeric: tabular-nums; background: rgba(5, 6, 10, 0.72); padding: 0 8px;
+}
+.op-hud__r--l { top: -7px; left: 26px; }
+.op-hud__r--r { bottom: -7px; right: 26px; }
+
+/* ── /services · ORBIT ───────────────────────────────────── */
+.op-orbit {
+  --W: min(66vw, 920px);
+  --R: calc(var(--W) * 0.37);
+  --k: calc(1 + (1 - var(--ae)) * 0.95);
+  position: absolute; left: 70%; top: 46%; width: 0; height: 0; z-index: 1;
+  transform: rotate(-12deg);
+}
+.op-orbit__halo, .op-orbit__rings, .op-orbit__moon, .op-orbit__moon img { max-width: none; }
+.op-orbit__halo {
+  position: absolute; left: 0; top: 0; width: calc(var(--W) * 0.62); aspect-ratio: 1; translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(230, 233, 238, 0.16), rgba(139, 145, 155, 0.06) 55%, transparent 100%);
+  opacity: calc(0.35 + 0.65 * var(--ae));
+}
+.op-orbit__rings {
+  position: absolute; left: 0; top: 0; width: var(--W); height: var(--W); overflow: visible;
+  translate: -50% -50%;
+  transform: scale(calc(0.55 + 0.45 * var(--ae)));
+  opacity: calc(0.2 + 0.7 * var(--ae));
+  will-change: transform;
+}
+.op-orbit__ring { fill: none; stroke: rgba(255, 255, 255, 0.24); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.op-orbit__ring--1 { stroke: rgba(255, 255, 255, 0.16); stroke-dasharray: 2 7; }
+.op-orbit__ring--3 { stroke: rgba(139, 145, 155, 0.5); }
+.op-orbit__moon {
+  position: absolute; left: 0; top: 0; width: calc(var(--W) * 0.3); aspect-ratio: 1; translate: -50% -50%;
+  transform: scale(calc(0.62 + 0.38 * var(--ae))) rotate(calc(12deg - var(--p) * 16deg));
+  will-change: transform;
+}
+.op-orbit__moon img { display: block; width: 100%; height: 100%; border-radius: 50%; animation: op-moon 1.8s var(--reveal) both; }
+@keyframes op-moon { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: none; } }
+.op-orbit__sat {
+  --ang: calc(var(--a0) + var(--p) * 150deg - 40deg);
+  --c: cos(var(--ang));
+  --s: sin(var(--ang));
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  animation: x-fade 1.4s var(--reveal) calc(0.4s + var(--i) * 0.12s) both;
+}
+.op-orbit__tether {
+  position: absolute; left: 0; top: 0; width: var(--R); height: 1px; transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.5));
+  transform: rotate(atan2(calc(var(--s) * 0.36), var(--c))) scaleX(calc(hypot(var(--c), calc(var(--s) * 0.36)) * var(--k)));
+  opacity: calc(clamp(0, (var(--p) - 0.35) / 0.25, 1) * (0.55 + 0.35 * var(--s)));
+  will-change: transform;
+}
+.op-orbit__node {
+  position: absolute; left: 0; top: 0; translate: -50% -50%;
+  display: inline-flex; align-items: center; gap: 10px; white-space: nowrap;
+  transform: translate3d(calc(var(--c) * var(--R) * var(--k)), calc(var(--s) * var(--R) * 0.36 * var(--k)), 0) rotate(12deg);
+  opacity: calc((0.4 + 0.6 * var(--ae)) * (0.8 + 0.2 * var(--s)));
+  will-change: transform;
+}
+.op-orbit__icon {
+  display: grid; place-items: center; width: 40px; height: 40px; color: #f5f5f7; background: #0b0d14;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.op-orbit__label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.82); }
+.op-orbit__label b { font-weight: 500; color: #8b919b; margin-right: 8px; }
+
+/* ── /work · WARP ────────────────────────────────────────── */
+.op-warp__glow {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(40% 34% at 50% 46%, rgba(230, 233, 238, 0.1), transparent 70%);
+}
+.op-warp__stars { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0; transition: opacity 1.2s ease; }
+.op-warp__stars.is-on { opacity: 1; }
+.op-warp__space { position: absolute; inset: 0; z-index: 1; perspective: 900px; perspective-origin: 50% 46%; pointer-events: none; }
+.op-warp__screen {
+  --zn: min(700, calc(var(--z0) + var(--p) * 3900));
+  position: absolute; left: 50%; top: 46%; margin: 0; width: min(36vw, 520px);
+  translate: -50% -50%;
+  transform: translate3d(calc(var(--x) * 1vw), calc(var(--y) * 1vh), calc(var(--zn) * 1px)) rotateY(calc(var(--x) * -0.45deg));
+  opacity: calc(clamp(0, (var(--zn) + 3500) / 900, 1) * clamp(0, (540 - var(--zn)) / 380, 1));
+  background: #0b0d14; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22), 0 40px 90px -40px rgba(0, 0, 0, 0.9);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+.op-warp__bar { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.op-warp__bar i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.28); }
+.op-warp__bar em { margin-left: 8px; font-style: normal; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.55); }
+.op-warp__screen img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+
+/* ── /about · DESCENT ────────────────────────────────────── */
+.op-descent__media {
+  position: absolute; inset: 0; z-index: 0; transform-origin: 60% 60%;
+  will-change: transform;
+}
+.op-descent__media--day { transform: scale(calc(1.04 + var(--e) * 0.55)); }
+.op-descent__media--night {
+  opacity: clamp(0, (var(--p) - 0.5) / 0.32, 1);
+  transform: scale(calc(1.5 - var(--e) * 0.34));
+  transform-origin: 55% 55%;
+}
+.op-descent__img, .op-descent__img img { display: block; width: 100%; height: 100%; }
+.op-descent__img img { object-fit: cover; filter: grayscale(1) contrast(1.08); }
+.op-descent__media--day .op-descent__img img { animation: x-zoom 2.4s var(--reveal) both; }
+.op-descent__reticle {
+  --g: calc((1 - var(--ae)) * 70px);
+  position: absolute; left: 60%; top: 52%; width: 132px; height: 132px; translate: -50% -50%; z-index: 3; pointer-events: none;
+  opacity: calc(0.35 + 0.65 * var(--ae));
+}
+.op-descent__reticle i { position: absolute; width: 18px; height: 18px; border: 0 solid rgba(255, 255, 255, 0.85); will-change: transform; }
+.op-descent__reticle i:nth-child(1) { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; transform: translate3d(calc(var(--g) * -1), calc(var(--g) * -1), 0); }
+.op-descent__reticle i:nth-child(2) { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; transform: translate3d(var(--g), calc(var(--g) * -1), 0); }
+.op-descent__reticle i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; transform: translate3d(calc(var(--g) * -1), var(--g), 0); }
+.op-descent__reticle i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; transform: translate3d(var(--g), var(--g), 0); }
+.op-descent__cross { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; translate: -50% -50%; border: 1px solid #fff; transform: rotate(45deg); }
+.op-descent__tag {
+  position: absolute; left: calc(100% + 14px); top: -2px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: rgba(255, 255, 255, 0.78); white-space: nowrap;
+  opacity: clamp(0, (var(--p) - 0.4) / 0.2, 1);
+}
+.op-descent__ruler {
+  position: absolute; right: clamp(40px, 4vw, 64px); top: 24%; height: 52%; width: 16px; overflow: hidden; z-index: 3; pointer-events: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+}
+.op-descent__ruler i {
+  position: absolute; left: 0; right: 0; top: -100%; height: 300%;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 12px), repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0 1px, transparent 1px 60px);
+  background-size: 8px 100%, 16px 100%; background-repeat: repeat-y; background-position: right top, right top;
+  transform: translate3d(0, calc(var(--p) * 33.3%), 0); will-change: transform;
+}
+.op-descent__read {
+  position: absolute; right: clamp(76px, 7vw, 112px); top: 38%; z-index: 3; margin: 0; display: grid; gap: 14px; pointer-events: none;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.82); text-align: right;
+  animation: x-fade 1.2s var(--reveal) 0.6s both;
+}
+.op-descent__read dt { color: #8b919b; font-size: 10px; }
+.op-descent__read dd { margin: 2px 0 0; font-size: 15px; letter-spacing: 0.06em; color: #f5f5f7; }
+
+/* ── /contact · EVENT HORIZON ────────────────────────────── */
+.op--horizon .op__stage { min-height: 86svh; }
+.op-horizon__bg {
+  position: absolute; inset: -6% 0; z-index: 0;
+  transform: translate3d(0, calc(var(--p) * 16%), 0) scale(calc(1 + var(--p) * 0.08));
+  will-change: transform;
+}
+.op-horizon__css { position: absolute; inset: 0; background: radial-gradient(50% 60% at 70% 48%, rgba(139, 145, 155, 0.12), transparent 70%); }
+.op-horizon__css i {
+  position: absolute; left: 70%; top: 48%; width: min(34vw, 440px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(closest-side, #000 0 62%, rgba(255, 255, 255, 0.85) 64%, rgba(185, 190, 198, 0.35) 70%, rgba(139, 145, 155, 0.08) 84%, transparent 100%);
+  animation: x-fade 1.6s var(--reveal) both;
+}
+.op-horizon__gl { position: absolute !important; inset: 0; animation: op-in 1.8s ease 0.2s both; }
+@keyframes op-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── detail pages · push-in intro ────────────────────────── */
+.op-detail__media {
+  position: absolute; inset: 0; z-index: 0;
+  transform: scale(calc(1.03 + var(--p) * 0.24)); transform-origin: 62% 46%;
+  will-change: transform;
+}
+.op-detail__img, .op-detail__img img { display: block; width: 100%; height: 100%; }
+.op-detail__img img { object-fit: cover; filter: grayscale(1) contrast(1.05); animation: x-zoom 2.2s var(--reveal) both; }
+.op-detail__scan { position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 3; pointer-events: none; overflow: hidden; }
+.op-detail__scan i {
+  position: absolute; left: 0; right: 0; top: 12%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 30%, rgba(255, 255, 255, 0.55) 70%, transparent);
+  transform: translate3d(0, calc(var(--p) * 70svh), 0); opacity: clamp(0, 1 - var(--p) * 1.1, 0.8);
+  will-change: transform;
+}
+
+/* ── phones ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .op__stage { padding: calc(var(--header-h) + 40px) 0 112px; }
+  .op__title { font-size: clamp(42px, 12.4vw, 60px); }
+  .op-hud { inset: calc(var(--header-h) + 12px) 12px 14px; }
+  .op-hud__l--l, .op-hud__l--r, .op-hud__r--r { display: none; }
+  .op-hud__r { font-size: 9.5px; }
+  .op__cue { display: none; }
+  .op-orbit { --W: 96vw; left: 52%; top: 23%; transform: rotate(-12deg); }
+  .op-orbit__label { display: none; }
+  .op-orbit__icon { width: 34px; height: 34px; }
+  .op__shade--orbit, .op__shade--warp, .op__shade--descent, .op__shade--detail {
+    background: linear-gradient(to top, #05060a 0%, rgba(5, 6, 10, 0.82) 34%, rgba(5, 6, 10, 0.1) 64%, rgba(5, 6, 10, 0.45) 100%);
+  }
+  .op-warp__space { perspective-origin: 50% 34%; }
+  .op-warp__screen { width: 66vw; top: 34%; }
+  .op-descent__reticle { left: 56%; top: 34%; width: 96px; height: 96px; }
+  .op-descent__tag { left: auto; right: 0; top: calc(100% + 10px); }
+  .op-descent__ruler { display: none; }
+  .op-descent__read { right: 22px; top: calc(var(--header-h) + 40px); gap: 8px; }
+  .op-descent__read dd { font-size: 13px; }
+  .op-horizon__css i { left: 50%; top: 30%; width: 70vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op-orbit__moon img, .op-orbit__sat, .op-hud, .op-descent__read, .op-horizon__css i, .op-horizon__gl,
+  .op-descent__img img, .op-detail__img img, .op__cue i { animation: none !important; }
+  .op-horizon__bg, .op-descent__media, .op-detail__media, .op--detail .op__inner { transform: none !important; }
+}
