@@ -22,6 +22,10 @@ export interface AirlockHeroProps {
   /** Section height in viewport heights (scrub length). */
   length?: number;
   id?: string;
+  /** Two small HUD readouts across the top. */
+  hud?: [string, string];
+  /** Monochrome grade (the moon) or full colour (the astronaut). */
+  tone?: "mono" | "color";
 }
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -36,6 +40,8 @@ export default function AirlockHero({
   scrollHint = "SCROLL",
   length = 3.2,
   id,
+  hud = ["LUNAR APPROACH · 384,400 KM", "SYS.02 · ARKA/ORBIT"],
+  tone = "mono",
 }: AirlockHeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -161,7 +167,7 @@ export default function AirlockHero({
     <section
       ref={sectionRef}
       id={id}
-      className="airlock"
+      className={`airlock airlock--${tone}`}
       data-tone="dark"
       aria-label={title}
       style={{ height: reduced ? "100svh" : `${length * 100}svh` }}
@@ -181,8 +187,8 @@ export default function AirlockHero({
         <div className="airlock__falloff" aria-hidden="true" />
         <div ref={scrimRef} className="airlock__scrim" aria-hidden="true" />
         <div className="airlock__hud" aria-hidden="true">
-          <span>LUNAR APPROACH · 384,400 KM</span>
-          <span>SYS.02 · ARKA/ORBIT</span>
+          <span>{hud[0]}</span>
+          <span>{hud[1]}</span>
         </div>
         <div ref={titleRef} className="airlock__layer">
           <div>

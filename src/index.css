@@ -1819,3 +1819,33 @@ html.intro-skip .h-hero::after { animation: none; }
 /* ── v7 · Event horizon behind the closing CTA ───────────── */
 .cta__bg--bh.is-gl { opacity: 1; filter: none; }
 .cta__bg--bh.is-gl > div { position: absolute; inset: 0; }
+
+/* ── v7.1 · sharpness + smoothness pass ─────────────────────
+   No CSS filters on the live moon canvas, the orbiting moon or the headline
+   (a filter forces the layer to be re-rasterised every frame: soft + laggy).
+   Pointer parallax is already lerped in JS, so no CSS transition on top
+   (two smoothers fighting each other made the small moon stutter). */
+.scene--hero .hero__moon-inner, .hero__moon-inner { filter: none !important; transition: none !important; will-change: transform; }
+.scene--hero .hero__moon-inner::after { content: ""; position: absolute; inset: -6%; border-radius: 50%; pointer-events: none; z-index: -1;
+  background: radial-gradient(circle, rgba(170,180,200,.14) 40%, transparent 70%); }
+.scene--hero .hero__orbit .hero__sphere, .hero__sphere { filter: none !important; transition: none !important; will-change: transform; }
+.scene--hero .hero__orbit { will-change: transform; }
+.h-hero__in, .js .h-hero__in { filter: none !important; }
+.swap__trail { filter: none !important; }
+
+/* ── v7.1 · Event horizon CTA: the black hole is the picture, copy sits on its dark side ── */
+.scene--bh { min-height: 100svh; }
+.scene--bh::before { display: none; }
+.scene--bh .cta__bg--bh { opacity: 1 !important; z-index: 0; -webkit-mask-image: none; mask-image: none; }
+.scene--bh .cta__bg--bh video { filter: none; }
+.scene--bh .cta { position: relative; z-index: 2; background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; text-align: left; margin-left: max(24px, calc(50% - 600px)); max-width: 560px; padding: 0; }
+.scene--bh .cta::before, .scene--bh .cta::after, .scene--bh .cta .hud-brackets { display: none; }
+.scene--bh .cta__h { text-shadow: 0 2px 30px rgba(0,0,0,.6); }
+.scene--bh .cta__p { color: rgba(245,245,247,.75); }
+@media (max-width: 767px) {
+  .scene--bh { align-items: flex-start; padding-top: 110px; }
+  .scene--bh .cta { margin: 0 auto; text-align: center; padding: 0 20px; }
+}
+.airlock--color .airlock__title { background: linear-gradient(180deg, #fff 35%, #d8dde6); -webkit-background-clip: text; background-clip: text; }
+@media (max-width: 767px) { .airlock--color .airlock__video, .airlock--color .airlock__poster { object-position: 72% 50%; } }

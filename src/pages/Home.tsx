@@ -37,12 +37,12 @@ function EventHorizon() {
       {mode === "gl" && (
         <Suspense fallback={null}>
           <BlackHole
-            hotColor="#FFFFFF" midColor="#C9CED6" coolColor="#3A3F48"
-            doppler={0.5} exposure={0.95} glow={narrow ? 0.8 : 1.05}
-            focus={narrow ? [0.5, 0.78] : [0.5, 0.56]} distance={narrow ? 24 : 12} roll={narrow ? -12 : -16}
-            fov={narrow ? 60 : 40} elevation={narrow ? -7 : -5}
-            steps={narrow ? 170 : 230} resolution={narrow ? 0.5 : 0.62} maxDpr={narrow ? 1.5 : 1.75}
-            scrim={narrow ? "top" : "none"} scrimStrength={0.85} vignette={0.4} starBrightness={0.35}
+            hotColor="#FFF6EC" midColor="#E2B98A" coolColor="#5A3A22"
+            doppler={0.6} exposure={1.05} glow={narrow ? 0.55 : 0.6}
+            focus={narrow ? [0.5, 0.7] : [0.72, 0.5]} distance={narrow ? 22 : 17}
+            roll={narrow ? -10 : -18} fov={narrow ? 56 : 40} elevation={narrow ? -6 : -5}
+            steps={narrow ? 180 : 260} resolution={narrow ? 0.7 : 0.85} maxDpr={narrow ? 1.75 : 2}
+            scrim={narrow ? "top" : "left"} scrimStrength={0.88} vignette={0.3} starBrightness={0.5}
           />
         </Suspense>
       )}
@@ -422,7 +422,7 @@ function Film() {
 /* ── Scene 6 · Closing CTA ───────────────────────────────── */
 function Closing() {
   return (
-    <section id="contact" className="scene scene--cta" data-tone="dark" aria-labelledby="cta-h">
+    <section id="contact" className="scene scene--cta scene--bh" data-tone="dark" aria-labelledby="cta-h">
       <div className="scangrid" aria-hidden="true" />
       <Lines
         traces={[{ pts: "l40,t160 l80,t200 c-360,t200", tone: "line" }, { pts: "c+360,b-200 r-80,b-200 r-40,b-160", tone: "line", pulse: true }]}
@@ -453,19 +453,31 @@ export default function Home() {
     <div className="home home--v4">
       <Hero />
       <AirlockHero
-        id="orbit"
-        videoSrc="/media/lunar-scrub-1080.mp4"
-        mobileVideoSrc="/media/lunar-scrub-540.mp4"
-        posterSrc="/media/lunar-scrub-poster.jpg"
-        eyebrow="ARKA · Orbit"
-        title="SYSTEMS ONLINE"
-        tagline="Engineered for what’s next — AI, software and growth, in orbit around your business."
+        id="airlock"
+        tone="color"
+        videoSrc="/media/airlock-iss-1080.mp4"
+        mobileVideoSrc="/media/airlock-iss-540.mp4"
+        posterSrc="/media/airlock-iss-poster.jpg"
+        eyebrow="ARKA · Mission 01"
+        title="THE AIRLOCK OPENS"
+        tagline="Step outside the template. We build what’s next — AI, software and growth."
+        hud={["EVA · LOW EARTH ORBIT", "SYS.02 · ARKA/AIRLOCK"]}
       />
       <Services />
       <Film />
       <Work />
       <Studio />
       <Process />
+      <AirlockHero
+        id="orbit"
+        videoSrc="/media/lunar-scrub-1080.mp4"
+        mobileVideoSrc="/media/lunar-scrub-540.mp4"
+        posterSrc="/media/lunar-scrub-poster.jpg"
+        eyebrow="ARKA · Orbit"
+        title="SYSTEMS ONLINE"
+        tagline="Engineered for what’s next — in orbit around your business."
+        length={2.4}
+      />
       <Closing />
     </div>
   );

@@ -32,3 +32,6 @@ NASA material is not copyrighted; use does not imply NASA endorsement.
 
 ## ARKA's own media (unchanged)
 pale-*, terrain-*, terrain-loop, horizon-loop, film-*, gate-*, moon-*/sphere (procedural) — derived from the site's own assets; see scripts/assets/README.md.
+
+- airlock-iss-*: ISS airlock / astronaut clip shipped with the 21st.dev "Airlock Hero" component (github.com/yuraoak/airlock-hero-assets), self-hosted, re-encoded for scrubbing.
+- lunar-scrub-*: NASA Artemis lunar flyby (public domain), graded monochrome.

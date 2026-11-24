@@ -123,10 +123,11 @@ export function startHeroGL(canvas: HTMLCanvasElement, hero: HTMLElement, scene:
     const t = start < 0 ? 0 : (now - start) / 1000;
     const asm = !assemble || html.classList.contains("intro-skip") ? 1 : Math.min(1, t / 1.6);
     if (t > 1.25) hero.classList.add("gl-resolved");
-    const cs = getComputedStyle(hero);
-    const mx = parseFloat(cs.getPropertyValue("--mx")) || 0;
-    const my = parseFloat(cs.getPropertyValue("--my")) || 0;
-    const p = parseFloat(getComputedStyle(scene).getPropertyValue("--p")) || 0;
+    // inline custom props (set by the parallax / scene hooks): reading them from
+    // getComputedStyle every frame forced a full style recalc and caused stutter
+    const mx = parseFloat(hero.style.getPropertyValue("--mx")) || 0;
+    const my = parseFloat(hero.style.getPropertyValue("--my")) || 0;
+    const p = parseFloat(scene.style.getPropertyValue("--p")) || 0;
     rot += dt * 0.12;
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);

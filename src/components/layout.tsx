@@ -34,9 +34,12 @@ function useToneUnder() {
     };
     const on = () => { if (!raf) raf = requestAnimationFrame(check); };
     check();
+    // the entry gate / intro sit over the page at mount, so keep re-checking briefly after load
+    const iv = window.setInterval(on, 400);
+    const stop = window.setTimeout(() => window.clearInterval(iv), 12000);
     window.addEventListener("scroll", on, { passive: true });
     window.addEventListener("resize", on);
-    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
+    return () => { window.clearInterval(iv); window.clearTimeout(stop); window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
   }, [path]);
   return tone;
 }
