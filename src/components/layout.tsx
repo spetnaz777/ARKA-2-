@@ -274,6 +274,7 @@ export function Footer() {
             © <span suppressHydrationWarning>{year}</span> ARKA. All rights reserved. <span className="site-footer__loc">{SITE.locationShort}</span>
           </p>
           <ul className="site-footer__legal">
+            <li><Link to="/blog">Journal</Link></li>
             <li><Link to="/privacy">Privacy</Link></li>
             <li><Link to="/terms">Terms</Link></li>
             <li><Link to="/contact">Contact</Link></li>

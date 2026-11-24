@@ -10,6 +10,7 @@ import {
   type PhotoKey,
 } from "../components/v8";
 import { BrowserPreview, PhonePreview, SiteShot, VisitLink, domainOf } from "../components/SitePreview";
+import { LOCAL_PAGES, POSTS, SERVICE_READING, localBySlug, postBySlug, type Post } from "../content/growth";
 import "./v8.css";
 
 /* ── Imagery + accent per service / project ──────────────── */
@@ -151,6 +152,13 @@ export function ServicesOverview() {
               };
             })}
           />
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="gta-ov-h">
+        <div className="container">
+          <Head n="—" label="Toronto & GTA" title="Working in" accent="the GTA." id="gta-ov-h" lead="ARKA is based in the Greater Toronto Area and works with businesses across Toronto, Mississauga, Vaughan, Markham and beyond, as well as clients worldwide." />
+          <LocalCards slugs={LOCAL_PAGES.map((l) => l.slug)} />
         </div>
       </section>
 
@@ -314,6 +322,24 @@ export function ServicePage({ slug }: { slug: string }) {
         <div className="container x-split">
           <Head n="G" label="FAQ" title="Common" accent="questions." id="faq-h" />
           <div className="x-faq"><FAQ items={s.faq} /></div>
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="read-h">
+        <div className="container">
+          <Head n="H" label="Further reading" title="Guides from" accent="the Journal." id="read-h" />
+          <PostCards slugs={SERVICE_READING[s.slug] ?? []} />
+          {LOCAL_PAGES.some((l) => l.service === s.slug) && (
+            <p className="x-lead">
+              Working in Toronto or the GTA? See{" "}
+              {LOCAL_PAGES.filter((l) => l.service === s.slug).map((l, i, a) => (
+                <React.Fragment key={l.slug}>
+                  <Link to={`/${l.slug}`}>{l.short.replace(/ (Toronto|GTA)$/, " in $1")}</Link>
+                  {i < a.length - 1 ? " and " : "."}
+                </React.Fragment>
+              ))}
+            </p>
+          )}
         </div>
       </section>
 
@@ -505,6 +531,10 @@ export function CaseStudy({ slug }: { slug: string }) {
           <Head n="C" label="Results" title="Shared with" accent="permission." id="res-h" />
           <Reveal className="x-note">
             <p>Performance figures for this project are shared with the client’s permission only. Ask us about it on a call.</p>
+            <p>
+              Built under our <Link to="/services/web-development">Web &amp; Software Development</Link> service
+              {p.location.includes("Toronto") ? <> — see also <Link to="/web-design-toronto">web design in Toronto</Link>.</> : "."}
+            </p>
             <Button to="/contact" variant="outline" arrow="r">Book a call</Button>
           </Reveal>
         </div>
@@ -724,6 +754,184 @@ export function Terms() {
       <h2>Contact</h2>
       <p>Questions about these terms: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
     </LegalShell>
+  );
+}
+
+/* ── Journal + GTA landing pages ─────────────────────────── */
+export function PostCards({ slugs }: { slugs: string[] }) {
+  const posts = slugs.map(postBySlug).filter(Boolean) as Post[];
+  return (
+    <ul className="x-principles x-reading" role="list">
+      {posts.map((p, i) => (
+        <Reveal as="li" key={p.slug} delay={i * 60}>
+          <TiltCard className="x-card x-card--tall">
+            <span className="x-card__n">{p.topic}</span>
+            <h3 className="x-h4"><a className="x-card__link" href={`/blog/${p.slug}`}>{p.title}</a></h3>
+            <p className="x-body">{p.description}</p>
+          </TiltCard>
+        </Reveal>
+      ))}
+    </ul>
+  );
+}
+
+function LocalCards({ slugs }: { slugs: string[] }) {
+  const pages = slugs.map(localBySlug).filter(Boolean) as typeof LOCAL_PAGES;
+  return (
+    <ul className="x-principles x-reading" role="list">
+      {pages.map((l, i) => (
+        <Reveal as="li" key={l.slug} delay={i * 60}>
+          <TiltCard className="x-card x-card--tall">
+            <span className="x-card__n">{l.eyebrow.split(" · ")[0]}</span>
+            <h3 className="x-h4"><Link className="x-card__link" to={`/${l.slug}`}>{l.metaTitle.replace(/ \| ARKA$/, "")}</Link></h3>
+            <p className="x-body">{l.intro}</p>
+          </TiltCard>
+        </Reveal>
+      ))}
+    </ul>
+  );
+}
+
+export function LocalLanding({ slug }: { slug: string }) {
+  const l = localBySlug(slug)!;
+  const svc = serviceBySlug(l.service)!;
+  const projects = l.projects.map(projectBySlug).filter(Boolean) as typeof PROJECTS;
+  return (
+    <Page style={accVars()}>
+      <CineHero
+        photo={l.photo}
+        alt={l.photoAlt}
+        n={svc.n}
+        eyebrow={l.eyebrow}
+        title={l.title[0]}
+        accent={l.title[1]}
+        intro={l.intro}
+        crumbs={[["Home", "/"], ["Services", "/services"], [svc.name, `/services/${svc.slug}`], [l.short]]}
+        readout="LOC · 43.65°N 79.38°W · GTA"
+      >
+        <div className="x-hero__ctas">
+          <Button to="/contact" variant="primary">Book a Free Strategy Call</Button>
+          <Link to={`/services/${svc.slug}`} className="x-ghost">{svc.name} <Arrow dir="r" size={16} /></Link>
+        </div>
+      </CineHero>
+
+      <Marquee items={l.build.map((b) => b.t)} />
+
+      <section className="x-sec" aria-labelledby="loc-ov-h">
+        <div className="container x-split">
+          <Head n="A" label="Overview" title="What ARKA" accent="does here." id="loc-ov-h" />
+          <Reveal className="x-prose">
+            {l.answer.map((t) => <p key={t.slice(0, 24)}>{t}</p>)}
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-build-h">
+        <div className="container">
+          <Head n="B" label="What we build" title="Systems we" accent="deliver." id="loc-build-h" />
+          <ul className="x-principles" role="list">
+            {l.build.map((b, i) => (
+              <Reveal as="li" key={b.t} delay={i * 60}>
+                <TiltCard className="x-card x-card--tall">
+                  <span className="x-card__n">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="x-h4">{b.t}</h3>
+                  <p className="x-body">{b.d}</p>
+                </TiltCard>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-local-h">
+        <div className="container x-split">
+          <Head n="C" label="Local considerations" title="Built for" accent="Ontario." id="loc-local-h" />
+          <dl className="x-uses">
+            {l.local.map((u, i) => (
+              <Reveal key={u.t} className="x-uses__item" delay={i * 50}>
+                <dt><span className="x-uses__i">{String(i + 1).padStart(2, "0")}</span>{u.t}</dt>
+                <dd>{u.d}</dd>
+              </Reveal>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-work-h">
+        <div className="container">
+          <Head n="D" label="Real examples" title="Work in" accent="the GTA." id="loc-work-h" />
+          {projects.length ? (
+            <ul className="x-proj-grid" role="list">
+              {projects.map((p, i) => <Reveal as="li" key={p.slug} delay={i * 60}><ProjectCard p={p} /></Reveal>)}
+            </ul>
+          ) : (
+            <Reveal className="x-note">
+              <p>
+                Client work in this area is published once clients approve it. Our public builds for GTA businesses are on the{" "}
+                <Link to="/work">Work</Link> page, and we’re happy to walk through relevant examples on a call.
+              </p>
+              <Button to="/work" variant="outline" arrow="r">See our work</Button>
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-flow-h">
+        <div className="container">
+          <Head n="E" label="Workflow" title="How a project" accent="runs." id="loc-flow-h" />
+          <StepRail steps={svc.workflow} />
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-faq-h">
+        <div className="container x-split">
+          <Head n="F" label="FAQ" title="Common" accent="questions." id="loc-faq-h" />
+          <div className="x-faq"><FAQ items={l.faq} /></div>
+        </div>
+      </section>
+
+      <section className="x-sec" aria-labelledby="loc-read-h">
+        <div className="container">
+          <Head n="G" label="Further reading" title="Guides from" accent="the Journal." id="loc-read-h" />
+          <PostCards slugs={l.reading} />
+        </div>
+      </section>
+      <ContactBanner />
+    </Page>
+  );
+}
+
+export function Journal() {
+  return (
+    <Page style={accVars()}>
+      <CineHero
+        photo="night-sky"
+        alt="A star-filled night sky over a mountain ridge at dusk"
+        n="05"
+        eyebrow="Journal"
+        title="The ARKA"
+        accent="Journal."
+        intro="Practical guides on AI automation, websites, software and digital marketing for growing businesses, written by the people who build the systems."
+        crumbs={[["Home", "/"], ["Journal"]]}
+        readout={`LOG · ${String(POSTS.length).padStart(2, "0")} ENTRIES`}
+        size="mid"
+      />
+      <section className="x-sec" aria-labelledby="journal-h">
+        <div className="container">
+          <Head n="A" label="All articles" title="Guides &" accent="breakdowns." id="journal-h" />
+          <PostCards slugs={POSTS.map((p) => p.slug)} />
+        </div>
+      </section>
+      <section className="x-sec" aria-labelledby="journal-svc-h">
+        <div className="container">
+          <Head n="B" label="Services" title="Put it" accent="to work." id="journal-svc-h" lead="Every guide maps to a service ARKA delivers for businesses in Toronto, the GTA and worldwide." />
+          <ul className="x-chips" role="list">
+            {SERVICES.map((sv) => <li key={sv.slug}><Link to={`/services/${sv.slug}`}>{sv.name}</Link></li>)}
+          </ul>
+        </div>
+      </section>
+      <ContactBanner />
+    </Page>
   );
 }
 

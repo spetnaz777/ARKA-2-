@@ -513,3 +513,9 @@ body:has(.v8) .site-footer .wordmark, body:has(.v8) .site-footer svg { color: #f
   color: #8b919b !important; -webkit-text-fill-color: #8b919b;
 }
 .x-stat__v { background: none !important; color: #f5f5f7 !important; -webkit-text-fill-color: #f5f5f7; }
+
+/* ── Journal / reading cards (SEO pass: reuse card system) ── */
+.x-card__link { text-decoration: none; }
+.x-card__link:hover, .x-card__link:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+.x-reading .x-card--tall { min-height: 240px; }
+.x-chips a { text-decoration: none; }

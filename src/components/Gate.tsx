@@ -81,6 +81,8 @@ export function Gate() {
         <img
           src="/deep-black-hero-1280.jpg"
           alt=""
+          width={1440}
+          height={810}
           fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover opacity-25"
         />

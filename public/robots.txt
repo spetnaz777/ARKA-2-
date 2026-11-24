@@ -1,278 +1,79 @@
-# ═══════════════════════════════════════════════════════════
-#  ARKA — robots.txt
-#  https://www.arkalegion.com
-#
-#  © 2026 ARKA Systems. All rights reserved.
-#  All content on this website is the exclusive intellectual
-#  property of ARKA Systems. Unauthorized scraping,
-#  reproduction, or use of any content is strictly prohibited.
-# ═══════════════════════════════════════════════════════════
+# ARKA — robots.txt — https://www.arkalegion.com
+# Search engines and AI search/answer crawlers are welcome. Training
+# crawlers from the major AI labs are also allowed so ARKA can be described
+# accurately by AI assistants; aggressive scrapers and scanners are blocked.
 
-# ── Default: allow all legitimate crawlers ──
 User-agent: *
 Allow: /
+Disallow: /api/
 
-# Block internal/build directories from indexing
-Disallow: /src/
-Disallow: /.env
-Disallow: /.env.example
-Disallow: /.git/
-Disallow: /.svn/
-Disallow: /.htaccess
-Disallow: /.htpasswd
-Disallow: /node_modules/
-Disallow: /dist/
-Disallow: /server.js
-Disallow: /metadata.json
-Disallow: /package.json
-Disallow: /tsconfig.json
-Disallow: /wp-admin/
-Disallow: /wp-login.php
-Disallow: /wp-content/
-Disallow: /wp-includes/
-Disallow: /xmlrpc.php
-Disallow: /admin/
-Disallow: /administrator/
-Disallow: /phpmyadmin/
-Disallow: /phpinfo.php
-Disallow: /cgi-bin/
-Disallow: /config/
-Disallow: /backup/
-Disallow: /sql/
-Disallow: /db/
-Disallow: /*.php$
-Disallow: /*.asp$
-Disallow: /*.aspx$
-Disallow: /*.jsp$
-
-# ════════════════════════════════════════════════════════════
-#  AEO: AI Answer Engine Bots — EXPLICITLY ALLOWED
-#  These bots power Perplexity, ChatGPT browsing, Claude web,
-#  Google AI Overviews, and You.com. Blocking them prevents
-#  your content from being cited in AI-generated answers.
-# ════════════════════════════════════════════════════════════
-
-# Perplexity AI — used to index and cite content in answers
-User-agent: PerplexityBot
+# Search engines
+User-agent: Googlebot
 Allow: /
-Disallow: /src/
-Disallow: /.env
-Disallow: /.git/
+Disallow: /api/
 
-# ChatGPT browsing mode — reads pages during live conversations
-User-agent: ChatGPT-User
-Allow: /
-Disallow: /src/
-Disallow: /.env
-Disallow: /.git/
-
-# Claude browsing — used when Claude cites live web content
-User-agent: Claude-Web
-Allow: /
-Disallow: /src/
-Disallow: /.env
-Disallow: /.git/
-
-# You.com AI search
-User-agent: YouBot
-Allow: /
-Disallow: /src/
-Disallow: /.env
-Disallow: /.git/
-
-# Bing / Microsoft Copilot crawler (powers Bing AI answers)
 User-agent: Bingbot
 Allow: /
-Disallow: /src/
-Disallow: /.env
+Disallow: /api/
 
-# ════════════════════════════════════════════════════════════
-#  AI MODEL TRAINING SCRAPERS — BLOCKED
-#  These bots harvest content for training datasets, not for
-#  answering queries. Block to protect content ownership.
-# ════════════════════════════════════════════════════════════
+# AI search / answer engines (citability)
+User-agent: OAI-SearchBot
+Allow: /
 
-# OpenAI training bot (separate from ChatGPT-User browsing)
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+# AI model crawlers (entity understanding / training)
 User-agent: GPTBot
-Disallow: /
+Allow: /
 
-# Common Crawl — used for bulk model training datasets
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
 User-agent: CCBot
-Disallow: /
-
-# Anthropic training crawler (separate from Claude-Web browsing)
-User-agent: anthropic-ai
-Disallow: /
-
-# Cohere training crawler
-User-agent: cohere-ai
-Disallow: /
-
-# Meta AI training
-User-agent: FacebookBot
-Disallow: /
-
-User-agent: Omgilibot
-Disallow: /
-
-# ── Block known vulnerability scanners & exploit bots ──
-# SEO research crawlers — ALLOWED so ARKA's own Ahrefs / Semrush
-# site audits and competitor gap analysis can run. Flip these to
-# Disallow only if you want to hide the backlink profile.
-User-agent: AhrefsBot
 Allow: /
 
-User-agent: SemrushBot
-Allow: /
-
-User-agent: SEMrushBot
-Allow: /
-
-User-agent: DataForSeoBot
-Allow: /
-
-User-agent: SiteAuditBot
-Allow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-User-agent: DotBot
-Disallow: /
-
-User-agent: BLEXBot
-Disallow: /
-
-User-agent: MegaIndex
-Disallow: /
-
+# Aggressive scrapers, link-graph harvesters and vulnerability scanners
 User-agent: Bytespider
-Disallow: /
-
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BLEXBot
+User-agent: MegaIndex
 User-agent: PetalBot
-Disallow: /
-
 User-agent: Scrapy
-Disallow: /
-
-User-agent: wget
-Disallow: /
-
-User-agent: curl
-Disallow: /
-
-User-agent: libwww-perl
-Disallow: /
-
-User-agent: python-requests
-Disallow: /
-
-User-agent: Go-http-client
-Disallow: /
-
-User-agent: Nikto
-Disallow: /
-
-User-agent: sqlmap
-Disallow: /
-
-User-agent: Nessus
-Disallow: /
-
-User-agent: Masscan
-Disallow: /
-
-User-agent: zgrab
-Disallow: /
-
-User-agent: nmap
-Disallow: /
-
-User-agent: ZmEu
-Disallow: /
-
-User-agent: Morfeus
-Disallow: /
-
-User-agent: Havij
-Disallow: /
-
-User-agent: masscan
-Disallow: /
-
-User-agent: dirbuster
-Disallow: /
-
-User-agent: Dirbuster
-Disallow: /
-
-User-agent: wfuzz
-Disallow: /
-
-User-agent: w3af
-Disallow: /
-
-User-agent: burpsuite
-Disallow: /
-
-User-agent: zaproxy
-Disallow: /
-
-User-agent: OpenVAS
-Disallow: /
-
-User-agent: Acunetix
-Disallow: /
-
-User-agent: NetcraftSurveyAgent
-Disallow: /
-
-User-agent: ScanAlert
-Disallow: /
-
-User-agent: Detectify
-Disallow: /
-
 User-agent: HTTrack
-Disallow: /
-
+User-agent: sqlmap
+User-agent: Nikto
+User-agent: zgrab
+User-agent: masscan
 User-agent: WebCopier
-Disallow: /
-
 User-agent: WebStripper
-Disallow: /
-
-User-agent: SiteSnagger
-Disallow: /
-
-User-agent: BlackWidow
-Disallow: /
-
-User-agent: Zeus
-Disallow: /
-
 User-agent: EmailCollector
-Disallow: /
-
 User-agent: EmailSiphon
 Disallow: /
 
-# ── Allow key search engines explicitly ──
-User-agent: Googlebot
-Allow: /
-Disallow: /src/
-Disallow: /.env
-Disallow: /.git/
-Disallow: /node_modules/
-
-User-agent: Googlebot-Image
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-# Sitemap
 Sitemap: https://www.arkalegion.com/sitemap.xml

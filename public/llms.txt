@@ -1,0 +1,45 @@
+# ARKA
+
+> ARKA is a founder-led AI, software and digital-growth studio based in the Greater Toronto Area (GTA), Ontario, Canada, working with clients worldwide. It builds AI automation and AI chatbots, custom websites, web applications and software, digital marketing and marketing-automation systems, and provides technology consulting for small and growing businesses.
+
+Key facts:
+- Name: ARKA. Website: https://www.arkalegion.com. Email: hello@arkalegion.com
+- Based in the Greater Toronto Area, Canada; works remotely with clients in Toronto, Mississauga, Brampton, Vaughan, Markham, Richmond Hill, Oakville and worldwide.
+- Founder-led: clients work directly with the person designing and building their system.
+- Every build is scoped and quoted per project after a free strategy call; there is no public price list.
+- Clients own the code, workflows and integrations ARKA delivers.
+- ARKA does not publish client performance figures without client approval.
+
+## Services
+- [AI Solutions](https://www.arkalegion.com/services/ai-solutions): AI automation, AI chatbots and assistants, AI lead generation, AI customer service, internal AI tools and integrations.
+- [Web & Software Development](https://www.arkalegion.com/services/web-development): custom websites, web applications, technical SEO, performance and accessibility, integrations.
+- [Digital Marketing](https://www.arkalegion.com/services/digital-marketing): content and social media, paid ads, photo and video, marketing automation, SEO and content strategy, reviews and reputation workflows.
+- [Technology Consulting](https://www.arkalegion.com/services/technology-consulting): AI and automation strategy, systems architecture, tool selection, IT and office setup, cybersecurity.
+
+## Toronto & GTA
+- [AI automation in Toronto](https://www.arkalegion.com/ai-automation-toronto)
+- [Web design in Toronto](https://www.arkalegion.com/web-design-toronto)
+- [Custom software development in Toronto](https://www.arkalegion.com/custom-software-development-toronto)
+- [Digital marketing across the GTA](https://www.arkalegion.com/digital-marketing-gta)
+
+## Client work (websites designed and built by ARKA)
+- [Royal Caspian](https://www.arkalegion.com/work/royal-caspian): luxury residential and commercial cleaning, Toronto and GTA.
+- [Healexa Clinic](https://www.arkalegion.com/work/healexa-clinic): multidisciplinary health clinic, North York and Thornhill.
+- [Mehri Noshad](https://www.arkalegion.com/work/mehri-noshad): GTA real estate sales representative.
+- [Six Side Marketing](https://www.arkalegion.com/work/six-side-marketing): Toronto creative marketing and production team.
+- [Noctavius Aviation](https://www.arkalegion.com/work/noctavius-aviation): private aircraft detailing, Toronto and Ontario.
+
+## Journal
+- [All articles](https://www.arkalegion.com/blog)
+- [How to choose a web design company in Toronto](https://www.arkalegion.com/blog/choosing-a-web-design-company-toronto)
+- [Custom software vs off-the-shelf](https://www.arkalegion.com/blog/custom-software-vs-off-the-shelf)
+- [AODA website accessibility for Ontario businesses](https://www.arkalegion.com/blog/aoda-website-accessibility-ontario)
+- [AI automation for business](https://www.arkalegion.com/blog/ai-automation-for-business-guide)
+- [AI automation cost](https://www.arkalegion.com/blog/ai-automation-cost)
+- [AI chatbots for business](https://www.arkalegion.com/blog/ai-chatbots-for-business-guide)
+- [Lead follow-up automation](https://www.arkalegion.com/blog/lead-follow-up-automation)
+- [Website conversion rate optimization](https://www.arkalegion.com/blog/website-conversion-rate-optimization)
+
+## Company
+- [About](https://www.arkalegion.com/about)
+- [Contact](https://www.arkalegion.com/contact)

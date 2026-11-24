@@ -54,9 +54,9 @@ export const SERVICES: Service[] = [
     heroTitle: ["AI systems that do", "the repetitive work."],
     intro:
       "Custom AI tools, automation and integrations built around your workflows: lead follow-up, customer enquiries, scheduling, CRM syncing and the manual work in between.",
-    metaTitle: "AI Solutions — Automation, Chatbots & Custom AI Tools | ARKA",
+    metaTitle: "AI Automation, Chatbots & Custom AI Tools | ARKA",
     metaDesc:
-      "ARKA builds custom AI automation, AI chatbots and assistants, AI lead generation systems and internal AI tools, integrated with the software you already run.",
+      "Custom AI automation, AI chatbots, lead follow-up and internal AI tools, integrated with the software you already run. GTA-based studio, clients worldwide.",
     problems: [
       { t: "Leads go cold", d: "Enquiries arrive after hours or during busy periods and wait too long for a reply." },
       { t: "Manual busywork", d: "Your team copies data between tools, chases follow-ups and rebuilds the same reports every week." },
@@ -98,6 +98,8 @@ export const SERVICES: Service[] = [
       { q: "Which tools can you integrate with?", a: "Most CRMs, inboxes, calendars and spreadsheets, plus any service with a REST API or webhook. We confirm specifics during scoping." },
       { q: "Who owns the systems you build?", a: "You do. Code, workflows and integrations are transferred to you." },
       { q: "How is pricing set?", a: "Every build is scoped and quoted per project after a free strategy call. There is no public price list." },
+      { q: "Can you build an AI chatbot for a small business?", a: "Yes. We build assistants trained on your services, policies and FAQs that answer questions, qualify leads and book meetings, with a hand-off to a person for anything complex or sensitive." },
+      { q: "Do you work with businesses in Toronto and the GTA?", a: "Yes. ARKA is based in the Greater Toronto Area and works with businesses across Toronto, Mississauga, Vaughan, Markham and the rest of the GTA, as well as clients worldwide." },
     ],
   },
   {
@@ -111,9 +113,9 @@ export const SERVICES: Service[] = [
     heroTitle: ["Websites and platforms", "built to perform."],
     intro:
       "Custom websites, web applications and digital platforms: fast, mobile-first, accessible and structured for search, with the integrations your business runs on.",
-    metaTitle: "Web & Software Development — Custom Websites & Web Apps | ARKA",
+    metaTitle: "Web & Software Development: Custom Sites & Apps | ARKA",
     metaDesc:
-      "Custom websites and web applications from ARKA: mobile-first, fast, accessible and structured for search, built with modern frameworks and integrated with your tools.",
+      "Custom websites, web apps and software: mobile-first, fast, accessible and built for search on modern frameworks. Founder-led studio in the GTA.",
     problems: [
       { t: "Slow, dated sites", d: "Template sites that load slowly on phones and do not reflect the quality of the business behind them." },
       { t: "Invisible in search", d: "Pages without proper structure, metadata or sitemaps that search engines struggle to index." },
@@ -155,6 +157,8 @@ export const SERVICES: Service[] = [
       { q: "Will my site be optimised for search?", a: "Every build ships with technical SEO foundations: unique titles and descriptions, canonical URLs, structured data and a sitemap." },
       { q: "Can you work with my existing domain and email?", a: "Yes. We connect your existing domain and leave email and DNS records you rely on intact." },
       { q: "Can the site grow later?", a: "Yes. Sites are built on modern, component-based frameworks so new pages and features can be added without a rebuild." },
+      { q: "Do you build custom software and web apps, not just websites?", a: "Yes. We build web applications, internal tools, client portals and integrations as well as marketing websites." },
+      { q: "Are your websites accessible?", a: "Yes. We build to WCAG 2.0 Level AA practices, the standard Ontario's AODA references for websites: keyboard support, readable contrast, real headings and labelled forms." },
     ],
   },
   {
@@ -168,9 +172,9 @@ export const SERVICES: Service[] = [
     heroTitle: ["Marketing that compounds", "into growth."],
     intro:
       "Content, social, paid campaigns and marketing automation, planned around data and connected to the systems that capture and follow up every lead.",
-    metaTitle: "Digital Marketing — Content, Paid Ads & Marketing Automation | ARKA",
+    metaTitle: "Digital Marketing: Content, Ads & Automation | ARKA",
     metaDesc:
-      "ARKA plans and runs digital marketing: content and social media, paid ads, photo and video, SEO content and AI-driven marketing automation connected to your CRM.",
+      "Content, social, paid ads, SEO and AI marketing automation connected to your CRM, so every lead gets followed up. GTA-based, working worldwide.",
     problems: [
       { t: "Inconsistent content", d: "Posting happens when there is time, so the brand disappears for weeks." },
       { t: "Ads without tracking", d: "Spend goes out but nobody can say which campaigns produced enquiries." },
@@ -212,6 +216,8 @@ export const SERVICES: Service[] = [
       { q: "Can marketing connect to my CRM?", a: "Yes. Leads from forms and campaigns can flow into your CRM and trigger follow-up sequences automatically." },
       { q: "Do you produce content?", a: "Yes. Content, social media, photo and video are part of the service." },
       { q: "How do you report results?", a: "We agree the metrics that matter for your business at the start and report against them, not vanity numbers." },
+      { q: "Do you do local SEO for GTA businesses?", a: "Yes. We structure service and service-area pages, guide your Google Business Profile setup and work on citations for the cities you actually serve." },
+      { q: "Do your email sequences follow Canadian anti-spam rules?", a: "Sequences are built around consent, clear sender identification and working unsubscribe links, which Canada's Anti-Spam Legislation (CASL) expects of commercial messages." },
     ],
   },
   {
@@ -225,9 +231,9 @@ export const SERVICES: Service[] = [
     heroTitle: ["Clear technology decisions,", "built to scale."],
     intro:
       "Strategy, architecture, IT setup and security for growing businesses: a clear plan for which tools to use, how they connect and how to keep them protected.",
-    metaTitle: "Technology Consulting — Strategy, IT Setup & Cybersecurity | ARKA",
+    metaTitle: "Technology Consulting, IT Setup & Cybersecurity | ARKA",
     metaDesc:
-      "Technology consulting from ARKA: AI and automation strategy, systems architecture, tool selection, IT and office setup, and cybersecurity for small and growing businesses.",
+      "AI and automation strategy, systems architecture, tool selection, IT setup and cybersecurity for small and growing businesses in the GTA and beyond.",
     problems: [
       { t: "Tool sprawl", d: "Subscriptions pile up while the team still works around the gaps between them." },
       { t: "No roadmap", d: "Technology decisions are made one emergency at a time." },
@@ -269,6 +275,8 @@ export const SERVICES: Service[] = [
       { q: "Do you only advise, or also implement?", a: "Both. We can hand you a roadmap or build it with you." },
       { q: "Do you work remotely?", a: "Yes. ARKA is based in the Greater Toronto Area and works with clients remotely, across time zones." },
       { q: "What does the first conversation cover?", a: "Your current setup, what is slowing you down and where technology can help. You leave with clear next steps either way." },
+      { q: "Should we build custom software or buy an off-the-shelf tool?", a: "A short tool and workflow review usually answers that. If an existing product fits, we recommend it and help you configure and connect it; custom software is for processes no product handles well." },
+      { q: "Do you help small businesses with cybersecurity?", a: "Yes. We set up practical protections such as multi-factor authentication, password management, device updates, backups and sensible account permissions." },
     ],
   },
 ];

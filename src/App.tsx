@@ -5,7 +5,8 @@ import { Footer, Header } from "./components/layout";
 import { Gate } from "./components/Gate";
 import { CursorCrosshair, GlassDefs, useGlass, useMagnetic } from "./components/fx";
 import Home from "./pages/Home";
-import { About, CaseStudy, Contact, NotFound, Privacy, ServicePage, ServicesOverview, Terms, Work } from "./pages/pages";
+import { About, CaseStudy, Contact, Journal, LocalLanding, NotFound, Privacy, ServicePage, ServicesOverview, Terms, Work } from "./pages/pages";
+import { LOCAL_PAGES } from "./content/growth";
 import { PROJECTS, SERVICES } from "./content/site";
 
 export function resolve(path: string): { el: React.ReactNode; found: boolean } {
@@ -20,6 +21,9 @@ export function resolve(path: string): { el: React.ReactNode; found: boolean } {
   if (path === "/contact") return { el: <Contact />, found: true };
   if (path === "/privacy") return { el: <Privacy />, found: true };
   if (path === "/terms") return { el: <Terms />, found: true };
+  if (path === "/blog") return { el: <Journal />, found: true };
+  const loc = LOCAL_PAGES.find((l) => `/${l.slug}` === path);
+  if (loc) return { el: <LocalLanding slug={loc.slug} />, found: true };
   return { el: <NotFound />, found: false };
 }
 
@@ -42,6 +46,12 @@ function useHeadSync(path: string, found: boolean) {
     set('meta[name="twitter:title"]', "content", m.title);
     set('meta[name="twitter:description"]', "content", m.description);
     set('link[rel="canonical"]', "href", canonical(path));
+    set('link[rel="alternate"][hreflang="en-CA"]', "href", canonical(path));
+    set('link[rel="alternate"][hreflang="x-default"]', "href", canonical(path));
+    if (m.ogImage) {
+      set('meta[property="og:image"]', "content", m.ogImage);
+      set('meta[name="twitter:image"]', "content", m.ogImage);
+    }
     // move focus to the new page heading for screen-reader and keyboard users
     const h1 = document.querySelector<HTMLElement>("main h1");
     if (h1) {
