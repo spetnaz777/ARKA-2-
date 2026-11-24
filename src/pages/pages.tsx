@@ -9,6 +9,7 @@ import {
   Arrow, CineHero, Eyebrow, Hud, Kinetic, Marquee, Photo, ScrubFrame, ScrubText, StepRail, StickySwap, TiltCard, useProgress,
   type PhotoKey,
 } from "../components/v8";
+import { BrowserPreview, PhonePreview, SiteShot, VisitLink, domainOf } from "../components/SitePreview";
 import "./v8.css";
 
 /* ── Imagery + accent per service / project ──────────────── */
@@ -44,12 +45,12 @@ const LOOK: Record<Service["graphic"], Look> = {
   },
 };
 
-const CASE: Record<string, { photo: PhotoKey; alt: string; acc: string }> = {
-  "royal-caspian": { photo: "case-luxury-interior", alt: "A bright, spotless modern living room", acc: "#e8c37a" },
-  "healexa-clinic": { photo: "case-rehab", alt: "A person doing a core exercise on a mat in a sunlit studio", acc: "#ff8a5b" },
-  "mehri-noshad": { photo: "case-toronto", alt: "The Toronto skyline and CN Tower at sunset over Lake Ontario", acc: "#ffa86b" },
-  "six-side-marketing": { photo: "case-edit-suite", alt: "A colourful video editing timeline on a monitor", acc: "#ff5fd2" },
-  "noctavius-aviation": { photo: "case-jet", alt: "A private jet on the apron at sunset", acc: "#ffb36b" },
+const CASE: Record<string, { acc: string; sky: PhotoKey; skyAlt: string }> = {
+  "royal-caspian": { acc: "#e8c37a", sky: "orbit-night", skyAlt: "City lights across a continent at night, seen from orbit" },
+  "healexa-clinic": { acc: "#ff8a5b", sky: "aurora", skyAlt: "Green aurora borealis over a dark forest" },
+  "mehri-noshad": { acc: "#ffa86b", sky: "night-sky", skyAlt: "A star-filled night sky over a mountain ridge at dusk" },
+  "six-side-marketing": { acc: "#ff5fd2", sky: "nebula", skyAlt: "A colourful nebula bubble in deep space, imaged by the Hubble Space Telescope" },
+  "noctavius-aviation": { acc: "#ffb36b", sky: "launch", skyAlt: "A rocket lifting off on a column of smoke and fire" },
 };
 
 const accVars = (acc: string, acc2?: string) => ({ ["--acc" as string]: acc, ["--acc2" as string]: acc2 ?? acc }) as React.CSSProperties;
@@ -352,42 +353,44 @@ function ServiceNav({ current }: { current: string }) {
 export function ProjectCard({ p }: { p: (typeof PROJECTS)[number] }) {
   const c = CASE[p.slug];
   return (
-    <TiltCard as={Link} to={`/work/${p.slug}`} className="x-proj" style={accVars(c?.acc ?? "#4fd6ff")}>
-      <span className="x-proj__media">
-        <Photo k={c?.photo ?? "laptop-glow"} alt="" sizes="(max-width: 899px) 100vw, 50vw" />
-      </span>
-      <span className="x-proj__shade" aria-hidden="true" />
-      <span className="x-proj__chip">{p.category}</span>
-      <span className="x-proj__body">
-        <span className="x-proj__t">{p.name}</span>
+    <article className="x-proj" style={accVars(c?.acc ?? "#4fd6ff")}>
+      <BrowserPreview p={p} sizes="(max-width: 899px) 100vw, 46vw" className="x-proj__shot" />
+      <div className="x-proj__body">
+        <span className="x-proj__chip">{p.category}</span>
+        <Link to={`/work/${p.slug}`} className="x-proj__t">{p.name}</Link>
         <span className="x-proj__d">{p.summary}</span>
-        <span className="x-proj__meta">{p.location} <Arrow size={16} /></span>
-      </span>
-    </TiltCard>
+        <span className="x-proj__actions">
+          <Link to={`/work/${p.slug}`} className="x-ghost">Case study <Arrow dir="r" size={16} /></Link>
+          <VisitLink p={p} />
+        </span>
+      </div>
+    </article>
   );
 }
 
 function WorkRow({ p, i }: { p: (typeof PROJECTS)[number]; i: number }) {
-  const ref = useProgress<HTMLLIElement>("through");
   const c = CASE[p.slug];
   return (
-    <li ref={ref} className={`x-row ${i % 2 ? "x-row--flip" : ""}`} style={accVars(c.acc)}>
-      <Link to={`/work/${p.slug}`} className="x-row__link">
-        <TiltCard className="x-row__media">
-          <Photo k={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 60vw" />
-          <span className="x-row__chip">{p.category}</span>
-        </TiltCard>
+    <li className={`x-row ${i % 2 ? "x-row--flip" : ""}`} style={accVars(c.acc)}>
+      <div className="x-row__link">
+        <Reveal className="x-row__media">
+          <BrowserPreview p={p} sizes="(max-width: 899px) 100vw, 58vw" eager={i === 0} />
+        </Reveal>
         <span className="x-row__text">
           <span className="x-row__n">{String(i + 1).padStart(2, "0")}</span>
-          <span className="x-row__t">{p.name}</span>
+          <span className="x-row__chip">{p.category}</span>
+          <h2 className="x-row__t"><Link to={`/work/${p.slug}`}>{p.name}</Link></h2>
           <span className="x-row__d">{p.summary}</span>
           <span className="x-row__meta">
             <span>{p.sector}</span>
             <span>{p.location}</span>
           </span>
-          <span className="x-ghost">View case study <Arrow dir="r" size={16} /></span>
+          <span className="x-row__actions">
+            <Link to={`/work/${p.slug}`} className="x-ghost">View case study <Arrow dir="r" size={16} /></Link>
+            <VisitLink p={p} />
+          </span>
         </span>
-      </Link>
+      </div>
     </li>
   );
 }
@@ -396,8 +399,8 @@ export function Work() {
   return (
     <Page style={accVars("#a78bff", "#ff7aa8")}>
       <CineHero
-        photo="laptop-glow"
-        alt="A laptop glowing with colourful light in a dark room"
+        photo="night-sky"
+        alt="A star-filled night sky over a mountain ridge at dusk"
         n="03"
         eyebrow="Work"
         title="Selected"
@@ -429,8 +432,8 @@ export function CaseStudy({ slug }: { slug: string }) {
   return (
     <Page style={accVars(c.acc, "#a78bff")}>
       <CineHero
-        photo={c.photo}
-        alt={c.alt}
+        photo={c.sky}
+        alt={c.skyAlt}
         n={String(idx + 1).padStart(2, "0")}
         eyebrow={p.category}
         title={p.name}
@@ -444,8 +447,22 @@ export function CaseStudy({ slug }: { slug: string }) {
             <span className="btn__arrow"><Icon name="arrow-ur" size={16} /></span>
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
+          <span className="x-hero__domain">{domainOf(p.url)}</span>
         </div>
       </CineHero>
+
+      <section className="x-sec x-showcase" aria-label={`${p.name} live website preview`}>
+        <div className="container">
+          <Reveal className="sp-stage">
+            <BrowserPreview p={p} sizes="(max-width: 760px) 100vw, 1100px" eager />
+            <PhonePreview p={p} />
+          </Reveal>
+          <p className="x-showcase__cap">
+            <span>Live site · {domainOf(p.url)}</span>
+            <span className="hide-mobile">Hover to scroll · click to open</span>
+          </p>
+        </div>
+      </section>
 
       <section className="x-sec x-sec--tight" aria-label="Project facts">
         <div className="container">
@@ -494,7 +511,7 @@ export function CaseStudy({ slug }: { slug: string }) {
 
       <section className="x-next" aria-label="Next project" style={accVars(nc.acc)}>
         <Link to={`/work/${next.slug}`} className="x-next__link">
-          <Photo k={nc.photo} alt="" className="x-next__img" />
+          <SiteShot p={next} className="x-next__img" />
           <span className="x-next__shade" aria-hidden="true" />
           <span className="container x-next__inner">
             <span className="x-eyebrow"><span className="x-eyebrow__bar" aria-hidden="true" />Next project</span>

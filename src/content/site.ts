@@ -302,7 +302,7 @@ export const PROJECTS: Project[] = [
     overview:
       "Royal Caspian is a luxury cleaning company serving Toronto and the GTA: estate, house, deep, office and Airbnb cleaning by consultation. ARKA designed and built the website and its search foundations.",
     scope: ["Website design & development", "Service & location page architecture", "Technical & local SEO"],
-    url: "https://royalcaspiancleaning.com",
+    url: "https://www.royalcaspiancleaning.com",
     wave: 0,
   },
   {
@@ -315,7 +315,7 @@ export const PROJECTS: Project[] = [
     overview:
       "Healexa is a multidisciplinary clinic in North York and Thornhill offering physiotherapy, chiropractic care, therapeutic massage and acupuncture. ARKA designed and built the clinic's website.",
     scope: ["Website design & development", "Service & practitioner pages"],
-    url: "https://drhealexa.com",
+    url: "https://www.drhealexa.com",
     wave: 1,
   },
   {
@@ -328,7 +328,7 @@ export const PROJECTS: Project[] = [
     overview:
       "Mehri Noshad is a RE/MAX sales representative serving the Greater Toronto Area. ARKA designed and built her personal brand website.",
     scope: ["Website design & development", "Personal brand presentation"],
-    url: "https://mehrinoshad.ca",
+    url: "https://www.mehrinoshad.ca",
     wave: 2,
   },
   {
@@ -354,7 +354,7 @@ export const PROJECTS: Project[] = [
     overview:
       "Noctavius Aviation provides private aircraft detailing for jets, turboprops and helicopters in Toronto and across Ontario. ARKA built the website and its brand presentation.",
     scope: ["Website design & development", "Brand presentation", "Regional service pages"],
-    url: "https://rc-avation.vercel.app",
+    url: "https://noctavius-aviation.vercel.app",
     wave: 4,
   },
 ];

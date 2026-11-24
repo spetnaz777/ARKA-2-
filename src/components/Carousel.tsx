@@ -1,15 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import type { Project } from "../content/site";
 import { ContourPattern, Hatch, HudBrackets, Icon, Readout } from "./graphics";
-import { PaleImage, type PaleName } from "./media";
-
-const SLIDE_IMG: Record<string, PaleName> = {
-  "royal-caspian": "light-corridor",
-  "healexa-clinic": "white-curve",
-  "mehri-noshad": "towers-up",
-  "six-side-marketing": "glass-tower",
-  "noctavius-aviation": "earth-night",
-};
+import { BrowserPreview, VisitLink } from "./SitePreview";
 import { Link } from "../lib/router";
 
 /* Featured-work carousel: real ARKA client builds only.
@@ -88,16 +80,17 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
               aria-hidden={k !== i}
               inert={k !== i ? true : undefined}
             >
-              {seen.has(k) && <PaleImage name={SLIDE_IMG[p.slug] ?? "img-hall"} className="slide__img" sizes="(max-width: 700px) 100vw, 620px" />}
+              {seen.has(k) && <BrowserPreview p={p} className="slide__preview" sizes="(max-width: 700px) 100vw, 640px" />}
               <ContourPattern variant={p.wave} className="slide__wave" />
               <div className="slide__body">
                 <span className="chip">{p.category}</span>
                 <h3 className="slide__title">{p.name}</h3>
                 <p className="slide__desc">
                   <span>{p.summary}</span>
-                  <Link to={`/work/${p.slug}`} className="slide__link" aria-label={`View ${p.name} case study`}>
-                    <Icon name="arrow-ur" size={18} />
-                  </Link>
+                </p>
+                <p className="slide__actions">
+                  <Link to={`/work/${p.slug}`} className="slide__cs">Case study <Icon name="arrow-r" size={16} /></Link>
+                  <VisitLink p={p} className="slide__visit" />
                 </p>
               </div>
             </div>
