@@ -1850,3 +1850,15 @@ html.intro-skip .h-hero::after { animation: none; }
 .airlock--color .airlock__title { background: linear-gradient(180deg, #fff 35%, #d8dde6); -webkit-background-clip: text; background-clip: text; }
 @media (max-width: 767px) { .airlock--color .airlock__video, .airlock--color .airlock__poster { object-position: 72% 50%; } }
 @media (min-width: 768px) { .scene--bh .cta { display: flex; flex-direction: column; align-items: flex-start; } .scene--bh .cta .pill { align-self: flex-start; margin-left: 0; } }
+
+/* v7.2 · small moon: one continuous elliptical drift. The old keyframes eased to a stop at four
+   waypoints per loop (ease-in-out per segment), which read as a twitch. X and Y now run as two
+   independent sine-like motions on separate properties, so the path never stops. */
+.scene--hero .hero__orbit { animation: orbit-x 16s cubic-bezier(.45,0,.55,1) infinite alternate, orbit-y 8s cubic-bezier(.45,0,.55,1) -4s infinite alternate !important; }
+@keyframes orbit-x { from { transform: translate3d(0,0,0); } to { transform: translate3d(48px,0,0); } }
+@keyframes orbit-y { from { translate: 0 -12px; } to { translate: 0 12px; } }
+@media (prefers-reduced-motion: reduce) { .scene--hero .hero__orbit { animation: none !important; } }
+html.intro-skip .scene--hero .hero__orbit { animation-duration: 16s, 8s !important; }
+/* the sphere itself: only the (JS-lerped) pointer parallax moves it; the old float keyframes
+   fought that transform and made it jump */
+.scene--hero .hero__orbit .hero__sphere { animation: none !important; }
