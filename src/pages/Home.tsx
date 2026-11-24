@@ -5,8 +5,50 @@ import { CircuitFrame, HudBrackets, Icon, Place, Readout, SignalNode, TickRuler,
 import { Link } from "../lib/router";
 import { Carousel } from "../components/Carousel";
 import { LazyVideo, PaleImage } from "../components/media";
-import { useHeroParallax, useScene } from "../components/fx";
+import { Decode, useHeroParallax, useScene } from "../components/fx";
+import { Terminal } from "../components/Terminal";
 import { ShowreelButton } from "../components/Showreel";
+import AirlockHero from "../components/ui/airlock-spaceship-hero";
+import { lazy, Suspense } from "react";
+const BlackHole = lazy(() => import("../components/ui/blackhole-hero-section"));
+
+/* Black hole behind the closing CTA: mounted only near the viewport and only on
+   capable devices; everyone else keeps the horizon loop. */
+function EventHorizon() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<"wait" | "gl" | "video">("wait");
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
+    const weak = !!nav.connection?.saveData || (nav.hardwareConcurrency || 8) < 4 || (nav.deviceMemory ?? 8) < 4;
+    let gl = false;
+    try { const c = document.createElement("canvas"); gl = !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { gl = false; }
+    setNarrow(window.matchMedia("(max-width: 767px)").matches);
+    if (weak || !gl) { setMode("video"); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setMode("gl"); io.disconnect(); } }, { rootMargin: "60% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={`cta__bg cta__bg--bh${mode === "gl" ? " is-gl" : ""}`} aria-hidden="true">
+      {mode === "video" && <LazyVideo name="horizon-loop" />}
+      {mode === "gl" && (
+        <Suspense fallback={null}>
+          <BlackHole
+            hotColor="#FFFFFF" midColor="#C9CED6" coolColor="#3A3F48"
+            doppler={0.5} exposure={0.95} glow={narrow ? 0.8 : 1.05}
+            focus={narrow ? [0.5, 0.78] : [0.5, 0.56]} distance={narrow ? 24 : 12} roll={narrow ? -12 : -16}
+            fov={narrow ? 60 : 40} elevation={narrow ? -7 : -5}
+            steps={narrow ? 170 : 230} resolution={narrow ? 0.5 : 0.62} maxDpr={narrow ? 1.5 : 1.75}
+            scrim={narrow ? "top" : "none"} scrimStrength={0.85} vignette={0.4} starBrightness={0.35}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}
 
 /* ════════════════════════════════════════════════════════════
    Home: cinematic scenes. One idea per screen. On desktop (≥1100px, motion
@@ -75,6 +117,35 @@ function Hero() {
   const stage = useRef<HTMLDivElement>(null);
   useScene(scene, { mode: "pin" });
   useHeroParallax(stage);
+  // WebGL signature (lazy, capability-gated; the static moon is the fallback)
+  useEffect(() => {
+    const hero = stage.current;
+    const sc = scene.current;
+    const canvas = hero?.querySelector<HTMLCanvasElement>(".hero__gl");
+    if (!hero || !sc || !canvas) return;
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
+    const lowPower = (navigator.hardwareConcurrency || 8) < 4 || (nav.deviceMemory ?? 8) < 4 || nav.connection?.saveData;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || lowPower) return;
+    let stop = () => {};
+    let cancelled = false;
+    const go = () => {
+      import("../components/heroGL").then(({ startHeroGL }) => {
+        if (cancelled) return;
+        // assemble the moon only while the gate still covers the hero;
+        // otherwise add the cloud and rings without hiding the visible moon
+        const assemble = document.documentElement.classList.contains("intro-pending");
+        hero.classList.add(assemble ? "gl-on" : "gl-lite");
+        stop = startHeroGL(canvas, hero, sc, assemble);
+      });
+    };
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const id = ric ? ric(go, { timeout: 1200 }) : window.setTimeout(go, 400);
+    return () => {
+      cancelled = true;
+      if (!ric) window.clearTimeout(id);
+      stop();
+    };
+  }, []);
   // intro (construct → unmask, ≈1.4s) waits for the gate; any input skips it
   useEffect(() => {
     const html = document.documentElement;
@@ -122,6 +193,7 @@ function Hero() {
                 <source srcSet="/media/moon-real-1600.avif" type="image/avif" />
                 <img src="/media/moon-real-1600.webp" alt="" width={1600} height={1600} fetchPriority="high" decoding="async" />
               </picture>
+              <canvas className="hero__gl" aria-hidden="true" />
               <span className="hero__light" />
               <span className="hero__shade" />
             </div>
@@ -139,7 +211,7 @@ function Hero() {
         </div>
 
         <div className="container hero__content">
-          <p className="eyebrow hero__label">ARKA · AI studio</p>
+          <p className="eyebrow hero__label"><Decode text="ARKA · AI STUDIO · EST. GTA" hover={false} /></p>
           <h1 id="hero-h" className="h-hero">
             <span className="h-hero__line"><span className="h-hero__in">AI, Software &amp;</span></span>{" "}
             <span className="h-hero__line"><em className="h-hero__in sweep">Digital Growth.</em></span>
@@ -152,6 +224,7 @@ function Hero() {
             <ShowreelButton className="pill glass glass--pill glass--dark" />
           </div>
         </div>
+        <Terminal />
         <span className="hero__scroll" aria-hidden="true"><span /></span>
       </div>
     </section>
@@ -202,11 +275,11 @@ function Services() {
           </div>
           <div className="svc-panel">
           <HudBrackets inset={-12} size={14} className="hide-tablet" />
-          <ul className="svc-beats glass glass--panel glass--dark" data-tilt="" role="list">
+          <ul className="svc-beats" role="list">
             {SERVICES.map((s, k) => (
-              <li key={s.slug} className="svc-beat" style={{ ["--k" as string]: k }}>
+              <li key={s.slug} className="svc-beat glass glass--panel glass--dark" data-tilt="" style={{ ["--k" as string]: k }}>
                 <span className="svc-beat__icon" aria-hidden="true"><Icon name={s.icon} size={120} /></span>
-                <span className="svc-beat__n">{s.n}</span>
+                <span className="svc-beat__n"><Decode text={`SYS.${s.n} // ${s.short.toUpperCase()}`} /></span>
                 <h3 className="svc-beat__t">{s.short}</h3>
                 <p className="svc-beat__d">{s.card}</p>
                 <Link to={`/services/${s.slug}`} className="svc-beat__link" onFocus={() => focusStep(k)}>
@@ -357,9 +430,7 @@ function Closing() {
         readout="SYS.06 · CONTACT · CH 01"
         readoutAt="L+0,b-60"
       />
-      <div className="cta__bg" aria-hidden="true">
-        <LazyVideo name="horizon-loop" />
-      </div>
+      <EventHorizon />
       <Reveal className="container cta glass glass--panel glass--dark glass--refract">
         <HudBrackets inset={-14} size={16} />
         <h2 id="cta-h" className="h-display cta__h">
@@ -381,6 +452,15 @@ export default function Home() {
   return (
     <div className="home home--v4">
       <Hero />
+      <AirlockHero
+        id="orbit"
+        videoSrc="/media/lunar-scrub-1080.mp4"
+        mobileVideoSrc="/media/lunar-scrub-540.mp4"
+        posterSrc="/media/lunar-scrub-poster.jpg"
+        eyebrow="ARKA · Orbit"
+        title="SYSTEMS ONLINE"
+        tagline="Engineered for what’s next — AI, software and growth, in orbit around your business."
+      />
       <Services />
       <Film />
       <Work />

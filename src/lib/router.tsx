@@ -1,3 +1,4 @@
+import { flushSync } from "react-dom";
 import React, {
   createContext,
   useCallback,
@@ -32,13 +33,19 @@ export function RouterProvider({
     const url = new URL(to, window.location.href);
     const next = normalize(url.pathname);
     window.history.pushState({}, "", url.pathname + url.search + url.hash);
-    setPath(next);
+    const commit = () => {
+      setPath(next);
+      if (!url.hash) window.scrollTo(0, 0);
+    };
+    // smooth page-to-page transition where supported (View Transitions API)
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (doc.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      doc.startViewTransition(() => flushSync(commit));
+    } else commit();
     if (url.hash) {
       requestAnimationFrame(() =>
         document.getElementById(url.hash.slice(1))?.scrollIntoView(),
       );
-    } else {
-      window.scrollTo(0, 0);
     }
   }, []);
 

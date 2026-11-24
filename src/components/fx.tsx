@@ -129,7 +129,7 @@ export function useMagnetic() {
     if (!finePointer() || reduced()) return;
     let active: HTMLElement | null = null;
     const move = (e: PointerEvent) => {
-      const b = (e.target as HTMLElement).closest<HTMLElement>(".btn, .ctrl-btn, .playlink");
+      const b = (e.target as HTMLElement).closest<HTMLElement>(".pill, .glass-btn, .ctrl-btn, .btn");
       if (active && active !== b) {
         active.style.transform = "";
         active = null;

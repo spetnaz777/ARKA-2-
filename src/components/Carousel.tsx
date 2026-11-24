@@ -81,6 +81,7 @@ export function Carousel({ projects, intro }: { projects: Project[]; intro?: Rea
             <div
               key={p.slug}
               className={`slide ${k === i ? "is-active" : ""}`}
+              style={(() => { let o = k - i; if (o > n / 2) o -= n; if (o < -n / 2) o += n; return { ["--o" as string]: o, ["--ao" as string]: Math.abs(o) }; })()}
               role="group"
               aria-roledescription="slide"
               aria-label={`${k + 1} of ${n}: ${p.name}`}
