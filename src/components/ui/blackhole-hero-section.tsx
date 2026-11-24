@@ -70,6 +70,10 @@ export interface BlackHoleHeroSectionProps
   scrimStrength?: number;
   /** Freeze on the current frame. */
   paused?: boolean;
+  /** Frame-rate cap for the ray march (the gas moves slowly; 30 looks identical and halves GPU load). */
+  maxFps?: number;
+  /** Cap on the ray-traced buffer's pixel count, whatever the screen size. */
+  maxScenePixels?: number;
   children?: React.ReactNode;
 }
 
@@ -471,6 +475,8 @@ export function BlackHoleHeroSection({
   scrim = "none",
   scrimStrength = 0.9,
   paused = false,
+  maxFps = 30,
+  maxScenePixels = 420_000,
   className = "",
   children,
   ...rest
@@ -482,13 +488,13 @@ export function BlackHoleHeroSection({
     distance, elevation, azimuth, orbitSpeed, roll, fov, diskInner, diskOuter,
     diskThickness, diskDensity, brightness, spinSpeed, grain, doppler, hotColor,
     midColor, coolColor, starBrightness, glow, exposure, vignette, steps,
-    resolution, maxDpr, focus, scrim, scrimStrength, paused,
+    resolution, maxDpr, focus, scrim, scrimStrength, paused, maxFps, maxScenePixels,
   });
   props.current = {
     distance, elevation, azimuth, orbitSpeed, roll, fov, diskInner, diskOuter,
     diskThickness, diskDensity, brightness, spinSpeed, grain, doppler, hotColor,
     midColor, coolColor, starBrightness, glow, exposure, vignette, steps,
-    resolution, maxDpr, focus, scrim, scrimStrength, paused,
+    resolution, maxDpr, focus, scrim, scrimStrength, paused, maxFps, maxScenePixels,
   };
 
   useEffect(() => {
@@ -689,8 +695,10 @@ export function BlackHoleHeroSection({
         : Math.min(1, Math.max(0.4, props.current.resolution));
       const w = Math.max(2, Math.round(cssW * dpr));
       const h = Math.max(2, Math.round(cssH * dpr));
-      const sw = Math.max(2, Math.round(w * scale));
-      const sh = Math.max(2, Math.round(h * scale));
+      let sw = Math.max(2, Math.round(w * scale));
+      let sh = Math.max(2, Math.round(h * scale));
+      const cap = props.current.maxScenePixels;
+      if (sw * sh > cap) { const k = Math.sqrt(cap / (sw * sh)); sw = Math.max(2, Math.round(sw * k)); sh = Math.max(2, Math.round(sh * k)); }
       if (w === width && h === height && sw === sceneW && sh === sceneH) return;
       width = w;
       height = h;
@@ -862,7 +870,9 @@ export function BlackHoleHeroSection({
       if (!running) return;
       raf = requestAnimationFrame(tick);
       if (!visible) { lastFrame = now; return; }
-      const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 0;
+      const minGap = 1000 / Math.max(10, props.current.maxFps) - 2;
+      if (lastFrame && now - lastFrame < minGap) return;
+      const dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
       lastFrame = now;
       if (!props.current.paused && !reduced) clock += dt;
       render(clock);

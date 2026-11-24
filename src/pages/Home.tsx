@@ -27,7 +27,14 @@ function EventHorizon() {
     try { const c = document.createElement("canvas"); gl = !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { gl = false; }
     setNarrow(window.matchMedia("(max-width: 767px)").matches);
     if (weak || !gl) { setMode("video"); return; }
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setMode("gl"); io.disconnect(); } }, { rootMargin: "60% 0px" });
+    // compile the shaders while the browser is idle, well before the section is reached,
+    // so the hitch never lands mid-scroll; the renderer itself sleeps while off-screen
+    let done = false;
+    const go = () => { if (!done) { done = true; setMode("gl"); } };
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const start = () => (ric ? ric(go, { timeout: 4000 }) : window.setTimeout(go, 2500));
+    if (document.readyState === "complete") window.setTimeout(start, 1500); else window.addEventListener("load", () => window.setTimeout(start, 1500), { once: true });
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { go(); io.disconnect(); } }, { rootMargin: "150% 0px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -41,7 +48,7 @@ function EventHorizon() {
             doppler={0.6} exposure={1.05} glow={narrow ? 0.55 : 0.6}
             focus={narrow ? [0.5, 0.7] : [0.72, 0.5]} distance={narrow ? 22 : 17}
             roll={narrow ? -10 : -18} fov={narrow ? 56 : 40} elevation={narrow ? -6 : -5}
-            steps={narrow ? 180 : 260} resolution={narrow ? 0.7 : 0.85} maxDpr={narrow ? 1.75 : 2}
+            steps={narrow ? 150 : 190} resolution={narrow ? 0.55 : 0.6} maxDpr={1.25} maxFps={30} maxScenePixels={narrow ? 220_000 : 380_000}
             scrim={narrow ? "top" : "left"} scrimStrength={0.88} vignette={0.3} starBrightness={0.5}
           />
         </Suspense>

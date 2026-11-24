@@ -1849,3 +1849,4 @@ html.intro-skip .h-hero::after { animation: none; }
 }
 .airlock--color .airlock__title { background: linear-gradient(180deg, #fff 35%, #d8dde6); -webkit-background-clip: text; background-clip: text; }
 @media (max-width: 767px) { .airlock--color .airlock__video, .airlock--color .airlock__poster { object-position: 72% 50%; } }
+@media (min-width: 768px) { .scene--bh .cta { display: flex; flex-direction: column; align-items: flex-start; } .scene--bh .cta .pill { align-self: flex-start; margin-left: 0; } }
