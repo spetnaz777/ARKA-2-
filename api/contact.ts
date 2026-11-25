@@ -4,7 +4,10 @@
    rate limiting, and delivery through Resend's HTTP API. Requires:
      RESEND_API_KEY  — Resend API key
      CONTACT_TO      — inbox that receives enquiries
-     CONTACT_FROM    — verified sender, e.g. "ARKA Website <web@arkalegion.com>"
+     CONTACT_FROM    — verified sender, e.g. "ARKA <hello@mail.arkalegion.com>"
+     CONTACT_REPLY_TO — optional; where visitors' replies go (default arka.secops@gmail.com)
+   Sends the enquiry to the team (must succeed) and a confirmation with a ticket
+   reference to the visitor (best effort).
    If any are missing the function returns 503 and the form shows an honest
    "not sent" message with the direct email address. It never fakes success. */
 
@@ -90,7 +93,10 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const d = v.data;
+  const ticket = makeTicket();
+  const replyTo = process.env.CONTACT_REPLY_TO || "arka.secops@gmail.com";
   const rows: [string, string][] = [
+    ["Ticket", ticket],
     ["Name", d.name],
     ["Email", d.email],
     ["Company", d.company || "—"],
@@ -98,34 +104,96 @@ export async function POST(request: Request): Promise<Response> {
     ["Budget", d.budget || "—"],
     ["Timeline", d.timeline || "—"],
   ];
-  const text = `${rows.map(([k, val]) => `${k}: ${val}`).join("\n")}\n\nProject details:\n${d.details}\n`;
-  const html =
-    `<table cellpadding="6" style="font-family:sans-serif;font-size:14px">${rows
-      .map(([k, val]) => `<tr><td><strong>${k}</strong></td><td>${escapeHtml(val)}</td></tr>`)
-      .join("")}</table><p style="font-family:sans-serif;font-size:14px;white-space:pre-wrap">${escapeHtml(d.details)}</p>`;
 
+  // 1) The enquiry to ARKA. This one must land, or the visitor is told it was not sent.
+  const team = await send(RESEND_API_KEY, {
+    from: CONTACT_FROM,
+    to: CONTACT_TO.split(",").map((s) => s.trim()),
+    reply_to: d.email,
+    subject: `New enquiry ${ticket} · ${d.name.replace(/[\r\n]/g, " ")} · ${d.services.join(", ")}`,
+    text: `${rows.map(([k, val]) => `${k}: ${val}`).join("\n")}\n\nProject details:\n${d.details}\n`,
+    html: teamHtml(rows, d.details),
+    headers: { "X-Entity-Ref-ID": ticket },
+  });
+  if (!team.ok) {
+    console.error("contact: resend error (team)", team.status, team.body);
+    return json(502, { ok: false, error: "Our email service didn't accept the message, so it was not sent." });
+  }
+
+  // 2) Confirmation to the visitor. Nice to have: the enquiry already reached us.
+  const first = d.name.split(/\s+/)[0];
+  const visitor = await send(RESEND_API_KEY, {
+    from: CONTACT_FROM,
+    to: [d.email],
+    reply_to: replyTo,
+    subject: `We received your enquiry · ${ticket}`,
+    text: `Hi ${first},\n\nThanks for reaching out to ARKA. Your enquiry is in, reference ${ticket}. A member of our team will reply within one business day.\n\nWhat you sent:\n${rows.slice(3).map(([k, val]) => `${k}: ${val}`).join("\n")}\n\n${d.details}\n\nReply to this email if you want to add anything.\n\nARKA · AI, Software & Digital Growth · https://www.arkalegion.com\n`,
+    html: visitorHtml(first, ticket, rows.slice(3), d.details),
+    headers: { "X-Entity-Ref-ID": `${ticket}-c` },
+  });
+  if (!visitor.ok) console.error("contact: confirmation to visitor failed (team copy delivered)", visitor.status, visitor.body);
+
+  return json(200, { ok: true, ticket });
+}
+
+/* ── helpers ─────────────────────────────────────────────────────────── */
+
+function makeTicket(now = new Date()) {
+  const y = String(now.getUTCFullYear()).slice(2);
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(3)), (b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
+  return `ARK-${y}${m}${day}-${rand}`;
+}
+
+async function send(key: string, payload: Record<string, unknown>) {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: CONTACT_FROM,
-        to: CONTACT_TO.split(",").map((s) => s.trim()),
-        reply_to: d.email,
-        subject: `New ARKA enquiry — ${d.name.replace(/[\r\n]/g, " ")}`,
-        text,
-        html,
-      }),
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      console.error("contact: resend error", res.status, await res.text().catch(() => ""));
-      return json(502, { ok: false, error: "Our email service didn't accept the message, so it was not sent." });
-    }
-    return json(200, { ok: true });
+    return { ok: res.ok, status: res.status, body: res.ok ? "" : await res.text().catch(() => "") };
   } catch (err) {
-    console.error("contact: delivery failed", err);
-    return json(502, { ok: false, error: "Delivery failed, so your message was not sent." });
+    return { ok: false, status: 0, body: String(err) };
   }
+}
+
+const FONT = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Segoe UI',Helvetica,Arial,sans-serif";
+
+function shell(inner: string) {
+  return `<!doctype html><html><body style="margin:0;background:#f5f5f7;padding:32px 12px;font-family:${FONT};color:#111">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #e5e5ea">
+<tr><td style="background:#05060a;padding:26px 32px;color:#f5f5f7;font-size:13px;letter-spacing:0.32em;font-weight:600">A R K A</td></tr>
+<tr><td style="padding:32px">${inner}</td></tr>
+<tr><td style="padding:18px 32px;border-top:1px solid #eee;font-size:12px;color:#86868b">ARKA · AI, Software &amp; Digital Growth · <a href="https://www.arkalegion.com" style="color:#86868b">arkalegion.com</a></td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function rowsHtml(rows: [string, string][]) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border-collapse:collapse">${rows
+    .map(([k, val]) => `<tr><td style="padding:9px 0;border-bottom:1px solid #f0f0f2;color:#86868b;width:120px;vertical-align:top">${k}</td><td style="padding:9px 0;border-bottom:1px solid #f0f0f2">${escapeHtml(val)}</td></tr>`)
+    .join("")}</table>`;
+}
+
+function teamHtml(rows: [string, string][], details: string) {
+  return shell(`<p style="margin:0 0 6px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#86868b">New website enquiry</p>
+<h1 style="margin:0 0 22px;font-size:24px;font-weight:600;letter-spacing:-0.02em">${escapeHtml(rows[1][1])}</h1>
+${rowsHtml(rows)}
+<p style="margin:22px 0 8px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#86868b">Project details</p>
+<p style="margin:0;font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(details)}</p>
+<p style="margin:26px 0 0;font-size:13px;color:#86868b">Reply to this email to answer ${escapeHtml(rows[1][1])} directly.</p>`);
+}
+
+function visitorHtml(first: string, ticket: string, rows: [string, string][], details: string) {
+  return shell(`<h1 style="margin:0 0 14px;font-size:26px;font-weight:600;letter-spacing:-0.02em">Thanks, ${escapeHtml(first)}.</h1>
+<p style="margin:0 0 18px;font-size:16px;line-height:1.6">Your enquiry is in. A member of the ARKA team will reply within one business day.</p>
+<p style="margin:0 0 24px;display:inline-block;background:#f5f5f7;border-radius:999px;padding:8px 16px;font-size:13px;letter-spacing:0.06em">Reference <strong>${ticket}</strong></p>
+<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#86868b">What you sent</p>
+${rowsHtml(rows)}
+<p style="margin:18px 0 0;font-size:15px;line-height:1.6;white-space:pre-wrap;color:#3a3a3c">${escapeHtml(details)}</p>
+<p style="margin:26px 0 0;font-size:14px;color:#3a3a3c">Want to add something? Just reply to this email.</p>`);
 }
 
 export function GET(): Response {

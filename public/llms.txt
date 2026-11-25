@@ -3,7 +3,7 @@
 > ARKA is a founder-led AI, software and digital-growth studio based in the Greater Toronto Area (GTA), Ontario, Canada, working with clients worldwide. It builds AI automation and AI chatbots, custom websites, web applications and software, digital marketing and marketing-automation systems, and provides technology consulting for small and growing businesses.
 
 Key facts:
-- Name: ARKA. Website: https://www.arkalegion.com. Email: hello@arkalegion.com
+- Name: ARKA. Website: https://www.arkalegion.com. Email: arka.secops@gmail.com
 - Based in the Greater Toronto Area, Canada; works remotely with clients in Toronto, Mississauga, Brampton, Vaughan, Markham, Richmond Hill, Oakville and worldwide.
 - Founder-led: clients work directly with the person designing and building their system.
 - Every build is scoped and quoted per project after a free strategy call; there is no public price list.

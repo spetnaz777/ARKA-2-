@@ -36,7 +36,7 @@ export function validate(f: Fields) {
   return e;
 }
 
-type Status = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; msg: string };
+type Status = { kind: "idle" } | { kind: "sending" } | { kind: "sent"; ticket?: string } | { kind: "error"; msg: string };
 
 export function ContactForm() {
   const [f, setF] = useState<Fields>(EMPTY);
@@ -68,9 +68,9 @@ export function ContactForm() {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ ...f, elapsedMs: Date.now() - started.current }),
       });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; fields?: Record<string, string> };
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; ticket?: string; error?: string; fields?: Record<string, string> };
       if (res.ok && data.ok) {
-        setStatus({ kind: "sent" });
+        setStatus({ kind: "sent", ticket: data.ticket });
         setF(EMPTY);
       } else {
         if (data.fields) setErrors(data.fields as typeof errors);
@@ -88,7 +88,8 @@ export function ContactForm() {
       <div className="form-success chamfer chamfer--raised" role="status" tabIndex={-1}>
         <p className="label"><span>Received</span></p>
         <h2 className="h-card">Thank you — your message has been delivered.</h2>
-        <p>We’ll reply to the email address you provided. If it’s urgent, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+        {status.ticket && <p>Your reference is <strong>{status.ticket}</strong>. A confirmation is on its way to your inbox.</p>}
+        <p>We’ll reply to the email address you provided, usually within one business day. If it’s urgent, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
         <button type="button" className="textlink" onClick={() => setStatus({ kind: "idle" })}>Send another message</button>
       </div>
     );

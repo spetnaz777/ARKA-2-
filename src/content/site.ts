@@ -5,7 +5,7 @@
 export const SITE = {
   name: "ARKA",
   url: "https://www.arkalegion.com",
-  email: "hello@arkalegion.com",
+  email: "arka.secops@gmail.com",
   location: "Greater Toronto Area, Canada",
   locationShort: "GTA-Based · Worldwide",
   positioning: "AI, Software & Digital Growth",
