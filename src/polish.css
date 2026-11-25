@@ -75,3 +75,38 @@
 .scene--work .work-panel .slide .slide__body { opacity: 1; }
 .scene--work .work-panel .slide .slide__preview { transform: translate3d(0, 18px, 0); transition: transform 1s var(--expo-out); }
 .scene--work .work-panel .slide.is-active .slide__preview { transform: none; }
+
+/* ── 2026-11-25 fixes ─────────────────────────────────────────────────────
+   1. Dark pages: the root (html) stayed light grey while body and footer are
+      dark, so the overscroll bounce below the footer showed a white band. */
+html:has(.v8) { background: #05060a; }
+
+/* 2. Home "Four disciplines. One system." stage: the four stacked service cards
+      used the SVG-refraction backdrop filter over a moon that rotates with
+      scroll, so every scroll frame re-ran four displacement+blur filters (lag),
+      and the filtered, lazily decoded moon flickered while it rotated. Solid
+      tinted glass, an unfiltered moon on its own compositor layer, and paint
+      containment keep the motion and drop the cost. */
+.scene--svc .glass {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: rgba(14, 15, 19, 0.82) !important;
+}
+/* Only the card in front keeps a frosted blur (a plain blur, no SVG refraction),
+   so the cards stacked behind it never ghost through. */
+.scene--svc:not([data-step]) .svc-beat:first-child.glass,
+.scene--svc[data-step="0"] .svc-beat:nth-child(1).glass, .scene--svc[data-step="1"] .svc-beat:nth-child(2).glass,
+.scene--svc[data-step="2"] .svc-beat:nth-child(3).glass, .scene--svc[data-step="3"] .svc-beat:nth-child(4).glass {
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
+  background: rgba(14, 15, 19, 0.7) !important;
+}
+.scene--svc .svc-beat:not(:first-child) { will-change: opacity, transform; }
+.bgfield--svc { contain: strict; }
+.bgfield--svc img {
+  filter: none !important;
+  opacity: 0.3;
+  backface-visibility: hidden;
+  transform: translateZ(0) rotate(calc(var(--p, 0) * -40deg)) scale(calc(1 + var(--p, 0) * 0.1));
+}
+@media (prefers-reduced-motion: reduce) { .bgfield--svc img { transform: none !important; } }

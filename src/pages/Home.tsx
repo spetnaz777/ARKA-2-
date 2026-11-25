@@ -256,7 +256,7 @@ function Services() {
         <div className="bgfield bgfield--svc" aria-hidden="true">
           <picture>
             <source srcSet="/media/moon-gibbous-1400.avif" type="image/avif" />
-            <img src="/media/moon-gibbous-1400.webp" alt="" width={1400} height={1400} loading="lazy" decoding="async" />
+            <img src="/media/moon-gibbous-1400.webp" alt="" width={1400} height={1400} loading="eager" fetchPriority="low" decoding="async" />
           </picture>
         </div>
         <div className="scangrid" aria-hidden="true" />
