@@ -3,6 +3,7 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./polish.css";
+import "./mobile.css";
 
 const root = document.getElementById("root")!;
 const app = (

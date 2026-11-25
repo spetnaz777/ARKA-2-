@@ -1,0 +1,55 @@
+/* ════════════════════════════════════════════════════════════
+   Phones (≤ 767px). Loaded last so it wins over index/polish/v8.
+   1. One navigation: the ☰ menu. The floating bottom dock duplicated it
+      and sat on top of copy, cards and CTAs on every page.
+   2. The fixed header gets its own backdrop, so headings never scroll
+      underneath the logo / menu pills and collide with them.
+   3. Shorter pinned openings: 2.3 screens of scrolling per heading was
+      reading as dead space on a phone.
+   4. No scroll-driven blur on text (looked broken mid-transition and is
+      expensive on mobile GPUs) — see airlock-spaceship-hero.tsx.
+   5. Closing banner: the moon sits below the copy, not under it.
+   ════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* 1 — single nav */
+  .gnav__bar,
+  .gnav__bar.site-header__nav { display: none !important; }
+
+  /* 2 — header backdrop (tone-aware) */
+  .gnav.site-header::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    top: -10px;
+    height: calc(48px + 10px + 26px);
+    z-index: -1;
+    pointer-events: none;
+    background: #06070a;
+    -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent);
+    mask-image: linear-gradient(to bottom, #000 76%, transparent);
+  }
+  .gnav.site-header[data-tone="light"]::before {
+    background: #f5f5f7;
+  }
+  /* the pills no longer need to fight for contrast on their own */
+  .gnav__brand { padding: 0 16px 0 12px; }
+
+  /* 3 — shorter pinned openings */
+  .js .op--orbit, .js .op--warp, .js .op--descent { height: 140svh; }
+  .js .op--detail { height: 118svh; }
+  .op__stage { padding-bottom: 56px; }
+
+  /* 5 — closing banner: copy first, moon tucked into the corner behind the button row */
+  .cbanner__moon picture { width: 220px; right: -90px; bottom: -110px; top: auto; opacity: 0.55; }
+  .cbanner__text, .cbanner__btn { position: relative; z-index: 2; }
+  .cbanner__text p { max-width: 30ch; }
+
+  /* tables in articles scroll inside themselves instead of being clipped */
+  .prose table, article table {
+    display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+
+  /* comfortable tap targets */
+  .site-footer a { display: inline-block; padding-block: 6px; }
+}

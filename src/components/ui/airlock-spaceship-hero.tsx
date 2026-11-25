@@ -97,6 +97,8 @@ export default function AirlockHero({
       if (rm) seek(Math.max(0, duration - 0.05));
     };
 
+    // Phones: crossfade only. A half-finished blur on text reads as a rendering bug and is costly on mobile GPUs.
+    const noBlur = window.matchMedia("(max-width: 767px)").matches;
     const paint = (p: number) => {
       const vp = clamp(p / 0.8, 0, 1); // last 20% holds the final frame
       if (duration > 0) {
@@ -110,12 +112,12 @@ export default function AirlockHero({
       if (titleRef.current) {
         titleRef.current.style.opacity = String(ta);
         titleRef.current.style.transform = `translateY(${(1 - ta) * -28}px) scale(${0.96 + ta * 0.04})`;
-        titleRef.current.style.filter = `blur(${(1 - ta) * 12}px)`;
+        titleRef.current.style.filter = noBlur ? "" : `blur(${(1 - ta) * 12}px)`;
       }
       if (tagRef.current) {
         tagRef.current.style.opacity = String(pa);
         tagRef.current.style.transform = `translateY(${(1 - pa) * 22}px) scale(${0.97 + pa * 0.03})`;
-        tagRef.current.style.filter = `blur(${(1 - pa) * 10}px)`;
+        tagRef.current.style.filter = noBlur ? "" : `blur(${(1 - pa) * 10}px)`;
       }
       if (hintRef.current) hintRef.current.style.opacity = p > 0.02 ? "0" : "1";
       if (barRef.current) barRef.current.style.transform = `scaleX(${p})`;
