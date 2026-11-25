@@ -59,11 +59,21 @@ PAGES = [
     ("about", "orbit-day", "About", "The ARKA Studio."),
     ("contact", "aurora", "Contact", "Let's build what's next."),
     ("blog", "night-sky", "Journal", "Guides on AI, web & digital growth."),
+    ("local-ai-receptionist-toronto", "ai-robot", "AI Receptionist · Toronto & GTA", "An AI receptionist that never misses a lead."),
+    ("local-ai-chatbot-development-toronto", "ai-network", "AI Chatbots · Toronto & GTA", "Custom AI chatbots for your business."),
+    ("local-n8n-make-automation-agency", "con-network", "n8n · Make.com", "n8n and Make.com automation, built properly."),
+    ("local-website-redesign-toronto", "web-desk", "Website Redesign · Toronto", "A website redesign that keeps your rankings."),
+    ("local-real-estate-agent-websites", "case-toronto", "Real Estate", "Websites for real estate agents."),
+    ("local-clinic-website-design", "case-rehab", "Healthcare", "Clinic websites patients can use."),
+    ("local-home-service-business-websites", "case-luxury-interior", "Home & Local Services", "Websites for home service businesses."),
+    ("local-ai-automation-for-real-estate", "ai-3d", "Real Estate · AI", "AI automation for real estate teams."),
+    ("local-local-seo-toronto", "mkt-growth", "Local SEO · Toronto & GTA", "Local SEO for Toronto businesses."),
+    ("local-web-app-development-toronto", "web-laptop", "Web Applications · Toronto", "Web apps and portals built for your workflow."),
 ]
 for a in PAGES: card(*a)
 
 # one card per Journal article, titled from its <h1>
-BLOG_PHOTO = {"ai": "ai-network", "web": "web-desk", "market": "mkt-growth", "lead": "mkt-dashboard", "software": "con-blueprint", "aoda": "laptop-glow"}
+BLOG_PHOTO = {"ai": "ai-network", "web": "web-desk", "market": "mkt-growth", "lead": "mkt-dashboard", "software": "con-blueprint", "aoda": "laptop-glow", "n8n": "con-network", "seo": "mkt-growth"}
 bdir = P("public", "blog")
 for f in sorted(os.listdir(bdir)):
     if not f.endswith(".html"): continue
